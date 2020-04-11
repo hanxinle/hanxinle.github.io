@@ -23,7 +23,7 @@ Syntax highlighted code block
 
 **Bold** and _Italic_ and `Code` text
 
-[Link](url) and ![Image](src)
+[2014-12-26-windows平台dll文件的创建和使用](post/2014-12-26-windows平台dll文件的创建和使用.md) and ![Image](img/lambda.jpg)
 ```
 
 For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
