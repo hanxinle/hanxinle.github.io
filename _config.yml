@@ -1,121 +1,132 @@
-# Site settings
-title: 小乐
-#SEOTitle: 小乐的博客
-header-img: img/post-main-page.png
-email: hanxloop@foxmail.com
-description: "好记性不如烂笔头."
-keyword: "C++,Network,AI"
-url: "http://hanxinle.github.io"          # your host, for absolute URL
-baseurl: ""      # for example, '/blog' if your blog hosted on 'host/blog'
-github_repo: "https://github.com/hanxinle/hanxinle.github.io.git" # you code repository
+# Hexo Configuration
+## Docs: http://hexo.io/docs/configuration.html
+## Source: https://github.com/hexojs/hexo/
 
-# Sidebar settings
-sidebar: true                           # whether or not using Sidebar.
-# sidebar-about-description: "千里之行，始于足下"
-sidebar-avatar: /img/lambda.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
+# Site
+title: Litten的博客
+subtitle: 胆小认生，不易相处
+description: 华中科技大学09级，就职于腾讯SNG。擅长各项前端技能，深入研究移动端开发与前端性能。非专业视觉设计师。此为博客一枚。 
+author: Litten
+email: litten225@qq.com
+keywords: "前端,js,jquery,javascript,html5,开发者,程序猿,程序媛,极客,编程,代码,开源,IT网站,Developer,Programmer,Coder,Geek,html,css,css3,用户体验"
 
+# URL
+## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
+url: //litten.me
+root: /
+permalink: :year/:month/:day/:title/
+tag_dir: tags
+archive_dir: archives
+category_dir: categories
+code_dir: downloads/code
+permalink_defaults:
 
+# Directory
+source_dir: source
+public_dir: public
 
-# SNS settings
-RSS: false
-# weibo_username:     九品加
-# zhihu_username:     九品加
-github_username:    hanxinle
-#facebook_username:  hanxinle
-#jianshu_username:   hanxinle
-#twitter_username:   hanxinle
+# Writing
+new_post_name: :title.md # File name of new posts
+default_layout: post
+titlecase: false # Transform title into titlecase
+external_link: true # Open external links in new tab
+filename_case: 0
+render_drafts: false
+post_asset_folder: false
+relative_link: false
+highlight:                                                                                                                                                                                                   
+  enable: true                                                                                                                                                                                               
+  auto_detect: true                                                                                                                                                                                          
+  line_number: true                                                                                                                                                                                          
+  tab_replace: ''
 
+# Category & Tag
+default_category: uncategorized
+category_map:
+tag_map:
 
+# Archives
+## 2: Enable pagination
+## 1: Disable pagination
+## 0: Fully Disable
+archive: 1
+category: 1
+tag: 1
 
+# Server
+## Hexo uses Connect as a server
+## You can customize the logger format as defined in
+## http://www.senchalabs.org/connect/logger.html
+port: 4000
+server_ip: localhost
+logger: false
+logger_format: dev
 
-# Build settings
-# from 2016, 'pygments' is unsupported on GitHub Pages. Use 'rouge' for highlighting instead.
-permalink: pretty
-paginate: 10
-exclude: ["less","node_modules","Gruntfile.js","package.json","README.md"]
-anchorjs: true                          # if you want to customize anchor. check out line:181 of `post.html`
+# Date / Time format
+## Hexo uses Moment.js to parse and display date
+## You can customize the date format as defined in
+## http://momentjs.com/docs/#/displaying/format/
+date_format: YYYY-MM-DD
+time_format: HH:mm:ss
 
+# Pagination
+## Set per_page to 0 to disable pagination
+per_page: 8
+pagination_dir: page
 
+# Disqus
+disqus_shortname:
 
-# Gems
-# from PR#40, to support local preview for Jekyll 3.0
-gems: [jekyll-paginate]
+# Extensions
+## Plugins: https://github.com/hexojs/hexo/wiki/Plugins
+## Themes: https://github.com/hexojs/hexo/wiki/Themes
+# plugins:
+#  - hexo-generator-feed
+#  - hexo-generator-baidu-sitemap
+#  - hexo-generator-sitemap
 
+theme: yilia
+exclude_generator:
 
+# Deployment
+## Docs: http://hexo.io/docs/deployment.html
+#deploy:
+#  type: git
+#  repository: git@github.com:litten/litten.github.com.git
+#  branch: master
 
+deploy:
+  type: rsync
+  host: 120.24.181.238
+  user: root
+  root: /usr/local/nginx/litten.me/
+  port: 22
 
-# Markdown settings
-# replace redcarpet to kramdown,
-# although redcarpet can auto highlight code, the lack of header-id make the catalog impossible, so I switch to kramdown
-# document: http://jekyllrb.com/docs/configuration/#kramdown
-markdown: kramdown
-highlighter: rouge
-kramdown:
-  input: GFM                            # use Github Flavored Markdown !important
+sitemap:
+    path: sitemap.xml
+baidusitemap:
+    path: baidusitemap.xm
 
+feed:
+    type: atom
+    path: atom.xml
+    limit: 100
 
-
-# 评论系统
-#  Disqus（https://disqus.com/）
-disqus_username: hanxinle
-
-
-
-# Gitalk
-#gitalk:
-  #enable: false    #是否开启Gitalk评论
-  #clientID: f2c84e7629bb1446c1a4                            #生成的clientID
-  #clientSecret: ca6d6139d1e1b8c43f8b2e19492ddcac8b322d0d    #生成的clientSecret
-  #repo: hanxinle.github.io    #仓库名称
-  #owner: hanxinle    #github用户名
-  #admin: hanxinle
-  #distractionFreeMode: true #是否启用类似FB的阴影遮罩
-
-
-
-# 统计
-
-# Analytics settings
-# Baidu Analytics
-
-ba_track_id: b50bf2b12b5338a1845e33832976fd68
-
-# Google Analytics
-ga_track_id: 'UA-90855596-1'            # Format: UA-xxxxxx-xx
-ga_domain: auto               # 默认的是 auto, 这里我是自定义了的域名，你如果没有自己的域名，需要改成auto
-
-
-
-
-
-# Featured Tags
-featured-tags: true                     # 是否使用首页标签
-featured-condition-size: 1              # 相同标签数量大于这个数，才会出现在首页
-
-
-
-# Progressive Web Apps
-chrome-tab-theme-color: "#000000"
-service-worker: true
-
-
-
-# Friends
-friends: [
-    {
-        title: "微博",
-        href: "https://weibo.com/10150199"
-    }
- #   ,{
- #       title: "简书·BY",
- #       href: "http://www.jianshu.com/u/e71990ada2fd"
- #   },{
- #       title: "Apple",
- #       href: "https://apple.com"
-#    },{
-##        title: "Apple Developer",
-#        href: "https://developer.apple.com/"
-#    }
-]
-
-theme: jekyll-theme-minimal
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: false
+    tags: true
