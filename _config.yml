@@ -58,11 +58,7 @@ kramdown:
 # 评论系统
 #  Disqus（https://disqus.com/）
 disqus_username: hanxinle
----
-layout: default
-comments: true
-# other options
----
+
 
 
 # Gitalk
