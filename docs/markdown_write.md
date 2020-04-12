@@ -1,7 +1,6 @@
 ## markdown 语法
 ![](https://img.shields.io/badge/GitHub-https%3A%2F%2Fgithub.com%2Fhanxinle-orange)
-![](https://img.shields.io/badge/Blog-hanxinle.github.io-blue)  
-
+![](https://img.shields.io/badge/Blog-hanxinle.github.io-blue)
 
 [返回首页](../index.md)
 
