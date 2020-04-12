@@ -13,7 +13,7 @@ layout: default
 ### 1 计算机知识
 
 ### 2 学习资源
-* [2019.9 markdown 文件编写](docs/Markdown_usage.md) 
+* [2019.9 markdown 文件编写](docs/markdown_write.md) 
 
 ---
 
