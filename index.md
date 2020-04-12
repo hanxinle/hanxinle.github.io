@@ -2,112 +2,64 @@
 layout: default
 ---
 
-Text can be **bold**, _italic_, or ~~strikethrough~~.
+Hi，我是小乐(hanxinle)，现居深圳的软件开发。  
 
-[Link to another page](./another-page.html).
+我会在这个博客将技术实践过程的经验在这里汇总，这个博客模板支持 markdown 语法编辑博文。  
 
-[Link to another page](./docs/SUPPORT.md).
+PS：是遇到公式较多的情形，会将博文转为 JPEG、PDF 格式上传，这一页末尾是 Markdown 语法汇总。
 
+# 程序设计
 
+# 计算机知识
 
-There should be whitespace between paragraphs.
+# 学习资源
 
-There should be whitespace between paragraphs. We recommend including a README, or a file with information about your project.
+# MarkDown 语法
 
-# 技术文章
-
-[测试在 docs 中添加博文](./docs/hanxinle.md).  
-
-This is a normal paragraph following a header. GitHub is a code hosting platform for version control and collaboration. It lets you and others work together on projects from anywhere.
-
-# 开发环境
-
-> This is a blockquote following a header.
->
-> When something is important enough, you do it even if the odds are not in your favor.
-
-### Header 3
-
-```js
-// Javascript code with syntax highlighting.
-var fun = function lang(l) {
-  dateformat.i18n = require('./lang/' + l)
-  return true;
-}
-```
-
-```ruby
-# Ruby code with syntax highlighting
-GitHubPages::Dependencies.gems.each do |gem, version|
-  s.add_dependency(gem, "= #{version}")
-end
-```
-
-#### Header 4
+常见 Markdown 语法如下，也可参考[这篇文章](https://github.com/guodongxiaren/README)，新博文的格式参考已经发布的文章。
 
 *   This is an unordered list following a header.
 *   This is an unordered list following a header.
 *   This is an unordered list following a header.
-
-##### Header 5
 
 1.  This is an ordered list following a header.
 2.  This is an ordered list following a header.
 3.  This is an ordered list following a header.
 
-###### Header 6
+<center>表格  
 
 | head1        | head two          | three |
-|:-------------|:------------------|:------|
+|:------------:|:-----------------:|:-----:|
 | ok           | good swedish fish | nice  |
 | out of stock | good and plenty   | nice  |
 | ok           | good `oreos`      | hmm   |
 | ok           | good `zoute` drop | yumm  |
-
+</center>
 ### There's a horizontal rule below this.
-
-* * *
-
-### Here is an unordered list:
 
 *   Item foo
 *   Item bar
 *   Item baz
 *   Item zip
 
-### And an ordered list:
+- level 1 item
+  - level 2 item
+  - level 2 item
+    - level 3 item
+    - level 3 item
+- level 1 item
+  - level 2 item
+  - level 2 item
+  - level 2 item
+- level 1 item
+  - level 2 item
+  - level 2 item
+- level 1 item
 
 1.  Item one
 1.  Item two
 1.  Item three
 1.  Item four
-
-### And a nested list:
-
-- level 1 item
-  - level 2 item
-  - level 2 item
-    - level 3 item
-    - level 3 item
-- level 1 item
-  - level 2 item
-  - level 2 item
-  - level 2 item
-- level 1 item
-  - level 2 item
-  - level 2 item
-- level 1 item
-
-### Small image
-
-![Octocat](https://github.githubassets.com/images/icons/emoji/octocat.png)
-
-### Large image
-
-![Branching](https://guides.github.com/activities/hello-world/branching.png)
-
-
-### Definition lists can be used with HTML syntax.
 
 <dl>
 <dt>Name</dt>
@@ -120,10 +72,4 @@ end
 <dd>Green</dd>
 </dl>
 
-```
-Long, single-line code blocks should not wrap. They should horizontally scroll if they are too long. This line should be long enough to demonstrate this.
-```
 
-```
-The final element.
-```
