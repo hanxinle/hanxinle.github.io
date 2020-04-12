@@ -18,6 +18,6 @@ layout: default
 
 ---
 
-Hi，我是小乐(hanxinle)，现居深圳的软件开发。  
+Hi，我是小乐(hanxinle)，现居深圳的软件开发，[这里](https://github.com/hanxinle)是我的 GitHub 首页。  
 
-我会在这个博客将技术实践过程的经验在记录在此，希望对你有帮助。
+我会在这个博客记录技术实践过程的经验，希望对你有帮助。
