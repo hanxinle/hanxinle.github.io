@@ -1,13 +1,6 @@
 language: ruby
-env:
-  global:
-    - NOKOGIRI_USE_SYSTEM_LIBRARIES=true
-install: 
-  - gem install jekyll
-  - gem install jekyll-paginate
-script: 
-  - jekyll build
-after_success:
-  - bash <(curl -s https://codecov.io/bash)
-  
+cache: bundler
+rvm: 2.6
 
+install: script/bootstrap
+script: script/cibuild
