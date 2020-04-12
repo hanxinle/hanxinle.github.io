@@ -8,13 +8,13 @@ layout: default
 
 # 文章导航
 
-### 0 程序设计
+## 0 程序设计
 
-### 1 计算机知识
+## 1 计算机知识
 
-### 2 学习资源
-#### [2016.12 安装 Ubuntu 后开发环境配置](docs/things_must_be_done_after_install_ubuntu.md)
-#### [2019.9 markdown 文件编写](docs/markdown_write.md) 
+## 2 学习资源
+### [2016.12 安装 Ubuntu 后开发环境配置](docs/things_must_be_done_after_install_ubuntu.md)
+### [2019.9 markdown 文件编写](docs/markdown_write.md) 
 
 ---
 
