@@ -8,12 +8,12 @@ layout: default
 
 # 文章导航
 
-## 0 程序设计
+### 0 程序设计
 
-## 1 计算机知识
+### 1 计算机知识
 
-## 2 学习资源
-* [2019.9 Markdown 文件编写](docs/Markdown_usage.md) 
+### 2 学习资源
+* [2019.9 markdown 文件编写](docs/Markdown_usage.md) 
 
 ---
 
