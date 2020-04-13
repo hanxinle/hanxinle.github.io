@@ -1,9 +1,10 @@
 ---
 layout: default
 ---
+<center>
 <a href='https://github.com/hanxinle' target='_blank'><img src='https://img.shields.io/badge/GitHub-hanxinle-blue' /></a>
-<a href='https://hanxinle.github.io/' target='_blank'><img src='https://img.shields.io/badge/Blog-%E5%B0%8F%E4%B9%90-brightgreen' /></a>
-
+<!--<a href='https://hanxinle.github.io/' target='_blank'><img src='https://img.shields.io/badge/Blog-%E5%B0%8F%E4%B9%90-brightgreen' /></a> -->
+</center>
 
 
 # 文章导航
