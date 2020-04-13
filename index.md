@@ -1,8 +1,8 @@
 ---
 layout: default
 ---
-![](https://img.shields.io/badge/GitHub-https%3A%2F%2Fgithub.com%2Fhanxinle-orange)
-![](https://img.shields.io/badge/Blog-hanxinle.github.io-blue)  
+<a href='https://github.com/hanxinle' target='_blank'><img src='https://img.shields.io/badge/GitHub-hanxinle-blue' /></a>
+<a href='https://hanxinle.github.io/' target='_blank'><img src='https://img.shields.io/badge/Blog-%E5%B0%8F%E4%B9%90-brightgreen' /></a>
 
 
 
