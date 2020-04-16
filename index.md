@@ -7,9 +7,6 @@ layout: default
 <!--<a href='https://hanxinle.github.io/' target='_blank'><img src='https://img.shields.io/badge/Blog-%E5%B0%8F%E4%B9%90-brightgreen' /></a> 
 -->
 
-#### 欢迎这位靓仔!
-
-
 # 文章导航
 
 ## 0 程序设计
