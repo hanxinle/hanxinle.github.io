@@ -34,7 +34,7 @@
 
    ```touch .gitignore  && vim .gitigonre```
 
-   ```*.out *.py  # in .gitignore```
+   ```*.out *.py```
 
     原有创建的格式用 git rm --cached <file_name> 忽略
     [常用工程的ignore文件](https://github.com/github/gitignore)
@@ -79,7 +79,9 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
 
 则可以在得到与机器b一致的repo。
 
+
 ---
+
 
 ## 远程 repo
 
@@ -113,7 +115,7 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
 
 * 分支删除与重命名
 
-  ```git brach -D/-d  #删除 see git -h```
+  ```git brach -D/-d  PS 删除 see git -h```
   
   远端分支重命名(创建本地分支-->同步到远端-->删除远端同名分支-->原本地分支重命名-->推送到远端)
   
