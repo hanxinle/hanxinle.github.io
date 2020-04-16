@@ -2,13 +2,13 @@
 
 [返回首页](../../index.md)
 
-## 本地 repo
+## 1 本地 repo
 
 * 设置姓名和邮箱
 
-   ```git config --global user.name "xxxx"```
+  ```git config --global user.name "xxxx"```
 
-   ```git config --global user.email "xxxx@yyy.zzz"```
+  ```git config --global user.email "xxxx@yyy.zzz"```
 
 * 创建并初始化本地空仓库
 
@@ -32,12 +32,12 @@
 
 * 忽略特定格式文件格式
 
-   ```touch .gitignore  && vim .gitigonre```
+  ```touch .gitignore  && vim .gitigonre```
 
-   ```*.out *.py```
+  ```*.out *.py```
 
-    原有创建的格式用 git rm --cached <file_name> 忽略
-    [常用工程的ignore文件](https://github.com/github/gitignore)
+  原有创建的格式用 git rm --cached <file_name> 忽略
+  常用工程的 [ignore文件](https://github.com/github/gitignore)。
 
 * 回滚操作
 
@@ -49,7 +49,7 @@
 
    假设用户1修改了 xxx文件，并且 push 了，我这边再修改后 push 会提示拒绝，有冲突，查看冲突：
 
-```git diff master origin/master```
+  ```git diff master origin/master```
 
   建议将该文件备份，然后执行以下操作(备份，先拉取再合并：
 
@@ -77,12 +77,12 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
 
 ```git clone hanxinle@xx.mm.yy.zz:/home/hanxinle/xdisk.git```
 
-则可以在得到与机器b一致的repo。
+则可以在得到与机器b一致的 repo。
 
 
 ---
 
-## 远程 repo
+## 2 远程 repo
 
 * 查看分支
   
@@ -130,11 +130,11 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
 
 * tag 管理
 
-    网页端 release 中管理，和 commit 的哈希值相关。
+  网页端 release 中管理，和 commit 的哈希值相关。
 
 ---
 
-## 免密操作
+## 3 免密操作
 
 生成公有/私有 key
 
@@ -146,13 +146,13 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
 
 将 url=https:xxxxx 更改,它的值在网页端打开 github repo 的时候,选择 clone or download 按钮,会有 use ssh 一项,
 
-点击这一项,复制url链接到.git/config 文件替换 url=<url_value> 这一项.
+点击这一项,复制 url 链接到.git/config 文件替换 url=<url_value> 这一项.
 
 另一种方式是在 clone 命令时,不要通过 https 命令操作,直接通过上面这个 ssh 的 url 方式操作.
 
 ---
 
-## fork 后用 upstream 同步原始 repo 最新情况
+## 4 fork 后用 upstream 同步原始 repo 最新情况
 
 * 首先 git clone 到本地
 
@@ -178,7 +178,7 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
 
 ---
 
-## 其它 repo 选项
+## 5 其它 repo 选项
 
   * Issue
 
