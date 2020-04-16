@@ -2,7 +2,7 @@
 
 [返回首页](../../index.md)
 
-### 0 文本
+### 1 文本
 
 这是一段普通的文本
 
@@ -45,7 +45,7 @@
 |`~~***斜粗体删除线2***~~`|~~***斜粗体删除线2***~~|
 </center>
 
-### 1 结构
+### 2 结构
 *   This is an unordered list following a header.
 *   This is an unordered list following a header.
 *   This is an unordered list following a header.
@@ -108,7 +108,7 @@
 <dd>Green</dd>
 </dl>
 
-### 2 表情及 diff
+### 3 表情及 diff
 
 Github的Markdown语法支持添加emoji表情，输入不同的符号码（两个冒号包围的字符）可以显示出不同的表情。
 

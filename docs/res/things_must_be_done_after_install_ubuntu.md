@@ -4,8 +4,8 @@
 
 >不要花费过多时间用于折腾开发环境
 
-# 0 lisp相关
-## 0.0 emacs
+# 1 lisp相关
+## 1.1 emacs
 
 外观上，偏爱黑色风格,在~/.emacs中黏贴以下内容
 ```
@@ -49,7 +49,7 @@ apt-get install ecb
 启动 ecb 的命令是 M-X ecb 。
 
 ---
-## 0.1 Slime
+## 1.2 Slime
 
 如果是初步体验这个开发环境，使用如下命令安装：
 ```
@@ -83,33 +83,33 @@ CL-USER> (exit) 退出slime
 (require `evil)
 (evil-mode 1)
 ```
-## 0.2 补充
+## 1.3 补充
 
 Visual Studio Code 在编辑 .md 文件可以根据需要安装常用插件，以预览、转换成 pdf、html、jpeg 等格式，同时支持 .md 中编辑公式。  
 其它开发者也会根据配置将其用于远程开发，前端开发，刷 leetcode 题目等。
 
-# 1 系统工具
+# 2 系统工具
 
 （经典菜单、系统指示器）
 
 受到 这篇文章《[安装 Ubuntu 后要做的事](https://blog.csdn.net/skykingf/article/details/45267517/)》启发，经典菜单和系统指示器真乃神器也。
 
-## 1.0 经典菜单指示器
+## 2.1 经典菜单指示器
 ```
 sudo add-apt-repository ppa:diesch/testing
 sudo apt-get update
 sudo apt-get install classicmenu-indicator
 ```
-## 1.1 系统指示器SysPeek
+## 2.2 系统指示器SysPeek
 ```
 sudo add-apt-repository ppa:nilarimogard/webupd8  
 sudo apt-get update  
 sudo apt-get install syspeek 
 ```
 
-# 2 开发工具
+# 3 开发工具
 
-## 2.0 安装Opencv
+## 3.1 安装Opencv
 ```
 sudo apt-get install build-essential
 
@@ -174,7 +174,7 @@ g++ decolor.cpp -o a `pkg-config --cflags --libs opencv`
 然后， ./a 1.jpg
 ```
 ![complie_and_run_opencv.png](../../img/complie_and_run_opencv.png)
-## 2.1 通过 JavaScript 给 adobe reader 添加书签管理功能
+## 3.2 通过 JavaScript 给 adobe reader 添加书签管理功能
 
 在 Adobe reader 基础上采用[这本书](
 https://www.amazon.com/exec/obidos/ASIN/0596006551/ref=nosim/pdftk-20)作者介绍的插件，谷歌即可找到。
