@@ -78,7 +78,9 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
 
 则可以在得到与机器b一致的repo。
 
+
 ## 远程 repo
+
   
 * 查看分支
   
@@ -127,8 +129,7 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
 
 * tag 管理
 
-    网页端 release 中管理,和 commit 的哈希值相关.
-  
+    网页端 release 中管理,和 commit 的哈希值相关。
 
 ## 免密操作
 
@@ -171,6 +172,7 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
 * 最后push到远端
 
     ```git push origin master```
+
 ## 其它 repo 选项
 
    * Issue 

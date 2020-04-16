@@ -18,6 +18,7 @@ layout: default
 * [2016.12 安装 Ubuntu 后开发环境配置](docs/res/things_must_be_done_after_install_ubuntu.md)
 * [2019.9 markdown 文件编写](docs/res/markdown_write.md) 
 * [2019.9 GitHub 命令行](docs/res/github_commands.md)
+
 ---
 
 Hi，我是小乐，点击<a href='https://github.com/hanxinle' target='_blank'><img src='https://img.shields.io/badge/GitHub-hanxinle-blue' /></a>访问我的 GitHub 。  
