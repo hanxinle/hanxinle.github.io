@@ -1,4 +1,5 @@
 # GitHub 命令行
+
 [返回首页](../../index.md)
 
 ## 本地 repo
@@ -46,13 +47,13 @@
 
 * 解决push冲突
 
-   假设用户1修改了 xxx文件，并且push了，我这边再修改后push会提示拒绝，有冲突，查看冲突：
+   假设用户1修改了 xxx文件，并且 push 了，我这边再修改后 push 会提示拒绝，有冲突，查看冲突：
 
-    git diff master origin/master
+```git diff master origin/master```
 
-  建议将该文件备份，然后执行以下操作(备份，先拉取再合并）：
+  建议将该文件备份，然后执行以下操作(备份，先拉取再合并：
 
-```bash
+```
 git pull
 vim xxx  PS 对其进行更改
 git add xxx
@@ -78,10 +79,10 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
 
 则可以在得到与机器b一致的repo。
 
+---
 
 ## 远程 repo
 
-  
 * 查看分支
   
     ```git branch``` 
@@ -131,6 +132,8 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
 
     网页端 release 中管理,和 commit 的哈希值相关。
 
+---    
+
 ## 免密操作
 
 生成公有\私有 key
@@ -148,7 +151,9 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
 点击这一项,复制url链接到.git/config 文件替换 url=<url_value> 这一项.
 
 另一种方式是在 clone 命令时,不要通过 https 命令操作,直接通过上面这个 ssh 的 url 方式操作.
-   
+
+---
+
 ## fork后用upstream同步原始repo最新情况
 
 * 首先 git clone 到本地
@@ -173,6 +178,8 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
 
     ```git push origin master```
 
+---
+
 ## 其它 repo 选项
 
    * Issue 
@@ -191,5 +198,5 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
       
      代码\文档的片段
 
-
+---
 [返回首页](../../index.md)
