@@ -82,7 +82,6 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
 
 ---
 
-
 ## 远程 repo
 
 * 查看分支
@@ -128,17 +127,16 @@ GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法
   ```git commit -m <local_name> <new_branch_name>```
   
   ```git push origin <new_branch_name>```
-  
 
 * tag 管理
 
-    网页端 release 中管理,和 commit 的哈希值相关。
+    网页端 release 中管理，和 commit 的哈希值相关。
 
 ---
 
 ## 免密操作
 
-生成公有\私有 key
+生成公有/私有 key
 
 ```ssh-keygen```
 
