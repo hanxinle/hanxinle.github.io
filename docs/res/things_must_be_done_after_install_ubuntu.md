@@ -7,7 +7,6 @@
 # 0 lisp相关
 ## 0.0 emacs
 
-(外观，自动补全，ecb)
 外观上，偏爱黑色风格,在~/.emacs中黏贴以下内容
 ```
 (set-background-color "black")              ;;  使用黑色背景
@@ -18,7 +17,7 @@
 ;;(menu-bar-mode -1)                        ;;  这个关闭菜单栏
 
 ```
-关于找不到.emacs文件的问题解决方法，在 Options 菜单中更改任意设置，保存该设置，就会生成 .emacs 文件，在 windows 系统中，该文件可能位于用户目录或者用户目录下子目录 \AppData\Roaming 中，可在资源管理器搜索其位置。  
+关于找不到 .emacs 文件的问题解决方法，在 Options 菜单中更改任意设置，保存该设置，就会生成 .emacs 文件，在 windows 系统中，该文件可能位于用户目录或者用户目录下子目录 \AppData\Roaming 中，可在资源管理器搜索其位置。  
 自动补全，采用 auto-complete（[GitHub链接](https://github.com/auto-complete/auto-complete)），在 Ubuntu 中，解压文件到本地，得到文件夹 auto-complete-master，在 .emacs.d 文件夹中 plugins 中新建 文件夹并命名为 auto-complete，启动 emacs，执行 M-X | load-file | mydir/auto-complete-master/etc/install.el，选择安装目录是 .emacs.d/plugins/auto-complete，安装成功后根据提示 在 .emacs 中添加如下代码
 
 ```
@@ -26,7 +25,7 @@
 (require 'auto-complete-config)
 (ac-config-default)
 ```
-启动emacs，提示缺少 popup.el 文件，可以在 GitHub 上搜索该文件，或者运行
+启动 emacs，提示缺少 popup.el 文件，可以在 GitHub 上搜索该文件，或者运行
 ```
 apt-get install elpa-popup
 ```
@@ -70,7 +69,20 @@ C-c C-z 回到CL-USER >
 
 CL-USER> (exit) 退出slime
 ```
-本人还配置了Evil 环境，在 emacs 中可以综合使用 vim 和 emacs 编辑方式。 
+本人还配置了 [Evil](https://github.com/hanxinle/evil) 环境，在 emacs 中可以综合使用 vim 和 emacs 编辑方式；同时安装了 yasnippet 。 
+
+```
+(add-to-list 'load-path "~/.emacs.d/yasnippet")
+(require 'yasnippet)
+(yas-global-mode 1)
+(put 'upcase-region 'disabled nil)
+
+;;add in .emacs 
+;;Cril-z switch emacs-vim mode
+(add-to-list `load-path "~/.emacs.d/evil")
+(require `evil)
+(evil-mode 1)
+```
 ## 0.2 补充
 
 Visual Studio Code 在编辑 .md 文件可以根据需要安装常用插件，以预览、转换成 pdf、html、jpeg 等格式，同时支持 .md 中编辑公式。  
