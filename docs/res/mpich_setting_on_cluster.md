@@ -1,5 +1,5 @@
 # mpich 集群配置的详细说明
-
+[返回首页](../../index.md)
 >前言：弃用 openmpi ，在网上很少找到资料，而且它的出错信息对人不友好，选择 mpich。
 
 集群由 3 个主机构成：ThinkPad-T440p（master IP：192.168.1.106）与 VirtualBox 上a安装的 Ubuntu 16.04 LTS （node1 IP：192.168.1.109）、远程的 Erazer-X310-node（node2 IP：192.168.1.102 ）。
@@ -157,3 +157,6 @@ int main(int argc, char** argv) {
 2. [mpi tutorials 的 GitHub](https://github.com/wesleykendall/mpitutorial)    
 
 3. [靠谱的 nfs 文件夹设置方法](blog.csdn.net/zpf336/article/details/50825847)
+
+
+[返回首页](../../index.md)
