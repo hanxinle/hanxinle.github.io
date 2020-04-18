@@ -10,10 +10,12 @@ layout: default
 # 文章导航
 
 ## 程序设计
-* [2014.10 dll 文件的创建和使用 （VC6.0）](docs/cs/vc6dll.md)
+* [2014.10 dll 文件的创建和使用 （VC6.0）](docs/code/vc6dll.md)
 
 ---
 ## 计算机知识
+* [自然语言处理构成](docs/cs/nlp_base.md)
+
 ---
 ## 学习资源
 * [2016.12 安装 Ubuntu 后开发环境配置](docs/res/things_must_be_done_after_install_ubuntu.md)
