@@ -17,6 +17,7 @@ layout: default
 ---
 ## 学习资源
 * [2016.12 安装 Ubuntu 后开发环境配置](docs/res/things_must_be_done_after_install_ubuntu.md)
+* [2017.10 mpich 集群配置的详细说明](docs/res/mpich_setting_on_cluster.md)
 * [2019.9 markdown 文件编写](docs/res/markdown_write.md) 
 * [2019.9 GitHub 命令行](docs/res/github_commands.md)
 
