@@ -14,7 +14,7 @@ layout: default
 
 ---
 ## 计算机知识
-* [自然语言处理构成](docs/cs/nlp_base.md)
+* [2019.11 自然语言处理构成](docs/cs/nlp_base.md)
 
 ---
 ## 学习资源
