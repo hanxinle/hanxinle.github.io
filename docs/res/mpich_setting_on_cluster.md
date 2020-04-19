@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
 
 2. [mpi tutorials 的 GitHub](https://github.com/wesleykendall/mpitutorial)    
 
-3. [靠谱的 nfs 文件夹设置方法](blog.csdn.net/zpf336/article/details/50825847)
+3. [靠谱的 nfs 文件夹设置方法](https://blog.csdn.net/zpf336/article/details/50825847)
 
 
 [返回首页](../../index.md)
