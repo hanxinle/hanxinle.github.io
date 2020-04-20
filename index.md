@@ -22,6 +22,7 @@ layout: default
 * [2017.10 mpich 集群配置的详细说明](docs/res/mpich_setting_on_cluster.md)
 * [2019.9 markdown 文件编写](docs/res/markdown_write.md) 
 * [2019.9 GitHub 命令行](docs/res/github_commands.md)
+* [2020.4 赛博朋克](docs/res/cyberpunk2077/cyberpunk2077.md)
 
 ---
 
