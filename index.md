@@ -2,7 +2,7 @@
 layout: default
 ---
 <center>
-<a href='https://github.com/hanxinle' target='_blank'><img src='https://img.shields.io/badge/GitHub-hanxinle-blue' /></a>
+<a href='https://github.com/hanxinle' target='_blank'><img src='https://img.shields.io/badge/GitHub-%E5%8D%95%E5%87%BB%E8%AE%BF%E9%97%AE-blue' /></a>
 </center>
 <!--<a href='https://hanxinle.github.io/' target='_blank'><img src='https://img.shields.io/badge/Blog-%E5%B0%8F%E4%B9%90-brightgreen' /></a> 
 -->
@@ -26,4 +26,4 @@ layout: default
 
 ---
 
-Hi，我是小乐，点击<a href='https://github.com/hanxinle' target='_blank'><img src='https://img.shields.io/badge/GitHub-hanxinle-blue' /></a>访问我的 GitHub 。  
+Hi，我是小乐，点击<a href='https://github.com/hanxinle' target='_blank'><img src='https://img.shields.io/badge/GitHub-%E5%8D%95%E5%87%BB%E8%AE%BF%E9%97%AE-blue' /></a>访问我的 GitHub 。  
