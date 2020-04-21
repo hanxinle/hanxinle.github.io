@@ -25,5 +25,3 @@ layout: default
 * [2020.4 赛博朋克](docs/res/cyberpunk2077/cyberpunk2077.md)
 
 ---
-
-Hi，我是小乐，点击<a href='https://github.com/hanxinle' target='_blank'><img src='https://img.shields.io/badge/GitHub-%E5%8D%95%E5%87%BB%E8%AE%BF%E9%97%AE-blue' /></a>访问我的 GitHub 。  
