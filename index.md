@@ -4,7 +4,7 @@ layout: default
 
 <html>
 <head>
-    <link rel="icon" href="img/lambada.jpg">
+    <link rel="icon" href="img/lambda.jpg">
 </head>
 <body>
 <center>
