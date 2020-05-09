@@ -6,10 +6,6 @@ layout: default
 </center>
 <!--<a href='https://hanxinle.github.io/' target='_blank'><img src='https://img.shields.io/badge/Blog-%E5%B0%8F%E4%B9%90-brightgreen' /></a> 
 -->
-<!-- rel="shortcut icon"即标签栏行显示的图标。 -->
-<link rel="shortcut icon" href="img/lambda.jpg" type="image/x-icon">
-<!-- rel="bookmark"即收藏夹栏里显示的图标。 -->
-<link rel="bookmark" href="img/lambda.jpg">
 # 文章导航
 
 ## 程序设计
