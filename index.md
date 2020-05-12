@@ -10,7 +10,7 @@ layout: default
 # 文章导航
 
 ## 程序设计
-* [2014.10 dll 文件的创建和使用 （VC6.0）](docs/code/vc6dll.md)
+* [2014.10 dll 文件的创建和使用](docs/code/vc6dll.md)
 
 ---
 ## 计算机知识
