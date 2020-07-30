@@ -7,8 +7,6 @@ layout: default
 <!--<a href='https://hanxinle.github.io/' target='_blank'><img src='https://img.shields.io/badge/Blog-%E5%B0%8F%E4%B9%90-brightgreen' /></a> 
 -->
 
-# 文章加载中...
-
 ## 程序设计
 * [2014.10 dll 文件的创建和使用](docs/code/vc6dll.md)
 
