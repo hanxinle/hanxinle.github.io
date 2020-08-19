@@ -8,21 +8,21 @@ layout: default
 -->
 
 ## 程序设计
-* [2014.10 dll 文件的创建和使用](docs/code/vc6dll.md)
-* [2020.8 借助 gcc 理解编译系统](docs/code/compilation_system_gcc.md)
-* [2020.8 gdb 入门](docs/code/gdb_1.md)
+* [2014.10 dll 文件的创建和使用](post/code/vc6dll.md)
+* [2020.8 借助 gcc 理解编译系统](post/code/compilation_system_gcc.md)
+* [2020.8 gdb 入门](post/code/gdb_1.md)
 
 ---
 
 ## 领域漫谈
-* [2019.11 自然语言处理构成](docs/cs/nlp_base.md)
+* [2019.11 自然语言处理构成](post/cs/nlp_base.md)
 
 ---
 ## 学习资源
-* [2016.12 安装 Ubuntu 后开发环境配置](docs/res/things_must_be_done_after_install_ubuntu.md)
-* [2017.10 mpich 集群配置的详细说明](docs/res/mpich_setting_on_cluster.md)
-* [2019.9 markdown 文件编写](docs/res/markdown_write.md) 
-* [2019.9 GitHub 命令行](docs/res/github_commands.md)
-* [2020.4 赛博朋克](docs/res/cyberpunk2077.md)
+* [2016.12 安装 Ubuntu 后开发环境配置](post/res/things_must_be_done_after_install_ubuntu.md)
+* [2017.10 mpich 集群配置的详细说明](post/res/mpich_setting_on_cluster.md)
+* [2019.9 markdown 文件编写](post/res/markdown_write.md) 
+* [2019.9 GitHub 命令行](post/res/github_commands.md)
+* [2020.4 赛博朋克](post/res/cyberpunk2077.md)
 
 ---
