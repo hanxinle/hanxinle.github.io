@@ -11,16 +11,21 @@
 ![compilation system](./img/compilation_system_1.png)
 
 在 gcc 中，每个阶段的操作见表1.
-<center>
+
 表1 编译系统命令
+<style>
+.tablelines table, .tablelines td, .tablelines th {
+        border: 1px solid black;
+        }
+</style>
 
 |操作|命令|备注|
-|--|--|--|
+|-|-|-|
 |预处理| ```gcc -E```   | -E -DXXX 定义XXX|
 |编译  | gcc -S   |    |
 |汇编  | gcc -c   |    |
 |链接  | gcc      |    |
-</center>
+{: .tablelines}
 
 ## 2 程序编译各步骤记录
 
