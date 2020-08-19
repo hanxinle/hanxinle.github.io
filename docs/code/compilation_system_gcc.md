@@ -12,7 +12,7 @@
 
 在 gcc 中，每个阶段的操作见表1.
 
-表1 编译系统命令
+<center>表1 编译系统命令</center>
 <style>
 .tablelines table, .tablelines td, .tablelines th {
         border: 1px solid black;
