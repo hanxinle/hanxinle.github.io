@@ -30,7 +30,7 @@
 
 或者就是在两行文本直接加一个空行。
 
-<center>斜体、粗体、删除线
+<center>斜体、粗体、删除线</center>
 <style>
 .tablelines table, .tablelines td, .tablelines th {
         border: 1px solid black;
@@ -48,7 +48,7 @@
 |`***~~斜粗体删除线1~~***`|***~~斜粗体删除线1~~***|
 |`~~***斜粗体删除线2***~~`|~~***斜粗体删除线2***~~|
 {: .tablelines}
-</center>
+
 
 ### 2 结构
 *   This is an unordered list following a header.
@@ -59,7 +59,7 @@
 2.  This is an ordered list following a header.
 3.  This is an ordered list following a header.
 
-<center>表格  
+<center>表格</center>  
 
 | head1        | head two          | three |
 |:------------:|:-----------------:|:-----:|
@@ -67,7 +67,7 @@
 | out of stock | good and plenty   | nice  |
 | ok           | good `oreos`      | hmm   |
 | ok           | good `zoute` drop | yumm  |
-</center>
+{: .tablelines}
 
 复选框
 - [x] 需求分析
