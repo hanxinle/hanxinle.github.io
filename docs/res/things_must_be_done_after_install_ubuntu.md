@@ -171,7 +171,7 @@ g++ decolor.cpp -o a `pkg-config --cflags --libs opencv`
 
 然后， ./a 1.jpg
 ```
-![complie_and_run_opencv.png](../../img/complie_and_run_opencv.png)
+![complie_and_run_opencv.png](./img/complie_and_run_opencv.png)
 ## 3.2 通过 JavaScript 给 adobe reader 添加书签管理功能
 
 在 Adobe reader 基础上采用[这本书](
