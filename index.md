@@ -12,6 +12,7 @@ layout: default
 * [2020.8 借助 gcc 理解编译系统](docs/code/compilation_system_gcc.md)
 * [2020.8 gdb 入门](docs/code/gdb_1.md)
 ---
+
 ## 领域漫谈
 * [2019.11 自然语言处理构成](docs/cs/nlp_base.md)
 
