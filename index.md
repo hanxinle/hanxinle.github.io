@@ -7,14 +7,10 @@ layout: default
 <!--<a href='https://hanxinle.github.io/' target='_blank'><img src='https://img.shields.io/badge/Blog-%E5%B0%8F%E4%B9%90-brightgreen' /></a> 
 -->
 
-## 程序设计
+## 专题总结
 * [dll 文件的创建和使用](post/code/vc6dll.md)
 * [借助 gcc 理解编译系统](post/code/compilation_system_gcc.md)
 * [gdb 入门](post/code/gdb_1.md)
-
----
-
-## 领域漫谈
 * [自然语言处理构成](post/cs/nlp_base.md)
 
 ---
