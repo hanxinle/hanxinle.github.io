@@ -10,7 +10,7 @@ layout: default
 ## 专题学习
 * [dll 文件的创建和使用](post/code/vc6dll.md)
 * [借助 gcc 理解编译系统](post/code/compilation_system_gcc.md)
-* [gdb 入门](post/code/gdb_1.md)
+* [进程虚拟空间（程序内存空间）](post/code/进程虚拟空间布局,程序的内存结构.md)
 * [自然语言处理综述](post/cs/nlp_base.md)
 
 ---
