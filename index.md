@@ -3,9 +3,13 @@ layout: default
 ---
 <center>
 <a href='https://github.com/hanxinle' target='_blank'><img src='https://img.shields.io/badge/GitHub-%E5%8D%95%E5%87%BB%E8%AE%BF%E9%97%AE-blue' /></a>
+
+[gitee博客](https://hanxinle.gitee.io/blog/)
+
 </center>
 <!--<a href='https://hanxinle.github.io/' target='_blank'><img src='https://img.shields.io/badge/Blog-%E5%B0%8F%E4%B9%90-brightgreen' /></a> 
 -->
+
 
 ## 系统
 * [dll 文件的创建和使用](post/code/vc6dll.md)
