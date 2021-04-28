@@ -26,7 +26,7 @@ layout: default
 ## 我的信息
 
 * [GitHub主页](https://github.com/hanxinle)
-* [码云博客](https://hanxinle.gitee.io/blog/)
-* [博客园首页](https://www.cnblogs.com/hanxinle/)
+* [码云博客主页](https://hanxinle.gitee.io/blog/)
+* [博客园主页](https://www.cnblogs.com/hanxinle/)
 
 ---
