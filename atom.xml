@@ -6,7 +6,7 @@
   <link href="https://hanxinle.github.io/atom.xml" rel="self"/>
   
   <link href="https://hanxinle.github.io/"/>
-  <updated>2024-02-03T04:29:33.101Z</updated>
+  <updated>2024-02-03T04:31:43.492Z</updated>
   <id>https://hanxinle.github.io/</id>
   
   <author>
@@ -21,9 +21,9 @@
     <link href="https://hanxinle.github.io/2023/12/02/hardware-notes/"/>
     <id>https://hanxinle.github.io/2023/12/02/hardware-notes/</id>
     <published>2023-12-02T06:08:34.000Z</published>
-    <updated>2024-02-03T04:29:33.101Z</updated>
+    <updated>2024-02-03T04:31:43.492Z</updated>
     
-    <content type="html"><![CDATA[<h1 id="1-一些教训"><a href="#1-一些教训" class="headerlink" title="1 一些教训"></a>1 一些教训</h1><p>非必要不升级系统，导致很多经典软件不能用，最后重新安装系统解决这些问题的.</p><span id="more"></span><h1 id="2-樱桃键盘"><a href="#2-樱桃键盘" class="headerlink" title="2 樱桃键盘"></a>2 樱桃键盘</h1><div class="table-container"><table><thead><tr><th>问题</th><th>按键</th></tr></thead><tbody><tr><td>win 键盘失效</td><td>fn+F9</td></tr><tr><td>F1~F3 与音量强制关联</td><td>fn+Ctrl</td></tr></tbody></table></div><h1 id="3-Git-状态图标异常"><a href="#3-Git-状态图标异常" class="headerlink" title="3 Git 状态图标异常"></a>3 Git 状态图标异常</h1><p><code>WIN+R</code> 启动注册表，找到这一项：</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">计算机\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIconOverlayIdentifiers\</span><br></pre></td></tr></table></figure><p>删掉该项下的 <code>Tortoise1Normal</code> 前的所有内容，任务管理器中重启 EXPLORER。</p><p>4</p>]]></content>
+    <content type="html"><![CDATA[<h1 id="1-一些教训"><a href="#1-一些教训" class="headerlink" title="1 一些教训"></a>1 一些教训</h1><p>非必要不升级系统，导致很多经典软件不能用，最后重新安装系统解决这些问题的.</p><span id="more"></span><h1 id="2-樱桃键盘"><a href="#2-樱桃键盘" class="headerlink" title="2 樱桃键盘"></a>2 樱桃键盘</h1><div class="table-container"><table><thead><tr><th>问题</th><th>按键</th></tr></thead><tbody><tr><td>win 键盘失效</td><td>fn+F9</td></tr><tr><td>F1~F3 与音量强制关联</td><td>fn+Ctrl</td></tr></tbody></table></div><h1 id="3-Git-状态图标异常"><a href="#3-Git-状态图标异常" class="headerlink" title="3 Git 状态图标异常"></a>3 Git 状态图标异常</h1><p><code>WIN+R</code> 启动注册表，找到这一项：</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">计算机\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIconOverlayIdentifiers\</span><br></pre></td></tr></table></figure><p>删掉该项下的 <code>Tortoise1Normal</code> 前的所有内容，任务管理器中重启 EXPLORER。</p><h1 id="4"><a href="#4" class="headerlink" title="4"></a>4</h1>]]></content>
     
     
     <summary type="html">&lt;h1 id=&quot;1-一些教训&quot;&gt;&lt;a href=&quot;#1-一些教训&quot; class=&quot;headerlink&quot; title=&quot;1 一些教训&quot;&gt;&lt;/a&gt;1 一些教训&lt;/h1&gt;&lt;p&gt;非必要不升级系统，导致很多经典软件不能用，最后重新安装系统解决这些问题的.&lt;/p&gt;</summary>
