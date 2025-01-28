@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Cpp_rules</title>
+    <url>/2023/11/26/Cpp-rules/</url>
+    <content><![CDATA[]]></content>
+  </entry>
+  <entry>
     <title>借助 gcc 理解编译系统（compilation system）</title>
     <url>/2020/12/16/compliation-system-by-gcc/</url>
     <content><![CDATA[<h2 id="1-编译系统-gcc-概述"><a href="#1-编译系统-gcc-概述" class="headerlink" title="1 编译系统(gcc)概述"></a>1 编译系统(gcc)概述</h2><span id="more"></span>
@@ -82,7 +87,7 @@ return 0;
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">程序主要分为 LFB0、LFB1 两个模块，分别是 f_sum.h 和 main.c 对应的汇编代码。</span><br><span class="line">其中 ```call    puts@PLT``` 调用的是 *printf* 函数，</span><br></pre></td></tr></table></figure>
 <p>movl    $3, %esi<br>movl    $2, %edi<br>call    f_sum<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">```call f_sum``` 调用的是 *f_sum* 函数，f_sum 中执行 addl 是求和运算。</span><br><span class="line">### 2.4 汇编阶段</span><br><span class="line"></span><br><span class="line">汇编阶段用汇编文件生成机器码，命令是 ```gcc -c ```。</span><br><span class="line"></span><br><span class="line">执行 ```gcc -c hello.s``` 得到 *hello.o*，执行 ```objdump -d hello.o``` 查看 *hello.o* 内容，</span><br></pre></td></tr></table></figure><br>hello.o：     文件格式 elf64-x86-64<br>Disassembly of section .text:</p>
 <p>0000000000000000 <f_sum>:<br>   0:   55                      push   %rbp<br>   1:   48 89 e5                mov    %rsp,%rbp<br>   4:   89 7d fc                mov    %edi,-0x4(%rbp)<br>   7:   89 75 f8                mov    %esi,-0x8(%rbp)<br>   a:   8b 55 fc                mov    -0x4(%rbp),%edx<br>   d:   8b 45 f8                mov    -0x8(%rbp),%eax<br>  10:   01 d0                   add    %edx,%eax<br>  12:   5d                      pop    %rbp<br>  13:   c3                      retq</p>
-<p>0000000000000014 <main>:<br>  14:   55                      push   %rbp<br>  15:   48 89 e5                mov    %rsp,%rbp<br>  18:   48 83 ec 10             sub    $0x10,%rsp<br>  1c:   c7 45 fc 00 00 00 00    movl   $0x0,-0x4(%rbp)<br>  23:   48 8d 3d 00 00 00 00    lea    0x0(%rip),%rdi        # 2a <main+0x16><br>  2a:   e8 00 00 00 00          callq  2f <main+0x1b><br>  2f:   be 03 00 00 00          mov    $0x3,%esi<br>  34:   bf 02 00 00 00          mov    $0x2,%edi<br>  39:   e8 00 00 00 00          callq  3e <main+0x2a><br>  3e:   89 45 fc                mov    %eax,-0x4(%rbp)<br>  41:   8b 45 fc                mov    -0x4(%rbp),%eax<br>  44:   89 c6                   mov    %eax,%esi<br>  46:   48 8d 3d 00 00 00 00    lea    0x0(%rip),%rdi        # 4d <main+0x39><br>  4d:   b8 00 00 00 00          mov    $0x0,%eax<br>  52:   e8 00 00 00 00          callq  57 <main+0x43><br>  57:   b8 00 00 00 00          mov    $0x0,%eax<br>  5c:   c9                      leaveq<br>  5d:   c3                      retq<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">第一行指明目标平台，第二行指出是对机器码的反汇编文件，尖括号 &lt;&gt; 指明对哪个函数的反汇编，左边是机器码，右边是对应的汇编带啊吗。</span><br><span class="line"></span><br><span class="line">可以看到在调用函数的语句处，*callq* 指令的地址是 00 00 00 00，并没有填入有效的函数地址，经过链接才填入，此时的文件被称作可重定位目标文件，即各节代码都是以 0 地址作为开始，但是将它们链接在一起时，会放入不重叠的地址空间。</span><br><span class="line"></span><br><span class="line">### 2.5 链接阶段</span><br><span class="line"></span><br><span class="line">汇编阶段生成的目标机器码并没有填入调用函数的地址，链接阶段完成这一过程。链接阶段为各个模块的目标代码在程序空间（运行时进程空间、虚拟地址）中指定它们独立的、不重叠的位置和区间，这个过程叫做“布局”。对未确定的目标地址，如汇编阶段 *callq* 指令全 0 的地址，需要用布局后的对应的函数地址填充，这个过程称作“重定位”。执行 ```gcc hello.o -o hello``` 生成文件 *hello*，然后执行 ```objdump -d hello``` ，显示如下：</span><br></pre></td></tr></table></figure><br>000000000000069e <main>:<br> 69e:   55                      push   %rbp<br> 69f:   48 89 e5                mov    %rsp,%rbp<br> 6a2:   48 83 ec 10             sub    $0x10,%rsp<br> 6a6:   c7 45 fc 00 00 00 00    movl   $0x0,-0x4(%rbp)<br> 6ad:   48 8d 3d c0 00 00 00    lea    0xc0(%rip),%rdi        # 774 <_IO_stdin_used+0x4><br> 6b4:   e8 97 fe ff ff          callq  550 <a href="&#109;&#97;&#x69;&#108;&#116;&#x6f;&#58;&#112;&#117;&#116;&#x73;&#64;&#112;&#x6c;&#116;">&#112;&#117;&#116;&#x73;&#64;&#112;&#x6c;&#116;</a><br> 6b9:   be 03 00 00 00          mov    $0x3,%esi<br> 6be:   bf 02 00 00 00          mov    $0x2,%edi<br> 6c3:   e8 c2 ff ff ff          callq  68a <f_sum><br> 6c8:   89 45 fc                mov    %eax,-0x4(%rbp)<br> 6cb:   8b 45 fc                mov    -0x4(%rbp),%eax<br> 6ce:   89 c6                   mov    %eax,%esi<br> 6d0:   48 8d 3d aa 00 00 00    lea    0xaa(%rip),%rdi        # 781 <_IO_stdin_used+0x11><br> 6d7:   b8 00 00 00 00          mov    $0x0,%eax<br> 6dc:   e8 7f fe ff ff          callq  560 <a href="&#109;&#x61;&#x69;&#108;&#116;&#111;&#x3a;&#112;&#x72;&#105;&#110;&#116;&#x66;&#x40;&#112;&#108;&#116;">&#112;&#x72;&#105;&#110;&#116;&#x66;&#x40;&#112;&#108;&#116;</a><br> 6e1:   b8 00 00 00 00          mov    $0x0,%eax<br> 6e6:   c9                      leaveq<br> 6e7:   c3                      retq<br> 6e8:   0f 1f 84 00 00 00 00    nopl   0x0(%rax,%rax,1)<br> 6ef:   00</p>
+<p>0000000000000014 <main>:<br>  14:   55                      push   %rbp<br>  15:   48 89 e5                mov    %rsp,%rbp<br>  18:   48 83 ec 10             sub    $0x10,%rsp<br>  1c:   c7 45 fc 00 00 00 00    movl   $0x0,-0x4(%rbp)<br>  23:   48 8d 3d 00 00 00 00    lea    0x0(%rip),%rdi        # 2a <main+0x16><br>  2a:   e8 00 00 00 00          callq  2f <main+0x1b><br>  2f:   be 03 00 00 00          mov    $0x3,%esi<br>  34:   bf 02 00 00 00          mov    $0x2,%edi<br>  39:   e8 00 00 00 00          callq  3e <main+0x2a><br>  3e:   89 45 fc                mov    %eax,-0x4(%rbp)<br>  41:   8b 45 fc                mov    -0x4(%rbp),%eax<br>  44:   89 c6                   mov    %eax,%esi<br>  46:   48 8d 3d 00 00 00 00    lea    0x0(%rip),%rdi        # 4d <main+0x39><br>  4d:   b8 00 00 00 00          mov    $0x0,%eax<br>  52:   e8 00 00 00 00          callq  57 <main+0x43><br>  57:   b8 00 00 00 00          mov    $0x0,%eax<br>  5c:   c9                      leaveq<br>  5d:   c3                      retq<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">第一行指明目标平台，第二行指出是对机器码的反汇编文件，尖括号 &lt;&gt; 指明对哪个函数的反汇编，左边是机器码，右边是对应的汇编带啊吗。</span><br><span class="line"></span><br><span class="line">可以看到在调用函数的语句处，*callq* 指令的地址是 00 00 00 00，并没有填入有效的函数地址，经过链接才填入，此时的文件被称作可重定位目标文件，即各节代码都是以 0 地址作为开始，但是将它们链接在一起时，会放入不重叠的地址空间。</span><br><span class="line"></span><br><span class="line">### 2.5 链接阶段</span><br><span class="line"></span><br><span class="line">汇编阶段生成的目标机器码并没有填入调用函数的地址，链接阶段完成这一过程。链接阶段为各个模块的目标代码在程序空间（运行时进程空间、虚拟地址）中指定它们独立的、不重叠的位置和区间，这个过程叫做“布局”。对未确定的目标地址，如汇编阶段 *callq* 指令全 0 的地址，需要用布局后的对应的函数地址填充，这个过程称作“重定位”。执行 ```gcc hello.o -o hello``` 生成文件 *hello*，然后执行 ```objdump -d hello``` ，显示如下：</span><br></pre></td></tr></table></figure><br>000000000000069e <main>:<br> 69e:   55                      push   %rbp<br> 69f:   48 89 e5                mov    %rsp,%rbp<br> 6a2:   48 83 ec 10             sub    $0x10,%rsp<br> 6a6:   c7 45 fc 00 00 00 00    movl   $0x0,-0x4(%rbp)<br> 6ad:   48 8d 3d c0 00 00 00    lea    0xc0(%rip),%rdi        # 774 <_IO_stdin_used+0x4><br> 6b4:   e8 97 fe ff ff          callq  550 <a href="&#x6d;&#x61;&#x69;&#x6c;&#x74;&#111;&#58;&#112;&#x75;&#116;&#115;&#64;&#x70;&#108;&#x74;">&#112;&#x75;&#116;&#115;&#64;&#x70;&#108;&#x74;</a><br> 6b9:   be 03 00 00 00          mov    $0x3,%esi<br> 6be:   bf 02 00 00 00          mov    $0x2,%edi<br> 6c3:   e8 c2 ff ff ff          callq  68a <f_sum><br> 6c8:   89 45 fc                mov    %eax,-0x4(%rbp)<br> 6cb:   8b 45 fc                mov    -0x4(%rbp),%eax<br> 6ce:   89 c6                   mov    %eax,%esi<br> 6d0:   48 8d 3d aa 00 00 00    lea    0xaa(%rip),%rdi        # 781 <_IO_stdin_used+0x11><br> 6d7:   b8 00 00 00 00          mov    $0x0,%eax<br> 6dc:   e8 7f fe ff ff          callq  560 <a href="&#109;&#97;&#105;&#x6c;&#116;&#x6f;&#x3a;&#x70;&#114;&#105;&#110;&#116;&#102;&#x40;&#112;&#108;&#116;">&#x70;&#114;&#105;&#110;&#116;&#102;&#x40;&#112;&#108;&#116;</a><br> 6e1:   b8 00 00 00 00          mov    $0x0,%eax<br> 6e6:   c9                      leaveq<br> 6e7:   c3                      retq<br> 6e8:   0f 1f 84 00 00 00 00    nopl   0x0(%rax,%rax,1)<br> 6ef:   00</p>
 <p>```</p>
 <p>将 0x550、0x68a 分别填入 <em>callq</em> 地址，对 <em>f_sum</em>调用使用了静态链接，在程序创建后就已经确定。查看 <em>printf</em> 调用地址发现该地址位于 <em>section.plt</em>，并且对应一条跳转指令，这涉及动态链接概念，创建可执行文件时仍不确定 <em>printf</em> 所在位置，需要运行时才能确定函数地址，当前暂时只想一个辅助代码的位置 <em>.plt</em> 处。</p>
 ]]></content>
@@ -105,9 +110,21 @@ return 0;
       </tags>
   </entry>
   <entry>
-    <title>Cpp_rules</title>
-    <url>/2023/11/26/Cpp-rules/</url>
-    <content><![CDATA[]]></content>
+    <title>gdb 使用</title>
+    <url>/2020/10/16/gdb-note/</url>
+    <content><![CDATA[<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
+<li><a href="[hanxinle/100-gdb-tips: A collection of gdb tips. 100 maybe just mean many here. (github.com"> A collection of gdb tips</a>](<a href="https://github.com/hanxinle/100-gdb-tips">https://github.com/hanxinle/100-gdb-tips</a>))</li>
+<li><a href="https://github.com/hellogcc/100-gcc-tips">A collection of gcc tips</a></li>
+</ol>
+<h1 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h1><span id="more"></span>
+<p><img src="gdb1.png" alt=""><br><img src="gdb2.png" alt=""><br><img src="gdb3.png" alt=""></p>
+<h1 id="补充用法"><a href="#补充用法" class="headerlink" title="补充用法"></a>补充用法</h1><h2 id="1-设置运行参数"><a href="#1-设置运行参数" class="headerlink" title="1 设置运行参数."></a>1 设置运行参数.</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">set</span> args &lt;your args&gt;</span><br></pre></td></tr></table></figure>
+<p><em>c</em>会运行到程序结束，<em>finish</em> 跳出 <em>step over(快捷键 s)</em> 进入的函数.  </p>
+<h2 id="2-vim-编辑代码"><a href="#2-vim-编辑代码" class="headerlink" title="2 vim 编辑代码"></a>2 vim 编辑代码</h2><p>终端中输入 <code>export EDITOR=vim</code>  后在 gdb 中输入 <em>edit</em> 即可在 vim 中打开文件.</p>
+]]></content>
+      <tags>
+        <tag>gcc/gdb</tag>
+      </tags>
   </entry>
   <entry>
     <title>GitHub 使用</title>
@@ -245,23 +262,6 @@ return 0;
       </tags>
   </entry>
   <entry>
-    <title>gdb 使用</title>
-    <url>/2020/10/16/gdb-note/</url>
-    <content><![CDATA[<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
-<li><a href="[hanxinle/100-gdb-tips: A collection of gdb tips. 100 maybe just mean many here. (github.com"> A collection of gdb tips</a>](<a href="https://github.com/hanxinle/100-gdb-tips">https://github.com/hanxinle/100-gdb-tips</a>))</li>
-<li><a href="https://github.com/hellogcc/100-gcc-tips">A collection of gcc tips</a></li>
-</ol>
-<h1 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h1><span id="more"></span>
-<p><img src="gdb1.png" alt=""><br><img src="gdb2.png" alt=""><br><img src="gdb3.png" alt=""></p>
-<h1 id="补充用法"><a href="#补充用法" class="headerlink" title="补充用法"></a>补充用法</h1><h2 id="1-设置运行参数"><a href="#1-设置运行参数" class="headerlink" title="1 设置运行参数."></a>1 设置运行参数.</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">set</span> args &lt;your args&gt;</span><br></pre></td></tr></table></figure>
-<p><em>c</em>会运行到程序结束，<em>finish</em> 跳出 <em>step over(快捷键 s)</em> 进入的函数.  </p>
-<h2 id="2-vim-编辑代码"><a href="#2-vim-编辑代码" class="headerlink" title="2 vim 编辑代码"></a>2 vim 编辑代码</h2><p>终端中输入 <code>export EDITOR=vim</code>  后在 gdb 中输入 <em>edit</em> 即可在 vim 中打开文件.</p>
-]]></content>
-      <tags>
-        <tag>gcc/gdb</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Git 案例</title>
     <url>/2023/07/22/gitsamples/</url>
     <content><![CDATA[<p>本文记录记录一些实际操作的案例，可以结合 <a href="https://hanxinle.github.io/2019/09/29/github-note/">GitHub 基本操作教程</a> 在工作中熟悉 Git 的使用。</p>
@@ -326,7 +326,7 @@ return 0;
   </entry>
   <entry>
     <title>补充 hexo 博客的使用</title>
-    <url>/2024/03/29/hhhh/</url>
+    <url>/2024/03/29/hexo_slide/</url>
     <content><![CDATA[<p>恢复重建</p>
 <p>删除</p>
 <p>更新</p>
@@ -552,17 +552,6 @@ return 0;
       </tags>
   </entry>
   <entry>
-    <title>OpenGL小记</title>
-    <url>/2023/01/07/opengl-1/</url>
-    <content><![CDATA[<h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><h2 id="写作目的"><a href="#写作目的" class="headerlink" title="写作目的"></a>写作目的</h2><p>记录 OpenGL 学习的环境准备工作，为了下一步学习扫清障碍。<br><span id="more"></span></p>
-<h2 id="GitHub-Repo-of-Mine"><a href="#GitHub-Repo-of-Mine" class="headerlink" title="GitHub Repo of Mine"></a>GitHub Repo of Mine</h2><p><a href="https://github.com/hanxinle/opengl_stuff">hanxinle/opengl_stuff</a></p>
-<h2 id="术语解释"><a href="#术语解释" class="headerlink" title="术语解释"></a>术语解释</h2><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="https://learnopengl-cn.github.io/">1 learn-opengl-cn</a><br><a href="https://github.com/JoeyDeVries/LearnOpenGL">2 资料1对应的 GitHub</a><br>3 <a href="https://github.com/TheCherno/OpenGL">TheCherno OpenGL 教程整理的工程</a><br>4 计算机图像学（使用OpenGL和C++）【书籍】</p>
-<!-- more -->]]></content>
-      <tags>
-        <tag>OpenGL</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>使用 OBS 开发零散记录</title>
     <url>/2023/07/04/obs-src-dev/</url>
     <content><![CDATA[<p>这个笔记比较乱，记录下 OBS 源码分析和使用 OBS 开发的一些做法。</p>
@@ -635,6 +624,17 @@ return 0;
       </tags>
   </entry>
   <entry>
+    <title>OpenGL小记</title>
+    <url>/2023/01/07/opengl-1/</url>
+    <content><![CDATA[<h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><h2 id="写作目的"><a href="#写作目的" class="headerlink" title="写作目的"></a>写作目的</h2><p>记录 OpenGL 学习的环境准备工作，为了下一步学习扫清障碍。<br><span id="more"></span></p>
+<h2 id="GitHub-Repo-of-Mine"><a href="#GitHub-Repo-of-Mine" class="headerlink" title="GitHub Repo of Mine"></a>GitHub Repo of Mine</h2><p><a href="https://github.com/hanxinle/opengl_stuff">hanxinle/opengl_stuff</a></p>
+<h2 id="术语解释"><a href="#术语解释" class="headerlink" title="术语解释"></a>术语解释</h2><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="https://learnopengl-cn.github.io/">1 learn-opengl-cn</a><br><a href="https://github.com/JoeyDeVries/LearnOpenGL">2 资料1对应的 GitHub</a><br>3 <a href="https://github.com/TheCherno/OpenGL">TheCherno OpenGL 教程整理的工程</a><br>4 计算机图像学（使用OpenGL和C++）【书籍】</p>
+<!-- more -->]]></content>
+      <tags>
+        <tag>OpenGL</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>程序的内存布局</title>
     <url>/2020/08/16/process-memory/</url>
     <content><![CDATA[<p>在命令行中运行程序的过程，是命令行会对程序进行复制，然后创建一个进程运行这个程序。因此，程序的内存结构所涉及的操作系统术语应该是 <strong>Linux 内存管理</strong>。<br><span id="more"></span><br><img src="linux_process_mem.jpg" alt="linux 逻辑内存空间布局"><br><img src="linux_process_mem_all.jpg" alt="linux 逻辑内存空间布局-all"></p>
@@ -648,24 +648,6 @@ return 0;
       <tags>
         <tag>gcc/gdb</tag>
         <tag>Linux</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>SRS 多种手段推拉流</title>
-    <url>/2021/07/18/push-pull-stream-with-srs/</url>
-    <content><![CDATA[<p>这篇文章记录几种与 SRS 之间推拉流的方法。<br><span id="more"></span></p>
-<h1 id="docker"><a href="#docker" class="headerlink" title="docker"></a>docker</h1><p>Docker 安装在 Windows 平台使用，这里备注两个使用时遇到的坑。一个是关于镜像保存，另一个是关于使用环境。容易使用的镜像因为对端口等有修改，所以每次使用后需要 commit，本地备份镜像的命令是：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker commit &lt;image-id&gt; &lt;usr-defined-name&gt;</span><br></pre></td></tr></table></figure></p>
-<p><usr-defined-name> 的建议的格式如下，不遵守格式会引发问题。<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;usr-name&gt;/&lt;container-name&gt;:&lt;tag&gt;</span><br></pre></td></tr></table></figure><br>我使用的名字是benjamin199/srs-4release:latest。<br>commit后的推送命令是：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker push benjamin199/srs-4release:latest</span><br></pre></td></tr></table></figure><br>推送时如果遇到如下报错：denied: requested access to the resource is denied.这就是因为镜像命名不规范而引发的错误，按照上述重新 commit 并且push可以解决这个问题。</p>
-<p>docker在Windows上使用还有其它的一些坑，需要如下操作避开。<br>首先，按照docker的教程开启 Hyper-V、Linux子系统，后续会少麻烦。另外，要在应用商店搜索Ubuntu，我安装的是Ubuntu18（不收费）。<br>其次，如果启动docker提示 WSL无法启动，正确的解决方法是：按照老外的方法，卸载docker重新安装最新版，不要花费时间去重新设置docker，重新设置的方式行不通。<br>最后，无法加载镜像，docker无法启动，提示端口被占用，或者permission dennied, can not access 等。遇到这类情况，重启系统。如果还有这类问题，重新安装最新版docker。</p>
-<p>docker部署后的推拉流命令分别如下：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -re -i a.flv -vcodec copy -acodec copy -f flv -y rtmp://localhost/live/livestream</span><br><span class="line"></span><br><span class="line">ffplay -x 640 -y 480 rtmp://localhost/live/livestream</span><br></pre></td></tr></table></figure></p>
-<h1 id="obs"><a href="#obs" class="headerlink" title="obs"></a>obs</h1><p>obs推拉流的坑在于密钥，实际上这是流的名字。使用obs的时候发现遇到一个问题，就是64位的软件会崩溃，因此操作使用32位。</p>
-<h1 id="webrtc拉流"><a href="#webrtc拉流" class="headerlink" title="webrtc拉流"></a>webrtc拉流</h1><p>webrtc拉流可以使用的配置文件是rtc2rtmp.conf，把rtc_server中的candidata修改为云主机的外部ip，启动srs<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cd srs/trunk</span><br><span class="line">./objs/srs -c conf/rtc2rtmp.conf</span><br></pre></td></tr></table></figure><br>启动srs后，本地需要推流以产生视频源，<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -re -i a.flv -vcodec copy -acodec copy -f flv -y rtmp://&lt;domain-name or ip&gt;/live/livestream</span><br></pre></td></tr></table></figure></p>
-<h1 id="vlc"><a href="#vlc" class="headerlink" title="vlc"></a>vlc</h1><h2 id="vlc推流"><a href="#vlc推流" class="headerlink" title="vlc推流"></a>vlc推流</h2><p>菜单栏选择“媒体”-“流”，在“打开媒体”中选择“添加”添加媒体后点击“串流”，在“流输出”中设置rtsp后点击添加，端口6554不变，路径填上11，“流输出”的“激活转码”不选择，“串流所有基本流”也不选择，最后单击“流”。</p>
-<h2 id="vlc拉流"><a href="#vlc拉流" class="headerlink" title="vlc拉流"></a>vlc拉流</h2><p>“媒体”——“打开网络串流”，如果是rtsp链接，可以填写如下rtsp://@:8554/11，其中@表示localhost，有些时候不添加可能会掉坑。</p>
-<h1 id="FFmpeg推拉流"><a href="#FFmpeg推拉流" class="headerlink" title="FFmpeg推拉流"></a>FFmpeg推拉流</h1><p>获取摄像头名称：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -list_devices true -f dshow -i dummy</span><br></pre></td></tr></table></figure><br>摄像头推流命令，其中-s控制的是分辨率:<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -f dshow -i video=&quot;HD Webcam eMeet C960&quot; -vcodec libx264 -acodec copy -preset:v ultrafast -tune:v zerolatency -s 320x240 -f flv rtmp://&lt;ip or domain-name&gt;/live/livestream4</span><br></pre></td></tr></table></figure><br>文件推流命令：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -re -i a.flv -vcodec copy -acodec copy -f flv -y rtmp://localhost/live/livestream</span><br></pre></td></tr></table></figure></p>
-]]></content>
-      <tags>
-        <tag>SRS</tag>
       </tags>
   </entry>
   <entry>
@@ -690,6 +672,24 @@ return 0;
 ]]></content>
       <tags>
         <tag>C++</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SRS 多种手段推拉流</title>
+    <url>/2021/07/18/push-pull-stream-with-srs/</url>
+    <content><![CDATA[<p>这篇文章记录几种与 SRS 之间推拉流的方法。<br><span id="more"></span></p>
+<h1 id="docker"><a href="#docker" class="headerlink" title="docker"></a>docker</h1><p>Docker 安装在 Windows 平台使用，这里备注两个使用时遇到的坑。一个是关于镜像保存，另一个是关于使用环境。容易使用的镜像因为对端口等有修改，所以每次使用后需要 commit，本地备份镜像的命令是：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker commit &lt;image-id&gt; &lt;usr-defined-name&gt;</span><br></pre></td></tr></table></figure></p>
+<p><usr-defined-name> 的建议的格式如下，不遵守格式会引发问题。<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;usr-name&gt;/&lt;container-name&gt;:&lt;tag&gt;</span><br></pre></td></tr></table></figure><br>我使用的名字是benjamin199/srs-4release:latest。<br>commit后的推送命令是：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker push benjamin199/srs-4release:latest</span><br></pre></td></tr></table></figure><br>推送时如果遇到如下报错：denied: requested access to the resource is denied.这就是因为镜像命名不规范而引发的错误，按照上述重新 commit 并且push可以解决这个问题。</p>
+<p>docker在Windows上使用还有其它的一些坑，需要如下操作避开。<br>首先，按照docker的教程开启 Hyper-V、Linux子系统，后续会少麻烦。另外，要在应用商店搜索Ubuntu，我安装的是Ubuntu18（不收费）。<br>其次，如果启动docker提示 WSL无法启动，正确的解决方法是：按照老外的方法，卸载docker重新安装最新版，不要花费时间去重新设置docker，重新设置的方式行不通。<br>最后，无法加载镜像，docker无法启动，提示端口被占用，或者permission dennied, can not access 等。遇到这类情况，重启系统。如果还有这类问题，重新安装最新版docker。</p>
+<p>docker部署后的推拉流命令分别如下：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -re -i a.flv -vcodec copy -acodec copy -f flv -y rtmp://localhost/live/livestream</span><br><span class="line"></span><br><span class="line">ffplay -x 640 -y 480 rtmp://localhost/live/livestream</span><br></pre></td></tr></table></figure></p>
+<h1 id="obs"><a href="#obs" class="headerlink" title="obs"></a>obs</h1><p>obs推拉流的坑在于密钥，实际上这是流的名字。使用obs的时候发现遇到一个问题，就是64位的软件会崩溃，因此操作使用32位。</p>
+<h1 id="webrtc拉流"><a href="#webrtc拉流" class="headerlink" title="webrtc拉流"></a>webrtc拉流</h1><p>webrtc拉流可以使用的配置文件是rtc2rtmp.conf，把rtc_server中的candidata修改为云主机的外部ip，启动srs<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cd srs/trunk</span><br><span class="line">./objs/srs -c conf/rtc2rtmp.conf</span><br></pre></td></tr></table></figure><br>启动srs后，本地需要推流以产生视频源，<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -re -i a.flv -vcodec copy -acodec copy -f flv -y rtmp://&lt;domain-name or ip&gt;/live/livestream</span><br></pre></td></tr></table></figure></p>
+<h1 id="vlc"><a href="#vlc" class="headerlink" title="vlc"></a>vlc</h1><h2 id="vlc推流"><a href="#vlc推流" class="headerlink" title="vlc推流"></a>vlc推流</h2><p>菜单栏选择“媒体”-“流”，在“打开媒体”中选择“添加”添加媒体后点击“串流”，在“流输出”中设置rtsp后点击添加，端口6554不变，路径填上11，“流输出”的“激活转码”不选择，“串流所有基本流”也不选择，最后单击“流”。</p>
+<h2 id="vlc拉流"><a href="#vlc拉流" class="headerlink" title="vlc拉流"></a>vlc拉流</h2><p>“媒体”——“打开网络串流”，如果是rtsp链接，可以填写如下rtsp://@:8554/11，其中@表示localhost，有些时候不添加可能会掉坑。</p>
+<h1 id="FFmpeg推拉流"><a href="#FFmpeg推拉流" class="headerlink" title="FFmpeg推拉流"></a>FFmpeg推拉流</h1><p>获取摄像头名称：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -list_devices true -f dshow -i dummy</span><br></pre></td></tr></table></figure><br>摄像头推流命令，其中-s控制的是分辨率:<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -f dshow -i video=&quot;HD Webcam eMeet C960&quot; -vcodec libx264 -acodec copy -preset:v ultrafast -tune:v zerolatency -s 320x240 -f flv rtmp://&lt;ip or domain-name&gt;/live/livestream4</span><br></pre></td></tr></table></figure><br>文件推流命令：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -re -i a.flv -vcodec copy -acodec copy -f flv -y rtmp://localhost/live/livestream</span><br></pre></td></tr></table></figure></p>
+]]></content>
+      <tags>
+        <tag>SRS</tag>
       </tags>
   </entry>
   <entry>
@@ -746,6 +746,23 @@ return 0;
       </tags>
   </entry>
   <entry>
+    <title>技术的简单性、累积性和组合性</title>
+    <url>/2021/04/21/tech-talk/</url>
+    <content><![CDATA[<p>刚刚在公众号“道哥的黑板报”，看了道哥最新的文章《如何看待一项技术：技术的本质》，文中的观点与我最近的感悟不谋而合。<span id="more"></span>但道哥思考得更深刻，得出的结论更加广博。</p>
+<p>技术是简单的，不是复杂的。技术可以是新的生产力，也可以是新的体验。新的生产力的表现在于提升了生产效率，解决了问题，这是实践主义和实用主义者应当关心的内容。新的体验是理论研究的范畴，新的理论可以和生产力和解决问题没有关系，一种可能的情况是，提供了新的解决问题的思路，但暂时还没有体现出生产力。</p>
+<p>技术很简单，道哥把技术的要素定义为：效率、成本、通用性、安全。其中效率是技术的主要价值目标，是一项新技术的出发点和根本。技术提升了效率，获得了新的能力。效率提升后，技术还需要进一步解决成本问题、通用性问题、安全问题，才能够扩大影响力和普及程度，形成生生不息的良性循环，进而改变世界。</p>
+<p>道哥以工业革命为例，简述了技术诞生-改进-改变世界的全过程。纵观每一次影响世界的技术革命，我们几乎都能看到类似的生命周期，一项新技术诞生之初，先解决效率问题，再依次解决成本、通用性和安全问题，最后新技术走向普及。</p>
+<p>并且道哥给出了技术人员可以怎么做：“通过「结构与组合」的方式。如果玩过一款叫「文明」的游戏，就会理解「科技树」这个概念。科技树非常形象的表达了，一项新的科技的诞生，是以其他已有科技为基础的。那么技术的创造方式就在于，通过不同现有技术之间的组合，搭建出一种新的结构，去解决一个特定的问题。因此从某种意义上来说，技术即解决方案。</p>
+<p>这里面的玄妙之处，在于如何搭建出一种的结构。不同的人会选用不同的原子技术，来搭建出不同的结构。而结构搭建的方式，则体现了各种各样的奇思妙想，或者背后有着某种理论指导。这是充满了知识和创意的地方。也是通过这样的结构搭建，才有效解决了效率、成本、通用性和安全的问题。因此原子技术很重要，结构也很重要。技术的创造方式，就是结构与组合。瓦特在改进纽科门蒸汽机时，做的两项设计改进：分离式的冷凝器，以及曲柄传动，就是典型的结构与组合的再设计，进而解决了纽科门蒸汽机的成本和通用性的问题。</p>
+<p>所有的技术扒开来看，都不神秘，都可以用很简单的原理和语言来描绘。”</p>
+<p>我的经验是，在结构和组合前，一定要先建立一个整体的大局观，然后从最有正反馈的地方着手，即先跑起来，然后边积累边改进，改进的具体方法就是结构和组合的方式，即注意整体中短板部分的改进。</p>
+<p>这样一点点积累，一个点只有组合为一个部件才是有生命力的，而改进的对象就是一个个部件。其次才是部件的组合，道哥讲述了结构性和组合性，我则发现最适合自己的是整体性-累积性，累积到部件再和道哥的理论研究结合起来，最大效率吸收旧技术的精华，同时催生新技术，迸发新技术的能量。</p>
+]]></content>
+      <tags>
+        <tag>技术思考</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>状态模式实现与内存泄漏问题解决</title>
     <url>/2023/01/14/state-design-pattern-and-memory-leak/</url>
     <content><![CDATA[<h1 id="1-引言"><a href="#1-引言" class="headerlink" title="1 引言"></a>1 引言</h1><h2 id="1-1-写作背景"><a href="#1-1-写作背景" class="headerlink" title="1.1 写作背景"></a>1.1 写作背景</h2><p>我看的设计模式资料使用 C# 和 Java 实现，这两种语言不需要处理内存泄漏问题。后续发现按照资料仿写的 C++ 代码有内存泄漏的情况，于是尝试解决这个问题，对 C++ 有新的理解，故记录之。<span id="more"></span></p>
@@ -773,45 +790,6 @@ return 0;
       <tags>
         <tag>C++</tag>
         <tag>设计模式</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>技术的简单性、累积性和组合性</title>
-    <url>/2021/04/21/tech-talk/</url>
-    <content><![CDATA[<p>刚刚在公众号“道哥的黑板报”，看了道哥最新的文章《如何看待一项技术：技术的本质》，文中的观点与我最近的感悟不谋而合。<span id="more"></span>但道哥思考得更深刻，得出的结论更加广博。</p>
-<p>技术是简单的，不是复杂的。技术可以是新的生产力，也可以是新的体验。新的生产力的表现在于提升了生产效率，解决了问题，这是实践主义和实用主义者应当关心的内容。新的体验是理论研究的范畴，新的理论可以和生产力和解决问题没有关系，一种可能的情况是，提供了新的解决问题的思路，但暂时还没有体现出生产力。</p>
-<p>技术很简单，道哥把技术的要素定义为：效率、成本、通用性、安全。其中效率是技术的主要价值目标，是一项新技术的出发点和根本。技术提升了效率，获得了新的能力。效率提升后，技术还需要进一步解决成本问题、通用性问题、安全问题，才能够扩大影响力和普及程度，形成生生不息的良性循环，进而改变世界。</p>
-<p>道哥以工业革命为例，简述了技术诞生-改进-改变世界的全过程。纵观每一次影响世界的技术革命，我们几乎都能看到类似的生命周期，一项新技术诞生之初，先解决效率问题，再依次解决成本、通用性和安全问题，最后新技术走向普及。</p>
-<p>并且道哥给出了技术人员可以怎么做：“通过「结构与组合」的方式。如果玩过一款叫「文明」的游戏，就会理解「科技树」这个概念。科技树非常形象的表达了，一项新的科技的诞生，是以其他已有科技为基础的。那么技术的创造方式就在于，通过不同现有技术之间的组合，搭建出一种新的结构，去解决一个特定的问题。因此从某种意义上来说，技术即解决方案。</p>
-<p>这里面的玄妙之处，在于如何搭建出一种的结构。不同的人会选用不同的原子技术，来搭建出不同的结构。而结构搭建的方式，则体现了各种各样的奇思妙想，或者背后有着某种理论指导。这是充满了知识和创意的地方。也是通过这样的结构搭建，才有效解决了效率、成本、通用性和安全的问题。因此原子技术很重要，结构也很重要。技术的创造方式，就是结构与组合。瓦特在改进纽科门蒸汽机时，做的两项设计改进：分离式的冷凝器，以及曲柄传动，就是典型的结构与组合的再设计，进而解决了纽科门蒸汽机的成本和通用性的问题。</p>
-<p>所有的技术扒开来看，都不神秘，都可以用很简单的原理和语言来描绘。”</p>
-<p>我的经验是，在结构和组合前，一定要先建立一个整体的大局观，然后从最有正反馈的地方着手，即先跑起来，然后边积累边改进，改进的具体方法就是结构和组合的方式，即注意整体中短板部分的改进。</p>
-<p>这样一点点积累，一个点只有组合为一个部件才是有生命力的，而改进的对象就是一个个部件。其次才是部件的组合，道哥讲述了结构性和组合性，我则发现最适合自己的是整体性-累积性，累积到部件再和道哥的理论研究结合起来，最大效率吸收旧技术的精华，同时催生新技术，迸发新技术的能量。</p>
-]]></content>
-      <tags>
-        <tag>技术思考</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Visual Studio dll的编写和使用</title>
-    <url>/2014/10/22/vc-dll/</url>
-    <content><![CDATA[<blockquote>
-<p>装载、链接、库（特别是 <em>Linux</em> 平台相关内容）<br><span id="more"></span><br>以前根据本科毕业设计写过一篇关于 VC++6.0 创建 dll 共享的博客，这篇文字简述下 vs2017 下创建动态链接库的操作。</p>
-</blockquote>
-<p>更新：</p>
-<p>现在创建 dll 及使用 dll 不需要原来那么复杂的做法。使用 dll 在同一个解决方案中，创建使用 dll 的项目，设置好项目依赖并且配置好即可使用，无需加载、卸载 dll 过程。</p>
-<p>在 vs2017 动态链接库项目中，自己以前经常程序莫名崩溃，一个原因是在解决方案中没有设置项目依赖关系，另一个原因是在 dll 项目中，需要在“项目属性-链接器-高级-导入库”中进行设置，导出 lib、dll 文件，使用时包含头文件，并且配置好包含路径、库路径、执行路径（dll  所咋路径）就不会再出错了。</p>
-<h2 id="1-dll-不同创建方法"><a href="#1-dll-不同创建方法" class="headerlink" title="1 .dll 不同创建方法"></a>1 <em>.dll</em> 不同创建方法</h2><h3 id="1-1-def-方式"><a href="#1-1-def-方式" class="headerlink" title="1.1 def 方式"></a>1.1 <em>def</em> 方式</h3><p><em>VC++6.0</em> 中，当写好了函数声明及实现文件后，可以添加 .def 文件， 注明要导出的函数即可。<br><figure class="highlight c++"><table><tr><td class="code"><pre><span class="line">LIBRARY <span class="string">&quot;dlltest&quot;</span></span><br><span class="line"></span><br><span class="line">EXPORTS add@<span class="number">1</span></span><br><span class="line">EXPORTS sub@<span class="number">2</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure><br>vs2017 中，创建项目类型中的“动态链接库(DLL)”和这种方式类似，可以添加自己的接口文件和实现文件，添加 .def 文件，在 EXPORTS 下写明函数名即可。<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">LIBRARY</span><br><span class="line"></span><br><span class="line">EXPORTS</span><br><span class="line">add</span><br><span class="line">sub</span><br></pre></td></tr></table></figure></p>
-<h3 id="1-2-具有导出项方式"><a href="#1-2-具有导出项方式" class="headerlink" title="1.2 具有导出项方式"></a>1.2 具有导出项方式</h3><p>这是 vs2017 中另一种创建 DLL 的方式，该方式为外部导出方式，生成的文件可以给其它模块调用。在项目创建时可以选择“具有导出项的动态链接库(DLL)”。在一 .h 文件中，会有如下内容（DLL2 是工程名字）：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#ifdef DLL2_EXPORTS</span><br><span class="line">#define DLL2_API __declspec(dllexport)</span><br><span class="line">#else</span><br><span class="line">#define DLL2_API __declspec(dllimport)</span><br><span class="line">#endif</span><br></pre></td></tr></table></figure><br>将自己编写的接口及实现文件可以拷贝到这个工程中，并且在接口文件上面添加上述内容，同时在需要导出的类、函数、变量等名字前添加 <em>DLL2_API</em>, 如果少量编码，将导出项写在 DLL 入口文件也可以，不需要标记 <em>DLL2_API</em>， 这个工程生的 .def 需要自己手动添加现有项，或者自行创建。</p>
-<h2 id="2-dll-调用"><a href="#2-dll-调用" class="headerlink" title="2 dll 调用"></a>2 dll 调用</h2><p>编译得到 .dll、.lib 文件后，放入相应位置，同一个解决方案中，可在解决方案属性中设置其它项目依赖该 dll 项目，遇到找不到库的情况，配置库目录及预加载的库。</p>
-<h3 id="2-1-显式链接——动态调用"><a href="#2-1-显式链接——动态调用" class="headerlink" title="2.1 显式链接——动态调用"></a>2.1 显式链接——动态调用</h3><p>显式链接是应用程序在执行过程中控制加载、卸载 <em>dll</em> 文件，具有更好的灵活性。加载 <em>dll</em> 获得句柄，获得函数地址，存储在函数指针中调用 dll 中函数，调用结束后释放句柄。</p>
-<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">void</span>)</span>  </span>&#123;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">int</span><span class="params">(*pMax)</span><span class="params">(<span class="type">int</span> a,<span class="type">int</span> b)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">int</span><span class="params">(*pMin)</span><span class="params">(<span class="type">int</span> a,<span class="type">int</span> b)</span></span>;</span><br><span class="line"></span><br><span class="line">HINSTANCE hDLL;</span><br><span class="line">pMax MaxHDLL=<span class="built_in">LoadLibrary</span>(<span class="string">&quot;MyDll.dll&quot;</span>);<span class="comment">//加载动态链接库MyDll.dll文件；</span></span><br><span class="line">Max=(pMax)<span class="built_in">GetProcAddress</span>(hDLL,<span class="string">&quot;Max&quot;</span>);</span><br><span class="line"><span class="type">int</span> maxV=<span class="built_in">Max</span>(<span class="number">5</span>,<span class="number">8</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;比较的结果为%d\n&quot;</span>,maxV);</span><br><span class="line"><span class="built_in">FreeLibrary</span>(hDLL);<span class="comment">//卸载MyDll.dll文件；</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<h3 id="2-2-隐式链接——静态调用"><a href="#2-2-隐式链接——静态调用" class="headerlink" title="2.2 隐式链接——静态调用"></a>2.2 隐式链接——静态调用</h3><p>隐式链接就是在程序开始执行时就将 <em>dll</em> 文件加载到应用程序当中，通过 comment 实现，如下所示：</p>
-<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> comment(lib，<span class="string">&quot;MyDll.lib&quot;</span>)</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span>  </span>&#123;</span><br><span class="line"><span class="type">int</span> result;</span><br><span class="line">result=<span class="built_in">min</span>(<span class="number">8</span>,<span class="number">10</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;比较的结果为%d\n&quot;</span>,result);</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-<p>（PS：该方式看似简单，看是我这边佛系编译，遇到问题真是头大）</p>
-]]></content>
-      <tags>
-        <tag>Windows</tag>
       </tags>
   </entry>
   <entry>
@@ -848,6 +826,28 @@ return 0;
 ]]></content>
       <tags>
         <tag>工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Visual Studio dll的编写和使用</title>
+    <url>/2014/10/22/vc-dll/</url>
+    <content><![CDATA[<blockquote>
+<p>装载、链接、库（特别是 <em>Linux</em> 平台相关内容）<br><span id="more"></span><br>以前根据本科毕业设计写过一篇关于 VC++6.0 创建 dll 共享的博客，这篇文字简述下 vs2017 下创建动态链接库的操作。</p>
+</blockquote>
+<p>更新：</p>
+<p>现在创建 dll 及使用 dll 不需要原来那么复杂的做法。使用 dll 在同一个解决方案中，创建使用 dll 的项目，设置好项目依赖并且配置好即可使用，无需加载、卸载 dll 过程。</p>
+<p>在 vs2017 动态链接库项目中，自己以前经常程序莫名崩溃，一个原因是在解决方案中没有设置项目依赖关系，另一个原因是在 dll 项目中，需要在“项目属性-链接器-高级-导入库”中进行设置，导出 lib、dll 文件，使用时包含头文件，并且配置好包含路径、库路径、执行路径（dll  所咋路径）就不会再出错了。</p>
+<h2 id="1-dll-不同创建方法"><a href="#1-dll-不同创建方法" class="headerlink" title="1 .dll 不同创建方法"></a>1 <em>.dll</em> 不同创建方法</h2><h3 id="1-1-def-方式"><a href="#1-1-def-方式" class="headerlink" title="1.1 def 方式"></a>1.1 <em>def</em> 方式</h3><p><em>VC++6.0</em> 中，当写好了函数声明及实现文件后，可以添加 .def 文件， 注明要导出的函数即可。<br><figure class="highlight c++"><table><tr><td class="code"><pre><span class="line">LIBRARY <span class="string">&quot;dlltest&quot;</span></span><br><span class="line"></span><br><span class="line">EXPORTS add@<span class="number">1</span></span><br><span class="line">EXPORTS sub@<span class="number">2</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure><br>vs2017 中，创建项目类型中的“动态链接库(DLL)”和这种方式类似，可以添加自己的接口文件和实现文件，添加 .def 文件，在 EXPORTS 下写明函数名即可。<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">LIBRARY</span><br><span class="line"></span><br><span class="line">EXPORTS</span><br><span class="line">add</span><br><span class="line">sub</span><br></pre></td></tr></table></figure></p>
+<h3 id="1-2-具有导出项方式"><a href="#1-2-具有导出项方式" class="headerlink" title="1.2 具有导出项方式"></a>1.2 具有导出项方式</h3><p>这是 vs2017 中另一种创建 DLL 的方式，该方式为外部导出方式，生成的文件可以给其它模块调用。在项目创建时可以选择“具有导出项的动态链接库(DLL)”。在一 .h 文件中，会有如下内容（DLL2 是工程名字）：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#ifdef DLL2_EXPORTS</span><br><span class="line">#define DLL2_API __declspec(dllexport)</span><br><span class="line">#else</span><br><span class="line">#define DLL2_API __declspec(dllimport)</span><br><span class="line">#endif</span><br></pre></td></tr></table></figure><br>将自己编写的接口及实现文件可以拷贝到这个工程中，并且在接口文件上面添加上述内容，同时在需要导出的类、函数、变量等名字前添加 <em>DLL2_API</em>, 如果少量编码，将导出项写在 DLL 入口文件也可以，不需要标记 <em>DLL2_API</em>， 这个工程生的 .def 需要自己手动添加现有项，或者自行创建。</p>
+<h2 id="2-dll-调用"><a href="#2-dll-调用" class="headerlink" title="2 dll 调用"></a>2 dll 调用</h2><p>编译得到 .dll、.lib 文件后，放入相应位置，同一个解决方案中，可在解决方案属性中设置其它项目依赖该 dll 项目，遇到找不到库的情况，配置库目录及预加载的库。</p>
+<h3 id="2-1-显式链接——动态调用"><a href="#2-1-显式链接——动态调用" class="headerlink" title="2.1 显式链接——动态调用"></a>2.1 显式链接——动态调用</h3><p>显式链接是应用程序在执行过程中控制加载、卸载 <em>dll</em> 文件，具有更好的灵活性。加载 <em>dll</em> 获得句柄，获得函数地址，存储在函数指针中调用 dll 中函数，调用结束后释放句柄。</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">void</span>)</span>  </span>&#123;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">int</span><span class="params">(*pMax)</span><span class="params">(<span class="type">int</span> a,<span class="type">int</span> b)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">int</span><span class="params">(*pMin)</span><span class="params">(<span class="type">int</span> a,<span class="type">int</span> b)</span></span>;</span><br><span class="line"></span><br><span class="line">HINSTANCE hDLL;</span><br><span class="line">pMax MaxHDLL=<span class="built_in">LoadLibrary</span>(<span class="string">&quot;MyDll.dll&quot;</span>);<span class="comment">//加载动态链接库MyDll.dll文件；</span></span><br><span class="line">Max=(pMax)<span class="built_in">GetProcAddress</span>(hDLL,<span class="string">&quot;Max&quot;</span>);</span><br><span class="line"><span class="type">int</span> maxV=<span class="built_in">Max</span>(<span class="number">5</span>,<span class="number">8</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;比较的结果为%d\n&quot;</span>,maxV);</span><br><span class="line"><span class="built_in">FreeLibrary</span>(hDLL);<span class="comment">//卸载MyDll.dll文件；</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="2-2-隐式链接——静态调用"><a href="#2-2-隐式链接——静态调用" class="headerlink" title="2.2 隐式链接——静态调用"></a>2.2 隐式链接——静态调用</h3><p>隐式链接就是在程序开始执行时就将 <em>dll</em> 文件加载到应用程序当中，通过 comment 实现，如下所示：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> comment(lib，<span class="string">&quot;MyDll.lib&quot;</span>)</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span>  </span>&#123;</span><br><span class="line"><span class="type">int</span> result;</span><br><span class="line">result=<span class="built_in">min</span>(<span class="number">8</span>,<span class="number">10</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;比较的结果为%d\n&quot;</span>,result);</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>（PS：该方式看似简单，看是我这边佛系编译，遇到问题真是头大）</p>
+]]></content>
+      <tags>
+        <tag>Windows</tag>
       </tags>
   </entry>
   <entry>
@@ -1009,61 +1009,6 @@ return 0;
 <h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a><strong>参考资料</strong></h1><p>[1] <a href="https://www.w3cschool.cn/vim/cjtr1pu3.html">w3cscchool 的教程</a></p>
 <p>[2] <a href="https://www.imooc.com/learn/1129">慕课网 PegasusWang 的高质量免费教程</a></p>
 <p>[3] <a href="https://zhuanlan.zhihu.com/p/113316942">Chrome插件Vimium使用教程</a></p>
-]]></content>
-      <tags>
-        <tag>工具</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Windows程序设计总结</title>
-    <url>/2017/08/10/windows-programing-note/</url>
-    <content><![CDATA[<h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><h2 id="文章背景"><a href="#文章背景" class="headerlink" title="文章背景"></a>文章背景</h2><p>对于Windows程序设计抓住主线进行总结，包括 Win32 和少量MFC和Qt的内容。</p>
-<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><span id="more"></span>
-<h1 id="正文和GitHub"><a href="#正文和GitHub" class="headerlink" title="正文和GitHub"></a>正文和GitHub</h1><p>访问以下<a href="https://github.com/hanxinle/Windows-Develop-Notes">链接</a>，可以看到教程在 ReadMe 中，并且有工程。</p>
-]]></content>
-      <tags>
-        <tag>Qt</tag>
-        <tag>Windows</tag>
-        <tag>MFC</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>hexo搭建环境完毕后写博客的步骤</title>
-    <url>/2020/10/27/write-blog-step-by-step/</url>
-    <content><![CDATA[<h1 id="一-发布博客的操作流程"><a href="#一-发布博客的操作流程" class="headerlink" title="一 发布博客的操作流程"></a>一 发布博客的操作流程</h1><p>1 创建新博文<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;博文标题&quot;</span></span><br></pre></td></tr></table></figure><br><span id="more"></span><br>编辑博客，保存。</p>
-<p>参考: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
-<p>2 启动本地服务器地址查看博客<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure></p>
-<p>参考: <a href="https://hexo.io/docs/server.html">Server</a></p>
-<p>3 推送到 Github(hanxinle.github.io)<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$  hexo g &amp;&amp; hexo d</span><br></pre></td></tr></table></figure></p>
-<p>PS: 下面这个命令是教程介绍的，亲测会删掉自己添加的封面等文件，慎用。<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$  hexo clean &amp;&amp; hexo g &amp;&amp; hexo d</span><br></pre></td></tr></table></figure></p>
-<p>参考: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
-<p>参考: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-<ul>
-<li>GitHub页面更新</li>
-</ul>
-<p>更新有延迟，需要等大约1分钟，刷新博客首页可以看到新部署。</p>
-<h1 id="二-在博文中显示公式的方法"><a href="#二-在博文中显示公式的方法" class="headerlink" title="二 在博文中显示公式的方法"></a>二 在博文中显示公式的方法</h1><p>1 在需要插入公式的博客中添加设置条目mathjax并设置值为true:<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: A Title</span><br><span class="line">date: 2020-02-08 10:39:55</span><br><span class="line">tags:</span><br><span class="line">- tag1</span><br><span class="line">- tag2</span><br><span class="line">categories:</span><br><span class="line">- parent</span><br><span class="line">- child</span><br><span class="line"></span><br><span class="line">mathjax: true</span><br><span class="line">---</span><br></pre></td></tr></table></figure></p>
-<p>2 主题next添加公式支持的方法【该博客采用的方案】<br>修改主题所在的_config.yml 文件内容如下（搜索math后修改）<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">math:</span><br><span class="line">  # Default (true) will load mathjax / katex script on demand.</span><br><span class="line">  # That is it only render those page which has `mathjax: true` in Front-matter.</span><br><span class="line">  # If you set it to false, it will load mathjax / katex srcipt EVERY PAGE.</span><br><span class="line">  enable: true</span><br><span class="line">  per_page: true</span><br><span class="line"></span><br><span class="line">  # hexo-renderer-pandoc (or hexo-renderer-kramed) required for full MathJax support.</span><br><span class="line">  mathjax:</span><br><span class="line">    enable: true</span><br><span class="line">    # See: https://mhchem.github.io/MathJax-mhchem/</span><br><span class="line">    mhchem: true</span><br></pre></td></tr></table></figure></p>
-<p>博客的根目录的 _config.yml 文件不需要修改。</p>
-<p>测试公式：   $ f(x) = a+b $</p>
-<p>3 主题butterfly的步骤有3个</p>
-<ul>
-<li><p>安装插件　　</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install hexo-math --save</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>在站点配置文件 _config.yml 中添加：　　</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">math:</span><br><span class="line">  engine: &#x27;mathjax&#x27; # or &#x27;katex&#x27;</span><br><span class="line">  mathjax:</span><br><span class="line">    # src: custom_mathjax_source</span><br><span class="line">    config:</span><br><span class="line">      # MathJax config</span><br></pre></td></tr></table></figure></li>
-<li>在 next 主题配置文件中 themes/butterfly/_config.yml 中将 mathJax 设为 true:</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># MathJax Support</span><br><span class="line">mathjax:</span><br><span class="line">  enable: true</span><br><span class="line">  per_page: false</span><br><span class="line">  cdn: //cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML</span><br></pre></td></tr></table></figure>
-<h1 id="三-图片显示的方法"><a href="#三-图片显示的方法" class="headerlink" title="三 图片显示的方法"></a>三 图片显示的方法</h1><p>在public路径下找到和博客文件同名的文件夹，将图像文件放入其中，在博客中直接引用即可，例如下文<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">![](1.jpg)</span><br></pre></td></tr></table></figure><br>显示如下：<br><img src="1.jpg" alt=""></p>
-<h1 id="四-删掉已经发布的博客的方法"><a href="#四-删掉已经发布的博客的方法" class="headerlink" title="四 删掉已经发布的博客的方法"></a>四 删掉已经发布的博客的方法</h1><p>参考资料：夏普通.2020-10-13.<a href="https://blog.csdn.net/qq_34243930/article/details/109046120#:~:text=%E5%85%B7%E4%BD%93%E6%AD%A5%E9%AA%A4%E5%A6%82%E4%B8%8B%201%20%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%8C%E5%8E%BB%E6%96%87%E4%BB%B6%E5%A4%B9%20source%2F_posts%20%E4%B8%8B%E5%88%A0%E9%99%A4%E4%BD%A0%E6%83%B3%E8%A6%81%E5%88%A0%E9%99%A4%E7%9A%84%E6%96%87%E7%AB%A0%202%20%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%8C%E5%88%A0%E9%99%A4%20.deploy_git,%E5%90%8E%EF%BC%8C%E5%86%8D%E6%89%A7%E8%A1%8C%20hexo%20g%20%EF%BC%8C%20hexo%20g%20%E5%8D%B3%E5%8F%AF%E3%80%82%20%E5%8F%91%E7%8E%B0%E6%96%87%E7%AB%A0%E5%88%A0%E9%99%A4%E6%88%90%E5%8A%9F%E2%9C%94">用Github Pages+Hexo搭建博客之(七)如何删除一篇已经发布的文章 #成功解决：同时删除掉.deploy_git文件夹</a></p>
-<p>步骤如下：</p>
-<ol>
-<li>删掉 <code>source/_posts</code> 下的 .md 博客文件 ;</li>
-<li>删除 <code>.deploy_git</code> 文件夹；</li>
-<li>执行 <code>hexo clean</code>，再执行 <code>hexo g &amp;&amp; hexo d</code>。</li>
-</ol>
 ]]></content>
       <tags>
         <tag>工具</tag>
@@ -1293,6 +1238,61 @@ return 0;
 ]]></content>
       <tags>
         <tag>WebRTC</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Windows程序设计总结</title>
+    <url>/2017/08/10/windows-programing-note/</url>
+    <content><![CDATA[<h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><h2 id="文章背景"><a href="#文章背景" class="headerlink" title="文章背景"></a>文章背景</h2><p>对于Windows程序设计抓住主线进行总结，包括 Win32 和少量MFC和Qt的内容。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><span id="more"></span>
+<h1 id="正文和GitHub"><a href="#正文和GitHub" class="headerlink" title="正文和GitHub"></a>正文和GitHub</h1><p>访问以下<a href="https://github.com/hanxinle/Windows-Develop-Notes">链接</a>，可以看到教程在 ReadMe 中，并且有工程。</p>
+]]></content>
+      <tags>
+        <tag>Qt</tag>
+        <tag>Windows</tag>
+        <tag>MFC</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>hexo搭建环境完毕后写博客的步骤</title>
+    <url>/2020/10/27/write-blog-step-by-step/</url>
+    <content><![CDATA[<h1 id="一-发布博客的操作流程"><a href="#一-发布博客的操作流程" class="headerlink" title="一 发布博客的操作流程"></a>一 发布博客的操作流程</h1><p>1 创建新博文<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;博文标题&quot;</span></span><br></pre></td></tr></table></figure><br><span id="more"></span><br>编辑博客，保存。</p>
+<p>参考: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
+<p>2 启动本地服务器地址查看博客<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure></p>
+<p>参考: <a href="https://hexo.io/docs/server.html">Server</a></p>
+<p>3 推送到 Github(hanxinle.github.io)<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$  hexo g &amp;&amp; hexo d</span><br></pre></td></tr></table></figure></p>
+<p>PS: 下面这个命令是教程介绍的，亲测会删掉自己添加的封面等文件，慎用。<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$  hexo clean &amp;&amp; hexo g &amp;&amp; hexo d</span><br></pre></td></tr></table></figure></p>
+<p>参考: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
+<p>参考: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+<ul>
+<li>GitHub页面更新</li>
+</ul>
+<p>更新有延迟，需要等大约1分钟，刷新博客首页可以看到新部署。</p>
+<h1 id="二-在博文中显示公式的方法"><a href="#二-在博文中显示公式的方法" class="headerlink" title="二 在博文中显示公式的方法"></a>二 在博文中显示公式的方法</h1><p>1 在需要插入公式的博客中添加设置条目mathjax并设置值为true:<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: A Title</span><br><span class="line">date: 2020-02-08 10:39:55</span><br><span class="line">tags:</span><br><span class="line">- tag1</span><br><span class="line">- tag2</span><br><span class="line">categories:</span><br><span class="line">- parent</span><br><span class="line">- child</span><br><span class="line"></span><br><span class="line">mathjax: true</span><br><span class="line">---</span><br></pre></td></tr></table></figure></p>
+<p>2 主题next添加公式支持的方法【该博客采用的方案】<br>修改主题所在的_config.yml 文件内容如下（搜索math后修改）<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">math:</span><br><span class="line">  # Default (true) will load mathjax / katex script on demand.</span><br><span class="line">  # That is it only render those page which has `mathjax: true` in Front-matter.</span><br><span class="line">  # If you set it to false, it will load mathjax / katex srcipt EVERY PAGE.</span><br><span class="line">  enable: true</span><br><span class="line">  per_page: true</span><br><span class="line"></span><br><span class="line">  # hexo-renderer-pandoc (or hexo-renderer-kramed) required for full MathJax support.</span><br><span class="line">  mathjax:</span><br><span class="line">    enable: true</span><br><span class="line">    # See: https://mhchem.github.io/MathJax-mhchem/</span><br><span class="line">    mhchem: true</span><br></pre></td></tr></table></figure></p>
+<p>博客的根目录的 _config.yml 文件不需要修改。</p>
+<p>测试公式：   $ f(x) = a+b $</p>
+<p>3 主题butterfly的步骤有3个</p>
+<ul>
+<li><p>安装插件　　</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install hexo-math --save</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在站点配置文件 _config.yml 中添加：　　</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">math:</span><br><span class="line">  engine: &#x27;mathjax&#x27; # or &#x27;katex&#x27;</span><br><span class="line">  mathjax:</span><br><span class="line">    # src: custom_mathjax_source</span><br><span class="line">    config:</span><br><span class="line">      # MathJax config</span><br></pre></td></tr></table></figure></li>
+<li>在 next 主题配置文件中 themes/butterfly/_config.yml 中将 mathJax 设为 true:</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># MathJax Support</span><br><span class="line">mathjax:</span><br><span class="line">  enable: true</span><br><span class="line">  per_page: false</span><br><span class="line">  cdn: //cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML</span><br></pre></td></tr></table></figure>
+<h1 id="三-图片显示的方法"><a href="#三-图片显示的方法" class="headerlink" title="三 图片显示的方法"></a>三 图片显示的方法</h1><p>在public路径下找到和博客文件同名的文件夹，将图像文件放入其中，在博客中直接引用即可，例如下文<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">![](1.jpg)</span><br></pre></td></tr></table></figure><br>显示如下：<br><img src="1.jpg" alt=""></p>
+<h1 id="四-删掉已经发布的博客的方法"><a href="#四-删掉已经发布的博客的方法" class="headerlink" title="四 删掉已经发布的博客的方法"></a>四 删掉已经发布的博客的方法</h1><p>参考资料：夏普通.2020-10-13.<a href="https://blog.csdn.net/qq_34243930/article/details/109046120#:~:text=%E5%85%B7%E4%BD%93%E6%AD%A5%E9%AA%A4%E5%A6%82%E4%B8%8B%201%20%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%8C%E5%8E%BB%E6%96%87%E4%BB%B6%E5%A4%B9%20source%2F_posts%20%E4%B8%8B%E5%88%A0%E9%99%A4%E4%BD%A0%E6%83%B3%E8%A6%81%E5%88%A0%E9%99%A4%E7%9A%84%E6%96%87%E7%AB%A0%202%20%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%8C%E5%88%A0%E9%99%A4%20.deploy_git,%E5%90%8E%EF%BC%8C%E5%86%8D%E6%89%A7%E8%A1%8C%20hexo%20g%20%EF%BC%8C%20hexo%20g%20%E5%8D%B3%E5%8F%AF%E3%80%82%20%E5%8F%91%E7%8E%B0%E6%96%87%E7%AB%A0%E5%88%A0%E9%99%A4%E6%88%90%E5%8A%9F%E2%9C%94">用Github Pages+Hexo搭建博客之(七)如何删除一篇已经发布的文章 #成功解决：同时删除掉.deploy_git文件夹</a></p>
+<p>步骤如下：</p>
+<ol>
+<li>删掉 <code>source/_posts</code> 下的 .md 博客文件 ;</li>
+<li>删除 <code>.deploy_git</code> 文件夹；</li>
+<li>执行 <code>hexo clean</code>，再执行 <code>hexo g &amp;&amp; hexo d</code>。</li>
+</ol>
+]]></content>
+      <tags>
+        <tag>工具</tag>
       </tags>
   </entry>
 </search>
