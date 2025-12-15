@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"hanxinle.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="参考资料 音视跳动李超老师的 WebRTC 编译博客 WebRTC Support(官网)  编译环境准备根据官方文档： https:&#x2F;&#x2F;webrtc.googlesource.com&#x2F;src&#x2F;+&#x2F;main&#x2F;docs&#x2F;native-code&#x2F;development&#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WebRTC 库在 Windows 平台编译（支持 H.264）">
+<meta property="og:url" content="https://hanxinle.github.io/2022/09/21/webrtc-build-on-windows/index.html">
+<meta property="og:site_name" content="科学学习与工程笔记">
+<meta property="og:description" content="参考资料 音视跳动李超老师的 WebRTC 编译博客 WebRTC Support(官网)  编译环境准备根据官方文档： https:&#x2F;&#x2F;webrtc.googlesource.com&#x2F;src&#x2F;+&#x2F;main&#x2F;docs&#x2F;native-code&#x2F;development&#x2F;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-09-21T07:05:11.000Z">
+<meta property="article:modified_time" content="2023-06-22T06:26:24.453Z">
+<meta property="article:author" content="川辣孙悟空(Goku)">
+<meta property="article:tag" content="WebRTC">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://hanxinle.github.io/2022/09/21/webrtc-build-on-windows/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>WebRTC 库在 Windows 平台编译（支持 H.264） | 科学学习与工程笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="科学学习与工程笔记" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">科学学习与工程笔记</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">动脑动手</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/hanxinle" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2022/09/21/webrtc-build-on-windows/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          WebRTC 库在 Windows 平台编译（支持 H.264）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-09-21 15:05:11" itemprop="dateCreated datePublished" datetime="2022-09-21T15:05:11+08:00">2022-09-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-06-22 14:26:24" itemprop="dateModified" datetime="2023-06-22T14:26:24+08:00">2023-06-22</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
+<li><a target="_blank" rel="noopener" href="https://avdancedu.com/2bafd6cf/">音视跳动李超老师的 WebRTC 编译博客</a></li>
+<li><a target="_blank" rel="noopener" href="https://webrtc.org/support/overview">WebRTC Support(官网)</a></li>
+</ol>
+<h1 id="编译环境准备"><a href="#编译环境准备" class="headerlink" title="编译环境准备"></a>编译环境准备</h1><p>根据官方文档：</p>
+<p><a target="_blank" rel="noopener" href="https://webrtc.googlesource.com/src/+/main/docs/native-code/development/">https://webrtc.googlesource.com/src/+/main/docs/native-code/development/</a></p>
+<span id="more"></span>
+<p>Windows 平台编译 WebRTC 与编译 Chromium 软件配置和操作大多一致，可以参考编译Chromium 文档编译 WebRTC，编译Chromium 文档的网址是：</p>
+<p><a target="_blank" rel="noopener" href="https://chromium.googlesource.com/chromium/src/+/refs/heads/main/docs/windows_build_instructions.md">https://chromium.googlesource.com/chromium/src/+/refs/heads/main/docs/windows_build_instructions.md</a> 。</p>
+<p>编译WebRTC需满足如下硬件要求：</p>
+<ol>
+<li>CPU型号为 intel；</li>
+<li>内存大于等于 8G；</li>
+<li>存放源码的硬盘是 NTFS 文件系统，容量建议大于等于100G。</li>
+</ol>
+<p>软件要求：</p>
+<ul>
+<li><p>Git</p>
+<p>下载地址：<a target="_blank" rel="noopener" href="https://git-scm.com/">https://git-scm.com/</a></p>
+</li>
+<li><p>Visual Studio 2019</p>
+<p>下载地址：<a target="_blank" rel="noopener" href="https://visualstudio.microsoft.com/zh-hans/vs/">https://visualstudio.microsoft.com/zh-hans/vs/</a> ,</p>
+<p>其它版本可在名为“MSDN,i tell you”网站下载，网址是 <a target="_blank" rel="noopener" href="https://msdn.itellyou.cn/">https://msdn.itellyou.cn/</a> </p>
+<p>必要组件：</p>
+<p>选择 “Windows” 页面下的 .Net 桌面开发，使用 C++ 的桌面开发、通用 Windows 平台开发。</p>
+<p>在 单个组件 标签下，找到并勾选 用于x86和x64的Visual C++ MFC、用于x86和X64的Visual C++ ATL、Clang/C2(实验)、带有Spectre缓解措施的Visual C++ ATL(x86/x64)、带有Spectre缓解措施的Visual C++ MFC(x86/x64)。</p>
+</li>
+<li><p>Windows sdk 和 Debugging Tools for Windows</p>
+<p>Windows10 编译 WebRTC 所需的 Windows SDK 版本最低要求是10.0.19041.0，如果系统没有安装满足版本要求Windows SDK。请访问  <a target="_blank" rel="noopener" href="https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk/">https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk/</a> 下载 .iso 文件，安装时选择 <strong>Debugging Tools for Windows</strong>。</p>
+</li>
+<li><p>depot tool</p>
+</li>
+</ul>
+<p>depot_tool下载地址是</p>
+<p><a target="_blank" rel="noopener" href="https://storage.googleapis.com/chrome-infra/depot_tools.zip">https://storage.googleapis.com/chrome-infra/depot_tools.zip</a></p>
+<p>若文件保存路径包含中文，请将depot_tools.zip移动到<strong>英文</strong>路径下，例如C:\bjm_tools\，右击depot_tools.zip,选择 解压到depot_tools（英文版解压软件命令是extract files to “depot_tools\”）.</p>
+<p>将C:\bjm_tools\depot_tools添加到系统 path 路径，然后选定该项，单击 <strong>上移</strong> ，将其移动到顶部，缺少这一步会导致depot_tools命令与系统原有软件命令冲突时系统不会优先选择depot_tools工具所支持的命令，产生错误。</p>
+<h1 id="编译过程"><a href="#编译过程" class="headerlink" title="编译过程"></a>编译过程</h1><p>运行 x86 Native Tools Command Prompt for VS 2019 专业版，设置环境变量：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">// 设置depot_tools使用本地VS进行编译</span><br><span class="line"><span class="built_in">set</span> DEPOT_TOOLS_WIN_TOOLCHAIN=0</span><br><span class="line">// 设置编译工具（GYP == Generate Your Projects）</span><br><span class="line"><span class="built_in">set</span> GYP_GENERATORS=ninja,msvs-ninja</span><br><span class="line">// 设置VS路径</span><br><span class="line"><span class="built_in">set</span> GYP_MSVS_OVERRIDE_PATH=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise</span><br><span class="line">// 设置VS版本</span><br><span class="line"><span class="built_in">set</span> GYP_MSVS_VERSION=2019</span><br><span class="line">// 指明vs2019_install路径</span><br><span class="line"><span class="built_in">set</span> vs2019_install=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>如果是 vs2017，则设置以下变量（本人没有使用）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">// 设置depot_tools使用本地VS进行编译</span><br><span class="line"><span class="built_in">set</span> DEPOT_TOOLS_WIN_TOOLCHAIN=0</span><br><span class="line">// 设置编译工具（GYP == Generate Your Projects）</span><br><span class="line"><span class="built_in">set</span> GYP_GENERATORS=ninja,msvs-ninja</span><br><span class="line">// 设置VS路径</span><br><span class="line"><span class="built_in">set</span> GYP_MSVS_OVERRIDE_PATH=C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional</span><br><span class="line">// 设置VS版本</span><br><span class="line"><span class="built_in">set</span> GYP_MSVS_VERSION=2017</span><br><span class="line">// 指明vs2017_install路径</span><br><span class="line"><span class="built_in">set</span> vs2017_install=C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional</span><br></pre></td></tr></table></figure>
+<p>因为网络问题，我在第一次启动 cmd 的时候设置了 Git 代理</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git config --global http.proxy <span class="string">&quot;127.0.0.1:1080&quot;</span></span><br><span class="line">git config --global https.proxy <span class="string">&quot;127.0.0.1:1080&quot;</span></span><br></pre></td></tr></table></figure>
+<p>后来重启 cmd 又设置了系统代理（榨干ssr 最有一点流量）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">set</span> http_proxy=127.0.0.1:1080</span><br><span class="line"><span class="built_in">set</span> https_proxy=127.0.0.1:1080</span><br></pre></td></tr></table></figure>
+<p>设置后执行:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gclient</span><br></pre></td></tr></table></figure>
+<p>该命令会安装其它所有编译 WebRTC源码所需要的、针对Windows平台特定的工具，例如 msysgit 和Python。</p>
+<p>执行 gclient 命令后，输入命令:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">where</span> python</span><br></pre></td></tr></table></figure>
+<p>确保 python.bat 出现在任何 python.exe 前再继续操作.</p>
+<p>设置 git ，然后下载源码:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">git config --global user.name <span class="string">&quot;xxxx&quot;</span></span><br><span class="line">git config --global user.email <span class="string">&quot;xxxxx@yy.com&quot;</span></span><br><span class="line">git config --global core.autocrlf <span class="literal">false</span></span><br><span class="line">git config --global core.filemode <span class="literal">false</span></span><br><span class="line">git config --global branch.autosetuprebase always</span><br></pre></td></tr></table></figure>
+<p>下载源码过程是：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">// 创建名为 webrtc-checkout 的文件夹</span><br><span class="line"><span class="built_in">mkdir</span> webrtc-checkout</span><br><span class="line">// 进入 webrtc-checkout</span><br><span class="line"><span class="built_in">cd</span> webrtc-checkout</span><br><span class="line">// 下载源码</span><br><span class="line">fetch --nohooks webrtc</span><br><span class="line">// 同步为最新版源码</span><br><span class="line">gclient <span class="built_in">sync</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 进入 src </span></span><br><span class="line"><span class="built_in">cd</span> src</span><br></pre></td></tr></table></figure>
+<p>李超老师的博客提到如下编译流程：</p>
+<p>首先，生成目录和编译库</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> src</span><br><span class="line">$ gn gen out/Default</span><br><span class="line">$ ninja -C out/Default</span><br></pre></td></tr></table></figure>
+<p>接着，再生成 vs 工程，用于调试学习</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ gn gen --ide=vs out\Default</span><br></pre></td></tr></table></figure>
+<p>这个流程是我 2023 年 6 月份使用的，对 2021-05 和 2021-08 两个版本的源码都能编译。</p>
+<p>在 2021 年，Default 是编译不过的。现在想当时的原因可能如下：</p>
+<ol>
+<li>编译环境变化，我现在把要设置的环境变量都写入到了系统环境变量中；</li>
+<li>2021 生成的待编译文件有 —ide=vs 选项，对其有干扰；</li>
+<li>现在使用了新的 Windows SDK 或者 VS2022 的关系；</li>
+<li>depot_tool 的更新；</li>
+<li>命令行的更换，我使用的是 develop prompt command for vs2019;</li>
+</ol>
+<p>2021 使用的生成 x86 debug with H.264 的 libwebrtc.lib 待编译文件命令是：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gn gen out/x86/vs2019ffmpeg_nolibcxx_nolld_notests --ide=vs2019 --args=<span class="string">&quot;target_cpu=\&quot;x86\&quot; is_debug = true  treat_warnings_as_errors = false</span></span><br><span class="line"><span class="string">use_custom_libcxx = false use_lld = false  rtc_use_h264 = true proprietary_codecs = true is_component_ffmpeg = true enable_iterator_debugging = true ffmpeg_branding = \&quot;Chrome\&quot; rtc_include_tests = false&quot;</span></span><br></pre></td></tr></table></figure>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>含义</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>out/x86/dh264ffmpeg</td>
+<td>工程存放路径</td>
+<td></td>
+</tr>
+<tr>
+<td>—ide=vs2017</td>
+<td>编译工程所用 IDE 工具</td>
+<td></td>
+</tr>
+<tr>
+<td>target_cpu=\”x86\”</td>
+<td>webrtc.lib 是32位</td>
+<td></td>
+</tr>
+<tr>
+<td>target_winuwp_family=\”desktop\”</td>
+<td>webrtc.lib用于Windows桌面程序</td>
+<td>后续生成工程不再指定这个参数的值</td>
+</tr>
+<tr>
+<td>is_debug=true</td>
+<td>生成的静态库用于debug模式</td>
+<td>默认debug模式，查看方法见表后正文</td>
+</tr>
+<tr>
+<td>treat_warnings_as_errors=false</td>
+<td>设置编译过程不将警告当作错误，避免中断编译过程</td>
+<td>如果忘记关闭需要更改源码，详见后文</td>
+</tr>
+<tr>
+<td>rtc_use_h264=true</td>
+<td>支持H.264编码</td>
+<td></td>
+</tr>
+<tr>
+<td>proprietary_codecs=true</td>
+<td>支持所有编解码方案开关开启</td>
+<td></td>
+</tr>
+<tr>
+<td>is_component_ffmpeg=true</td>
+<td>编译ffmpeg模块用于支持H.264解码</td>
+<td></td>
+</tr>
+<tr>
+<td>ffmpeg_branding=\”Chrome\”</td>
+<td>设置编译的ffmpeg多媒体播放设置适配Chrome系统</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>上述命令耗时4336ms，Windows平台 H.264 解码用ffmpeg，ffmpeg解码需要用到Clang，is_clang选项默认为true，如果不用Clang，将不支持H.264解码。具体信息请访问 <a target="_blank" rel="noopener" href="https://bugs.chromium.org/p/webrtc/issues/detail?id=9213">https://bugs.chromium.org/p/webrtc/issues/detail?id=9213</a> 。4.5 节会对详细说明这个网址涉及的内容。</p>
+<p>补充一个创建 WebRTC工程后查看配置参数的命令，即在命令行中输入</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gn args out/x86/vs2019ffmpeg_nolibcxx_nolld_notests –list</span><br></pre></td></tr></table></figure>
+<p>可以查看生成该工程可设置的所有参数，以及每个参数的当前值、默认值、该值的含义等信息。</p>
+<p>执行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gn args out/x86/vs2019ffmpeg_nolibcxx_nolld_notests –list=&lt;参数名&gt;</span><br></pre></td></tr></table></figure>
+<p>可以查看特定参数的值。</p>
+<p>编译 WebRTC 工程</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ninja -C out/x86/vs2019ffmpeg_nolibcxx_nolld_notests</span><br></pre></td></tr></table></figure>
+<p>测试编译：</p>
+<p>进入到生成目录 <em>out/x86/vs2019ffmpeg_nolibcxx_nolld_notests</em>，运行命令保存log并查看结果.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vidoe_engine_tests.exe &gt; video_engine_tests_log.txt</span><br></pre></td></tr></table></figure>
+<h1 id="创建-peerconnection-工程测试编译的库"><a href="#创建-peerconnection-工程测试编译的库" class="headerlink" title="创建 peerconnection 工程测试编译的库"></a>创建 peerconnection 工程测试编译的库</h1><p>启动vs2019，打开资源管理器进入WebRTC 源码路径，在 /examples/server 下拷贝 data_socket.cc、data_socket.h、main.c、peer_channel.cc、peer_channel.h、utils.cc、utils.h 到 bjm_peerconnetcion_server 路径下，并且导入该工程；pc_client 示例程序所在路径是 src/examples/client，拷贝conductor.cc、conductor.h、defaults.cc、defaults.h、flag_defs.h、main.cc、main_wnd.cc、main_wnd.h、peer_connection_client.cc、peer_connection_server.h 到 pc_client 所在路径并且导入工程。</p>
+<p><strong>对 server 配置 </strong>include 路径和库路径，在“链接器-输入”中添加：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ws2_32.lib</span><br><span class="line">winmm.lib</span><br><span class="line">webrtc.lib</span><br><span class="line">my_webrtc.lib    </span><br></pre></td></tr></table></figure>
+<p>PS: my_webrtc.lib 是自制.</p>
+<p><strong>对 client ，配置</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">ws2_32.lib</span><br><span class="line">winmm.lib</span><br><span class="line">strmiids.lib</span><br><span class="line">amstrmid.lib</span><br><span class="line">dmoguids.lib</span><br><span class="line">wmcodecdspuuid.lib</span><br><span class="line">crypt32.lib</span><br><span class="line">iphlpapi.lib</span><br><span class="line">secur32.lib</span><br><span class="line">rtc_json.lib</span><br><span class="line">msdmo.lib</span><br><span class="line">webrtc.lib</span><br><span class="line">ffmpeg.dll.lib</span><br><span class="line">my_webrtc.lib</span><br></pre></td></tr></table></figure>
+<p>PS: my_webrtc.lib 是自制.</p>
+<p>编译结束后，先启动 pc_server，再启动两个 pc_client ,单击 ”connect” 按钮，计算机上如果有两个摄像头，就可以互相看到对方。</p>
+<p>PS: 我还保留了几个脚本工具用于测试环节提取 lib、头文件、将 obj 文件制作成为 lib。</p>
+<h1 id="Q-amp-A"><a href="#Q-amp-A" class="headerlink" title="Q&amp;A"></a>Q&amp;A</h1><p>1、如果设置了 is_clang=false，会出现什么问题及解决方法是什么？</p>
+<p>答：几个文件如 /modules/audio_processing/agc2/rnn_vad/features_extraction.cc</p>
+<p>代码报错，提示不能对数据 窄化(narrowing) 操作。需要对该行报错的变量使用 static_cast&lt;窄化后的类型&gt; ，参考 <a target="_blank" rel="noopener" href="https://en.cppreference.com/w/cpp/language/static_cast">https://en.cppreference.com/w/cpp/language/static_cast</a> 。</p>
+<p>另有 TaskQueue 模块个别文件提示对象访问权限问题，根据报错信息打开源码，定位到报错的行，将 protected 改为 public。</p>
+<p>最严重的问题是无法编译 ffmpeg，因为VS对C11支持不完全，提示找不到头文件，无法通过拷贝相应头文件到VS的include 目录解决这个问题。</p>
+<p>2、如果不设置 treat_warnings_as_errors=false 会出现什么情况？如何解决？</p>
+<p>答：在执行ninja –C &lt;工程路径&gt; 命令后，编译过程会被频繁打断。需要定位到警告信息产生的代码文件相应的行，在行的前后加入 #pragma warning (disable:&lt;警告编号&gt;)。</p>
+<p>3、因为编译工程频繁更改代码，如何能统计自己更改了哪些代码以及做了何种更改？</p>
+<p>答：命令行环境进入 webrtc-checkout/src 路径,执行 git diff 即可看到对源码的修改记录。建议用Visual Studio Code(下文称VSC)修改代码，修改后保存代码但不要退出VSC，若需要恢复到修改前的代码，切换到文件标签，不断按 Cril+Z,即可撤销修改，保存文件。再执行 git diff 即可看到源码无修改。</p>
+<p>4、如何查看自己下载的WebRTC版本信息。</p>
+<p>答：执行 gclient revinfo –a 。</p>
+<p>5、这些参数是不是一成不变的？开发人员可以不了解直接采用 webrtc.lib？</p>
+<p>答：每个版本控制生成工程的参数都有可能发生变化，本文档 v1.1版撰写时 v1.0版的一些参数已经不再被使用，由其它参数覆盖、替代或干脆移除某参数涉及的模块。第二个问题的答案为是，开发人员不需要了解具体参数的含义，这也是本文档的意义——节约时间。</p>
+<p>6、H.264 编解码支持所依赖的 ffmpeg 编译及测试方案执行</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>WebRTC 生成工程参数</th>
+<th>编译器</th>
+<th>C++ 标准库版本</th>
+<th>链接器</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>is_clang=false</td>
+<td>MSVC cl.exe</td>
+<td>MSVC lib</td>
+<td>MSVC link.exe</td>
+<td></td>
+</tr>
+<tr>
+<td>is_clang=false  use_custom_libcxx=true  use_lld=true</td>
+<td>Clang</td>
+<td>Google custom  libcxx</td>
+<td>lld</td>
+<td>默认参数</td>
+</tr>
+<tr>
+<td>is_clang=true  use_custom_libcxx=false</td>
+<td>Clang</td>
+<td>MSVC lib</td>
+<td>lld</td>
+<td></td>
+</tr>
+<tr>
+<td>is_clang=true  use_custom_libcxx=false  use_lld=flase</td>
+<td>Clang</td>
+<td>MSVC lib</td>
+<td>MSVC link.exe</td>
+<td>本文档使用参数设置</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>此处需要特别说明使用 H.264 编解码支持的x86 debug 版webrtc.lib 的项目属性配置方案。WebRTC 若要支持 H.264 解码，需要添加 ffmpeg 模块。编译此模块在Windows 系统需要Clang 编译器支持。因此在生成 webrtc.lib 工程时，相关参数要与上表的最后一列一致。</p>
+<p>7、Windows 平台对 H.264 支持情况</p>
+<p>2021年编译的时候我记录了如下信息，近期没有重新编译，进展情况自行查官方信息吧：</p>
+<blockquote>
+<p>WebRTC官方宣布 Windows 系统使用vs原生工具集则不支持 H.264 编解码，截至本文档撰写完毕这个 bug依旧没有解决。这是网址：</p>
+<p><a target="_blank" rel="noopener" href="https://bugs.chromium.org/p/webrtc/issues/detail?id=9213%23c13">https://bugs.chromium.org/p/webrtc/issues/detail?id=9213#c13</a></p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/WebRTC/" rel="tag"># WebRTC</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/08/31/vim-note/" rel="prev" title="Vim 教程">
+      <i class="fa fa-chevron-left"></i> Vim 教程
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/01/07/opengl-1/" rel="next" title="OpenGL小记">
+      OpenGL小记 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-number">1.</span> <span class="nav-text">参考资料</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87"><span class="nav-number">2.</span> <span class="nav-text">编译环境准备</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text">编译过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-peerconnection-%E5%B7%A5%E7%A8%8B%E6%B5%8B%E8%AF%95%E7%BC%96%E8%AF%91%E7%9A%84%E5%BA%93"><span class="nav-number">4.</span> <span class="nav-text">创建 peerconnection 工程测试编译的库</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Q-amp-A"><span class="nav-number">5.</span> <span class="nav-text">Q&amp;A</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">川辣孙悟空(Goku)</p>
+  <div class="site-description" itemprop="description">hanxinle199@gmail.com</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">川辣孙悟空(Goku)</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/pangu@4/dist/browser/pangu.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

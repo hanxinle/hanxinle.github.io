@@ -1,0 +1,1293 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>借助 gcc 理解编译系统（compilation system）</title>
+    <url>/2020/12/16/compliation-system-by-gcc/</url>
+    <content><![CDATA[<h2 id="1-编译系统-gcc-概述"><a href="#1-编译系统-gcc-概述" class="headerlink" title="1 编译系统(gcc)概述"></a>1 编译系统(gcc)概述</h2><span id="more"></span>
+<p>通常，使用 gcc 编译程序 <code>gcc hello.c -o hello</code> 可以直接得到可执行的二进制文件 <em>hello</em>。然而，程序从源文件（文本）到可执行文件（二进制文件）要经历以下阶段:预处理，编译，汇编，链接，每个阶段处理后，都会得到新的文件，新的文件记录当前操作的信息，并且用于生成下一步操作。</p>
+<p>编译系统由预处理器、编译器、汇编器和链接器组成，它将源程序文件“翻译”为二进制的可执行目标程序。编译系统工作流程及生成的文件如图所示。</p>
+<p><img src="compilation_system_1.png" alt="compilation system"></p>
+<p>在 gcc 中，每个阶段的操作见表1.</p>
+<p><center>表1 编译系统命令</center></p>
+<style>
+.tablelines table, .tablelines td, .tablelines th {
+        border: 1px solid black;
+        }
+</style>
+
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>命令</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>预处理</td>
+<td><code>gcc -E</code></td>
+<td>-E -DXXX 定义XXX</td>
+</tr>
+<tr>
+<td>编译</td>
+<td>gcc -S</td>
+<td>生成汇编文件</td>
+</tr>
+<tr>
+<td>汇编</td>
+<td>gcc -c</td>
+<td>生成机器码</td>
+</tr>
+<tr>
+<td>链接</td>
+<td>gcc</td>
+<td>生成可执行文件</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>{: .tablelines}</p>
+<h2 id="2-编译系统-gcc-详述"><a href="#2-编译系统-gcc-详述" class="headerlink" title="2 编译系统(gcc)详述"></a>2 编译系统(gcc)详述</h2><p><em>f_sum.h</em> 的内容是：<br><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">f_sum</span><span class="params">(<span class="type">int</span> a, <span class="type">int</span> b)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> a+b;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br><em>hello.c</em> 的内容是：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;f_sum.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">int</span> var_sum = <span class="number">0</span>;</span><br><span class="line">    <span class="built_in">printf</span> (<span class="string">&quot;makefile OK!\n&quot;</span>);</span><br><span class="line">    var_sum = f_sum(<span class="number">2</span>,<span class="number">3</span>);</span><br><span class="line">    <span class="built_in">printf</span> (<span class="string">&quot;Sum is %d\n&quot;</span>,var_sum);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-1-源程序"><a href="#2-1-源程序" class="headerlink" title="2.1 源程序"></a>2.1 源程序</h3><p>利用 <em>hexdump</em> 命令可以查看源程序对应的 ASCII 码（以及对应程序源码）。</p>
+<figure class="highlight plaintext"><figcaption><span>-C  hello.c``` 输出如下：</span></figcaption><table><tr><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+<p>00000000  23 69 6e 63 6c 75 64 65  20 3c 73 74 64 69 6f 2e  |#include <stdio.|
+00000010  68 3e 0a 23 69 6e 63 6c  75 64 65 20 22 66 5f 73  |h>.#include “f_s|<br>00000020  75 6d 2e 68 22 0a 0a 2f  2f 69 6e 74 20 66 5f 73  |um.h”..//int f_s|<br>00000030  75 6d 28 69 6e 74 20 61  2c 69 6e 74 20 62 29 3b  |um(int a,int b);|<br>00000040  0a 0a 69 6e 74 20 6d 61  69 6e 28 29 20 7b 0a 20  |..int main() {. |<br>00000050  20 20 20 69 6e 74 20 76  61 72 5f 73 75 6d 20 3d  |   int var_sum =|<br>00000060  20 30 3b 0a 20 20 20 20  70 72 69 6e 74 66 20 28  | 0;.    printf (|<br>00000070  22 6d 61 6b 65 66 69 6c  65 20 4f 4b 21 5c 6e 22  |”makefile OK!\n”|<br>00000080  29 3b 0a 20 20 20 20 76  61 72 5f 73 75 6d 20 3d  |);.    var_sum =|<br>00000090  20 66 5f 73 75 6d 28 32  2c 33 29 3b 0a 20 20 20  | f_sum(2,3);.   |<br>000000a0  20 70 72 69 6e 74 66 20  28 22 53 75 6d 20 69 73  | printf (“Sum is|<br>000000b0  20 25 64 5c 6e 22 2c 76  61 72 5f 73 75 6d 29 3b  | %d\n”,var_sum);|<br>000000c0  0a 20 20 20 20 72 65 74  75 72 6e 20 30 3b 0a 7d  |.    return 0;.}|<br>*<br>000000d1<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">可以看到，*hello.c* 的长度是 0xd1 字节。</span><br><span class="line"></span><br><span class="line">### 2.2 预处理阶段</span><br><span class="line"></span><br><span class="line">预处理阶段完成的工作有，头文件的插入、宏定义的展开及条件编译的处理。</span><br><span class="line"></span><br><span class="line">预处理的命令是 ```gcc -E```，执行如下命令,</span><br><span class="line"></span><br><span class="line"> ```gcc -E hello.c -o hello.i```</span><br><span class="line"></span><br><span class="line">查看 ```hello.i``` 的内容如下(不加上 -o hello.i 就会直接显示预处理结果，和下面相同)：</span><br><span class="line"></span><br></pre></td></tr></table></figure><br>(省略大量 stdio.h 的代码)<br>……</p>
+<h1 id="868-“-usr-include-stdio-h”-3-4"><a href="#868-“-usr-include-stdio-h”-3-4" class="headerlink" title="868 “/usr/include/stdio.h” 3 4"></a>868 “/usr/include/stdio.h” 3 4</h1><h1 id="2-“hello-c”-2"><a href="#2-“hello-c”-2" class="headerlink" title="2 “hello.c” 2"></a>2 “hello.c” 2</h1><h1 id="1-“f-sum-h”-1"><a href="#1-“f-sum-h”-1" class="headerlink" title="1 “f_sum.h” 1"></a>1 “f_sum.h” 1</h1><h1 id="1-“f-sum-h”"><a href="#1-“f-sum-h”" class="headerlink" title="1 “f_sum.h”"></a>1 “f_sum.h”</h1><p>int f_sum(int a, int b) {<br>    return a+b;<br>}</p>
+<h1 id="3-“hello-c”-2"><a href="#3-“hello-c”-2" class="headerlink" title="3 “hello.c” 2"></a>3 “hello.c” 2</h1><p>int main() {<br>    int var_sum = 0;<br>    printf (“makefile OK!\n”);<br>    var_sum = f_sum(2,3);<br>    printf (“Sum is %d\n”,var_sum);<br>    return 0;<br>}<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">观察宏定义展开及条件条件编译的源程序 ```test_gcc_e.c``` 的内容如下：</span><br></pre></td></tr></table></figure></p>
+<h1 id="include"><a href="#include" class="headerlink" title="include "></a>include <stdio.h></h1><h1 id="define-LENGTH-1024"><a href="#define-LENGTH-1024" class="headerlink" title="define LENGTH 1024"></a>define LENGTH 1024</h1><p>int main(void) {</p>
+<h1 id="ifdef-TEST"><a href="#ifdef-TEST" class="headerlink" title="ifdef TEST"></a>ifdef TEST</h1><pre><code>printf (&quot;TEST Defined!\n &quot;);
+</code></pre><h1 id="endif"><a href="#endif" class="headerlink" title="endif"></a>endif</h1><pre><code>printf (&quot;Value of LENGTH is %d\n&quot;,1024);
+
+return 0;
+</code></pre><p>}</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">执行 ```gcc -E test_gcc_e.c``` 得到：</span><br></pre></td></tr></table></figure>
+<p>……(省略的代码)<br>int main(void) {<br>    printf (“Value of LENGTH is %d\n”,1024);</p>
+<pre><code>return 0;
+</code></pre><p>}<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">可以看到 LENGTH 的 值经过预处理已经被替换为 1024。</span><br><span class="line"></span><br><span class="line">执行 ```gcc -E -DTEST```</span><br><span class="line"></span><br></pre></td></tr></table></figure><br>int main(void) {</p>
+<pre><code>printf (&quot;TEST Defined!\n &quot;); //TEST defined
+
+
+printf (&quot;Value of LENGTH is %d\n&quot;,1024);
+
+return 0;
+</code></pre><p>}<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">### 2.3 编译阶段</span><br><span class="line"></span><br><span class="line">编译得到汇编程序，文件后缀为 *.s*，命令是 ```gcc -S```，执行 ```gcc -S hello.i``` 或者 ```gcc -S hello.c``` ，有：</span><br></pre></td></tr></table></figure></p>
+<pre><code>    .file   &quot;hello.c&quot;
+    .text
+    .globl  f_sum
+    .type   f_sum, @function
+</code></pre><p>f_sum:<br>.LFB0:<br>        .cfi_startproc<br>        pushq   %rbp<br>        .cfi_def_cfa_offset 16<br>        .cfi_offset 6, -16<br>        movq    %rsp, %rbp<br>        .cfi_def_cfa_register 6<br>        movl    %edi, -4(%rbp)<br>        movl    %esi, -8(%rbp)<br>        movl    -4(%rbp), %edx<br>        movl    -8(%rbp), %eax<br>        addl    %edx, %eax<br>        popq    %rbp<br>        .cfi_def_cfa 7, 8<br>        ret<br>        .cfi_endproc<br>.LFE0:<br>        .size   f_sum, .-f_sum<br>        .section        .rodata<br>.LC0:<br>        .string “makefile OK!”<br>.LC1:<br>        .string “Sum is %d\n”<br>        .text<br>        .globl  main<br>        .type   main, @function<br>main:<br>.LFB1:<br>        .cfi_startproc<br>        pushq   %rbp<br>        .cfi_def_cfa_offset 16<br>        .cfi_offset 6, -16<br>        movq    %rsp, %rbp<br>        .cfi_def_cfa_register 6<br>        subq    $16, %rsp<br>        movl    $0, -4(%rbp)<br>        leaq    .LC0(%rip), %rdi<br>        call    puts@PLT<br>        movl    $3, %esi<br>        movl    $2, %edi<br>        call    f_sum<br>        movl    %eax, -4(%rbp)<br>        movl    -4(%rbp), %eax<br>        movl    %eax, %esi<br>        leaq    .LC1(%rip), %rdi<br>        movl    $0, %eax<br>        call    printf@PLT<br>        movl    $0, %eax<br>        leave<br>        .cfi_def_cfa 7, 8<br>        ret<br>        .cfi_endproc<br>.LFE1:<br>        .size   main, .-main<br>        .ident  “GCC: (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0”<br>        .section        .note.GNU-stack,””,@progbits</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">程序主要分为 LFB0、LFB1 两个模块，分别是 f_sum.h 和 main.c 对应的汇编代码。</span><br><span class="line">其中 ```call    puts@PLT``` 调用的是 *printf* 函数，</span><br></pre></td></tr></table></figure>
+<p>movl    $3, %esi<br>movl    $2, %edi<br>call    f_sum<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">```call f_sum``` 调用的是 *f_sum* 函数，f_sum 中执行 addl 是求和运算。</span><br><span class="line">### 2.4 汇编阶段</span><br><span class="line"></span><br><span class="line">汇编阶段用汇编文件生成机器码，命令是 ```gcc -c ```。</span><br><span class="line"></span><br><span class="line">执行 ```gcc -c hello.s``` 得到 *hello.o*，执行 ```objdump -d hello.o``` 查看 *hello.o* 内容，</span><br></pre></td></tr></table></figure><br>hello.o：     文件格式 elf64-x86-64<br>Disassembly of section .text:</p>
+<p>0000000000000000 <f_sum>:<br>   0:   55                      push   %rbp<br>   1:   48 89 e5                mov    %rsp,%rbp<br>   4:   89 7d fc                mov    %edi,-0x4(%rbp)<br>   7:   89 75 f8                mov    %esi,-0x8(%rbp)<br>   a:   8b 55 fc                mov    -0x4(%rbp),%edx<br>   d:   8b 45 f8                mov    -0x8(%rbp),%eax<br>  10:   01 d0                   add    %edx,%eax<br>  12:   5d                      pop    %rbp<br>  13:   c3                      retq</p>
+<p>0000000000000014 <main>:<br>  14:   55                      push   %rbp<br>  15:   48 89 e5                mov    %rsp,%rbp<br>  18:   48 83 ec 10             sub    $0x10,%rsp<br>  1c:   c7 45 fc 00 00 00 00    movl   $0x0,-0x4(%rbp)<br>  23:   48 8d 3d 00 00 00 00    lea    0x0(%rip),%rdi        # 2a <main+0x16><br>  2a:   e8 00 00 00 00          callq  2f <main+0x1b><br>  2f:   be 03 00 00 00          mov    $0x3,%esi<br>  34:   bf 02 00 00 00          mov    $0x2,%edi<br>  39:   e8 00 00 00 00          callq  3e <main+0x2a><br>  3e:   89 45 fc                mov    %eax,-0x4(%rbp)<br>  41:   8b 45 fc                mov    -0x4(%rbp),%eax<br>  44:   89 c6                   mov    %eax,%esi<br>  46:   48 8d 3d 00 00 00 00    lea    0x0(%rip),%rdi        # 4d <main+0x39><br>  4d:   b8 00 00 00 00          mov    $0x0,%eax<br>  52:   e8 00 00 00 00          callq  57 <main+0x43><br>  57:   b8 00 00 00 00          mov    $0x0,%eax<br>  5c:   c9                      leaveq<br>  5d:   c3                      retq<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">第一行指明目标平台，第二行指出是对机器码的反汇编文件，尖括号 &lt;&gt; 指明对哪个函数的反汇编，左边是机器码，右边是对应的汇编带啊吗。</span><br><span class="line"></span><br><span class="line">可以看到在调用函数的语句处，*callq* 指令的地址是 00 00 00 00，并没有填入有效的函数地址，经过链接才填入，此时的文件被称作可重定位目标文件，即各节代码都是以 0 地址作为开始，但是将它们链接在一起时，会放入不重叠的地址空间。</span><br><span class="line"></span><br><span class="line">### 2.5 链接阶段</span><br><span class="line"></span><br><span class="line">汇编阶段生成的目标机器码并没有填入调用函数的地址，链接阶段完成这一过程。链接阶段为各个模块的目标代码在程序空间（运行时进程空间、虚拟地址）中指定它们独立的、不重叠的位置和区间，这个过程叫做“布局”。对未确定的目标地址，如汇编阶段 *callq* 指令全 0 的地址，需要用布局后的对应的函数地址填充，这个过程称作“重定位”。执行 ```gcc hello.o -o hello``` 生成文件 *hello*，然后执行 ```objdump -d hello``` ，显示如下：</span><br></pre></td></tr></table></figure><br>000000000000069e <main>:<br> 69e:   55                      push   %rbp<br> 69f:   48 89 e5                mov    %rsp,%rbp<br> 6a2:   48 83 ec 10             sub    $0x10,%rsp<br> 6a6:   c7 45 fc 00 00 00 00    movl   $0x0,-0x4(%rbp)<br> 6ad:   48 8d 3d c0 00 00 00    lea    0xc0(%rip),%rdi        # 774 <_IO_stdin_used+0x4><br> 6b4:   e8 97 fe ff ff          callq  550 <a href="&#x6d;&#97;&#x69;&#108;&#116;&#x6f;&#58;&#x70;&#x75;&#x74;&#115;&#64;&#x70;&#108;&#x74;">&#x70;&#x75;&#x74;&#115;&#64;&#x70;&#108;&#x74;</a><br> 6b9:   be 03 00 00 00          mov    $0x3,%esi<br> 6be:   bf 02 00 00 00          mov    $0x2,%edi<br> 6c3:   e8 c2 ff ff ff          callq  68a <f_sum><br> 6c8:   89 45 fc                mov    %eax,-0x4(%rbp)<br> 6cb:   8b 45 fc                mov    -0x4(%rbp),%eax<br> 6ce:   89 c6                   mov    %eax,%esi<br> 6d0:   48 8d 3d aa 00 00 00    lea    0xaa(%rip),%rdi        # 781 <_IO_stdin_used+0x11><br> 6d7:   b8 00 00 00 00          mov    $0x0,%eax<br> 6dc:   e8 7f fe ff ff          callq  560 <a href="&#x6d;&#x61;&#105;&#108;&#116;&#x6f;&#58;&#112;&#114;&#105;&#110;&#x74;&#102;&#x40;&#x70;&#x6c;&#x74;">&#112;&#114;&#105;&#110;&#x74;&#102;&#x40;&#x70;&#x6c;&#x74;</a><br> 6e1:   b8 00 00 00 00          mov    $0x0,%eax<br> 6e6:   c9                      leaveq<br> 6e7:   c3                      retq<br> 6e8:   0f 1f 84 00 00 00 00    nopl   0x0(%rax,%rax,1)<br> 6ef:   00</p>
+<p>```</p>
+<p>将 0x550、0x68a 分别填入 <em>callq</em> 地址，对 <em>f_sum</em>调用使用了静态链接，在程序创建后就已经确定。查看 <em>printf</em> 调用地址发现该地址位于 <em>section.plt</em>，并且对应一条跳转指令，这涉及动态链接概念，创建可执行文件时仍不确定 <em>printf</em> 所在位置，需要运行时才能确定函数地址，当前暂时只想一个辅助代码的位置 <em>.plt</em> 处。</p>
+]]></content>
+      <tags>
+        <tag>gcc/gdb</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>C/C++ 技术随笔</title>
+    <url>/2023/07/09/cpp-skill/</url>
+    <content><![CDATA[<ol>
+<li><p>单例模式的目的是确保唯一实例，确切的说是为了在应用程序的进程空间中确保唯一实例，刚刚在视频处理器的使用中被这种设计小小震撼一下：</p>
+<span id="more"></span>
+</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">class Single &#123;</span><br><span class="line">public:</span><br><span class="line">    static Single *Get() &#123;</span><br><span class="line">        static Single re;</span><br><span class="line">        return &amp;re;</span><br><span class="line">    &#125;</span><br><span class="line">    void Set(int x, int y) &#123;</span><br><span class="line">        a = x;</span><br><span class="line">        b = y;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void Print() &#123; std::cout &lt;&lt; a &lt;&lt; &quot; &quot; &lt;&lt; b &lt;&lt; std::endl; &#125;</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">    int a = 0;</span><br><span class="line">    int b = 0;</span><br><span class="line">    Single() &#123;&#125;</span><br><span class="line">    Single(const Single &amp;) &#123;&#125;</span><br><span class="line">    Single &amp;operator=(const Single &amp;) &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">int main() &#123;</span><br><span class="line">    auto s = Single::Get();</span><br><span class="line">    s-&gt;Set(12, 13);</span><br><span class="line">    s-&gt;Get()-&gt;Print();</span><br><span class="line">    std::thread([]() &#123;</span><br><span class="line">        auto sa = Single::Get();</span><br><span class="line">        sa-&gt;Set(01, 3);</span><br><span class="line">           &#125;).join();</span><br><span class="line">    s-&gt;Get()-&gt;Print();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// output</span><br><span class="line">12 13</span><br><span class="line">1 3</span><br></pre></td></tr></table></figure>
+]]></content>
+      <tags>
+        <tag>C/C++</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Git 案例</title>
+    <url>/2023/07/22/gitsamples/</url>
+    <content><![CDATA[<p>本文记录记录一些实际操作的案例，可以结合 <a href="https://hanxinle.github.io/2019/09/29/github-note/">GitHub 基本操作教程</a> 在工作中熟悉 Git 的使用。</p>
+<span id="more"></span>
+<h1 id="1-提交前处理冲突"><a href="#1-提交前处理冲突" class="headerlink" title="1 提交前处理冲突"></a>1 提交前处理冲突</h1><p>场景，usr1 和 usr2 协同开发，二人修改了同样的文件，usr1 已经提交，usr2 的操作过程是：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git add .								# 保存更改到本地</span><br><span class="line">git commit -m &quot;&lt;填入修改描述&gt;&quot;			# 提交信息，允许 git commit -am &lt;commit-id&gt; 追加新的 git add</span><br><span class="line"># git push will rejected. 提示因为存在冲突，需要先 git pull 合并冲突</span><br><span class="line"></span><br><span class="line">git pull								#允许 git pull 操作</span><br><span class="line"></span><br><span class="line">接着去处理冲突文件，比如 Readme.md</span><br><span class="line">&lt;&lt;&lt;&lt;&lt; upstream</span><br><span class="line"></span><br><span class="line">usr1 的内容</span><br><span class="line">=============</span><br><span class="line"></span><br><span class="line">usr2 的内容，也就是我的内容</span><br><span class="line">&gt;&gt;&gt;&gt;&gt; &lt;commit-id&gt;</span><br></pre></td></tr></table></figure>
+<p>编辑大小于号之间的内容并且保存，将 <code>&lt;&lt;&lt;&lt;</code>、<code>=====</code>、<code>&gt;&gt;&gt;</code> 这种符号删掉，最终保存的内容就是处理的冲突保存到结果，这个时候可以编译测试。接着：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git add Readme.md						# 添加冲突文件</span><br><span class="line">git rebase --continue					# rebase 看下参考资料</span><br><span class="line">log:</span><br><span class="line">	README.md: needs merge</span><br><span class="line">	You must edit all merge conflicts and 											then mark them as resolved using git add</span><br><span class="line">git push								</span><br></pre></td></tr></table></figure>
+<p>参考资料：</p>
+<p>1.<a href="https://juejin.cn/post/6969101234338791432">见”解决冲突CONFLICT“部分</a></p>
+<h1 id="2-更新已有-gitignore"><a href="#2-更新已有-gitignore" class="headerlink" title="2 更新已有 .gitignore"></a>2 更新已有 .gitignore</h1><p>更新已经在 repo 中的 .gitignore 文件，比如添加如下内容</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">bin/</span><br><span class="line">bin/*</span><br></pre></td></tr></table></figure>
+<p>保存文件，之前追踪的 bin 文件夹及其内部内容，在本地立刻就不会被追踪，这个通过 git status 即可发现。即，允许不提交 .gitignore 的方式使得本地追踪生效。</p>
+]]></content>
+      <tags>
+        <tag>工具</tag>
+        <tag>Git</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>GitHub 使用</title>
+    <url>/2019/09/29/github-note/</url>
+    <content><![CDATA[<span id="more"></span>
+<h1 id="最新：更新一些-GitHub-使用异常的故障排查"><a href="#最新：更新一些-GitHub-使用异常的故障排查" class="headerlink" title="最新：更新一些 GitHub 使用异常的故障排查"></a>最新：更新一些 GitHub 使用异常的故障排查</h1><ol>
+<li>问题1： Connection reset by 20.205.243.166 port 22</li>
+</ol>
+<p>​    解决方法：C://User/<usr-name> 中编辑 /.ssh/config 给文件加上以下内容后再，重启git bash。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">Host github.com</span><br><span class="line">    User git</span><br><span class="line">    ProxyCommand connect -H 127.0.0.1:7890 %h %p</span><br></pre></td></tr></table></figure>
+<h2 id="1-本地-repo"><a href="#1-本地-repo" class="headerlink" title="1 本地 repo"></a>1 本地 repo</h2><ul>
+<li><p>设置姓名和邮箱</p>
+<p><code>git config --global user.name &quot;xxxx&quot;</code></p>
+<p><code>git config --global user.email &quot;xxxx@yyy.zzz&quot;</code></p>
+<!-- more --></li>
+<li><p>创建并初始化本地空仓库</p>
+<p><code>git init &lt;repo_name&gt;</code></p>
+</li>
+<li><p>查看提交的状态</p>
+<p><code>git status</code></p>
+</li>
+<li><p>暂存区中添加更改</p>
+<p><code>git add &lt;file_name&gt;</code></p>
+</li>
+<li><p>记录一行提交信息</p>
+<p><code>git commit -m &quot;commit info&quot;</code></p>
+</li>
+<li><p>提交记录</p>
+<p><code>git log</code></p>
+</li>
+<li><p>忽略特定格式文件格式</p>
+<p><code>touch .gitignore  &amp;&amp; vim .gitigonre</code></p>
+<p><code>*.out *.py</code></p>
+<p>原有创建的格式用 git rm —cached <file_name> 忽略<br>常用工程的 <a href="https://github.com/github/gitignore">ignore文件</a>。</p>
+</li>
+<li><p>回滚操作</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git reset --hard &lt;commit ID&gt;   # &lt;commit ID&gt; 有两种，一种很长，一种截取前一种的若干字符表示</span><br><span class="line">git push -f -u origin main     # 好坑，参考资料写 master</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>解决push冲突</p>
+<p>假设用户1修改了 xxx文件，并且 push 了，我这边再修改后 push 会提示拒绝，有冲突，查看冲突：</p>
+<p><code>git diff master origin/master</code></p>
+<p>建议将该文件备份，然后执行以下操作(备份，先拉取再合并：</p>
+</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git pull</span><br><span class="line">vim xxx  PS 对其进行更改</span><br><span class="line">git add xxx</span><br><span class="line">git commit &quot;my work&quot;</span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法</p>
+<p>(1) 在机器 a 上执行以下语句，可在该机建立了一个暂存区。</p>
+</li>
+</ul>
+<p>​    <code>git init --bare /home/hanxinle/xdisk.git</code></p>
+<p>   （2）在机器 b 执行</p>
+<p><code>git clone hanxinle@xx.mm.yy.zz:/home/hanxinle/xdisk.git</code></p>
+<p>则将 repo 拉取到本地，在本地创建文件等更改后，在本地可执行 add，commit，push 操作。</p>
+<p>   （3）其它机器执行</p>
+<p><code>git clone hanxinle@xx.mm.yy.zz:/home/hanxinle/xdisk.git</code></p>
+<p>则可以在得到与机器b一致的 repo。</p>
+<hr>
+<h2 id="2-远程-repo"><a href="#2-远程-repo" class="headerlink" title="2 远程 repo"></a>2 远程 repo</h2><ul>
+<li><p>查看分支</p>
+<p><code>git branch</code></p>
+</li>
+<li><p>创建分支</p>
+<p><code>git branch &lt;branch_name</code></p>
+</li>
+<li><p>切换到分支</p>
+<p><code>git checkout &lt;branch_name&gt;</code></p>
+</li>
+<li><p>创建并且切换</p>
+<p><code>git checkout -b &lt;branch_name&gt;</code></p>
+</li>
+<li><p>分支合并(位于 master )</p>
+<p><code>git merge &lt;sub_branch_name&gt;</code></p>
+<p>同步后可以删除这个子分支</p>
+<p><code>git branch -d &lt;sub_branch_name&gt;</code></p>
+</li>
+<li><p>分支同步</p>
+<p><code>git push origin &lt;loacl_branch_name&gt;</code>   （将本地分支同步到服务器）</p>
+</li>
+<li><p>分支删除与重命名</p>
+<p><code>git brach -D/-d  PS 删除 see git -h</code></p>
+<p>远端分支重命名(创建本地分支—&gt;同步到远端—&gt;删除远端同名分支—&gt;原本地分支重命名—&gt;推送到远端)</p>
+<p><code>git checkout -b &lt;local_branch&gt;</code></p>
+<p><code>git push origin &lt;local_branch&gt;</code></p>
+<p><code>git push --delete origin &lt;local_name&gt;</code></p>
+<p><code>git commit -m &lt;local_name&gt; &lt;new_branch_name&gt;</code></p>
+<p><code>git push origin &lt;new_branch_name&gt;</code></p>
+</li>
+<li><p>tag 管理</p>
+<p>网页端 release 中管理，和 commit 的哈希值相关。</p>
+</li>
+</ul>
+<hr>
+<h2 id="3-免密操作"><a href="#3-免密操作" class="headerlink" title="3 免密操作"></a>3 免密操作</h2><p>执行命令 <code>ssh-keygen</code>，一路回车,在 .ssh 文件夹中, id_rsa 为私有, id_rsa.pub 为公有,在 Github 中点击右上角自己的头像,选择 setting ,在 ssh 相关设置中,点击 NEW SSH KEY ,将 id_rsa.pub 的内容复制进来,此时 push 还是需要用户名密码,有两种方式可以免输入,一种是编辑.git/config 文件，将 url=https:xxxxx 更改,它的值在网页端打开 github repo 的时候,选择 clone or download 按钮,会有 use ssh 一项,点击这一项,复制 url 链接到.git/config 文件替换 url=<url_value> 这一项.</p>
+<p>另一种方式是在 clone 命令时,不要通过 https 命令操作,直接通过上面这个 ssh 的 url 方式操作.</p>
+<hr>
+<h2 id="4-fork-后用-upstream-同步原始-repo-最新情况"><a href="#4-fork-后用-upstream-同步原始-repo-最新情况" class="headerlink" title="4 fork 后用 upstream 同步原始 repo 最新情况"></a>4 fork 后用 upstream 同步原始 repo 最新情况</h2><ul>
+<li><p>首先 git clone 到本地</p>
+</li>
+<li><p>查看远端分支</p>
+<p><code>git remote -v</code></p>
+</li>
+<li><p>添加upstream分支</p>
+<p><code>git remote add upstream git@xxxx.git</code></p>
+</li>
+<li><p>将upstream版本拉到本地</p>
+<p><code>git fetch upstream</code></p>
+</li>
+<li><p>再合并upstream master</p>
+<p><code>git merge upstream/master</code></p>
+</li>
+<li><p>最后push到远端</p>
+<p><code>git push origin master</code></p>
+</li>
+</ul>
+<hr>
+<h2 id="5-其它-repo-选项"><a href="#5-其它-repo-选项" class="headerlink" title="5 其它 repo 选项"></a>5 其它 repo 选项</h2><ul>
+<li><p>Issue</p>
+<p>bug提交</p>
+</li>
+<li><p>Projects</p>
+<p>项目进度管理</p>
+</li>
+<li><p>Wiki </p>
+<p>项目的介绍,可以制作网页,补充其它必要的文档,背景</p>
+</li>
+<li><p>Gist </p>
+<p>代码\文档的片段</p>
+</li>
+</ul>
+]]></content>
+      <tags>
+        <tag>工具</tag>
+        <tag>Git</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>gdb 使用</title>
+    <url>/2020/10/16/gdb-note/</url>
+    <content><![CDATA[<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
+<li><a href="[hanxinle/100-gdb-tips: A collection of gdb tips. 100 maybe just mean many here. (github.com"> A collection of gdb tips</a>](<a href="https://github.com/hanxinle/100-gdb-tips">https://github.com/hanxinle/100-gdb-tips</a>))</li>
+<li><a href="https://github.com/hellogcc/100-gcc-tips">A collection of gcc tips</a></li>
+</ol>
+<h1 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h1><span id="more"></span>
+<p><img src="gdb1.png" alt=""><br><img src="gdb2.png" alt=""><br><img src="gdb3.png" alt=""></p>
+<h1 id="补充用法"><a href="#补充用法" class="headerlink" title="补充用法"></a>补充用法</h1><h2 id="1-设置运行参数"><a href="#1-设置运行参数" class="headerlink" title="1 设置运行参数."></a>1 设置运行参数.</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">set</span> args &lt;your args&gt;</span><br></pre></td></tr></table></figure>
+<p><em>c</em>会运行到程序结束，<em>finish</em> 跳出 <em>step over(快捷键 s)</em> 进入的函数.  </p>
+<h2 id="2-vim-编辑代码"><a href="#2-vim-编辑代码" class="headerlink" title="2 vim 编辑代码"></a>2 vim 编辑代码</h2><p>终端中输入 <code>export EDITOR=vim</code>  后在 gdb 中输入 <em>edit</em> 即可在 vim 中打开文件.</p>
+]]></content>
+      <tags>
+        <tag>gcc/gdb</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>H.264 总结</title>
+    <url>/2023/10/06/h264-concept/</url>
+    <content><![CDATA[<p><img src="h264_1.png" alt=""></p>
+<p>这个图片是经过概念梳理后做的信息提取说明图，但是理清了 H.264 的内部关系，并且对 H.264 的结构和网络传输的概念予以说明，H.264 的传输说明应该关注的是 RTP 等协议，这些都有专门的 RFC 文档和对应的开源库。</p>
+]]></content>
+      <tags>
+        <tag>音视频</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>开发环境问题处理</title>
+    <url>/2023/12/02/hardware-notes/</url>
+    <content><![CDATA[<h1 id="1-一些教训"><a href="#1-一些教训" class="headerlink" title="1 一些教训"></a>1 一些教训</h1><p>非必要不升级系统，导致很多经典软件不能用，最后重新安装系统解决这些问题的.</p>
+<span id="more"></span>
+<h1 id="2-樱桃键盘"><a href="#2-樱桃键盘" class="headerlink" title="2 樱桃键盘"></a>2 樱桃键盘</h1><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>按键</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>win 键盘失效</td>
+<td>fn+F9</td>
+</tr>
+<tr>
+<td>F1~F3 与音量强制关联</td>
+<td>fn+Ctrl</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h1 id="3-Git-状态图标异常"><a href="#3-Git-状态图标异常" class="headerlink" title="3 Git 状态图标异常"></a>3 Git 状态图标异常</h1><p><code>WIN+R</code> 启动注册表，找到这一项：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">计算机\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIconOverlayIdentifiers\</span><br></pre></td></tr></table></figure>
+<p>删掉该项下的 <code>Tortoise1Normal</code> 前的所有内容，任务管理器中重启 EXPLORER。</p>
+<h1 id="4"><a href="#4" class="headerlink" title="4"></a>4</h1>]]></content>
+      <tags>
+        <tag>工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>补充 hexo 博客的使用</title>
+    <url>/2024/03/29/hexo_slide/</url>
+    <content><![CDATA[<p>恢复重建</p>
+<p>删除</p>
+<p>更新</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>C++和lua混合程序设计</title>
+    <url>/2023/03/14/lua-cpp/</url>
+    <content><![CDATA[<h1 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h1><h2 id="库编译"><a href="#库编译" class="headerlink" title="库编译"></a>库编译</h2><p>从官网下载的版本是 5.1.4 ，配合《lua设计与实现》在 Linux/Windows 编译，在 Windows 上编译的过程中<span id="more"></span> 有些小坑，记录下这些，以后不用再话费时间重复劳动了。</p>
+<p>vs2019 新建 dll 项目，将 src 路径下所有文件拷贝到工程路径并添加到解决方案，并在工程路径上一级目录新建 bin、lib 两个文件夹，用于输出生成的 dll 和 lib 文件，不适用预编译头 .pch 文件。</p>
+<p>实验发现编译工程会生成 dll 文件，但是无 lib 文件生成，在 luaconf.h 文件  154 行发现说明，需要在工程添加 宏定义 <em>LUA_BUILD_AS_DLL</em>。</p>
+<p>将“属性-链接器-高级-导入库”，设置为 <em>..\lib$(TargetName).lib</em>，再次编译程序即可。</p>
+<h2 id="测试工程"><a href="#测试工程" class="headerlink" title="测试工程"></a>测试工程</h2><p>新建控制台程序，需要以 extern “C” 包含的文件及引入工程的文件如下：</p>
+<p>{lauxlib}.h/.c、{lua}.h/.c、lualib.h、luaconf.h，注释掉 lua.c 中的 main 函数，新建 main.lua 文件，代码就一条 <code>print (&quot;hello world.&quot;)</code>，记得新工程导入 dll 和 lib 文件,该工程的 main.cpp 如下:</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="string">&quot;C&quot;</span> &#123;</span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;lauxlib.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;lua.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;lualib.h&quot;</span></span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstring&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    lua_State *lua = <span class="built_in">lua_open</span>();</span><br><span class="line">    <span class="built_in">luaopen_base</span>(lua);</span><br><span class="line">    <span class="built_in">luaopen_table</span>(lua);</span><br><span class="line">    <span class="built_in">luaL_openlibs</span>(lua);</span><br><span class="line">    <span class="built_in">luaopen_string</span>(lua);</span><br><span class="line">    <span class="built_in">luaopen_math</span>(lua);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">luaL_loadfile</span>(lua, <span class="string">&quot;main.lua&quot;</span>)) &#123;</span><br><span class="line">        <span class="type">const</span> <span class="type">char</span> *error = <span class="built_in">lua_tostring</span>(lua, <span class="number">-1</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%s\n ִrun script file failed.&quot;</span>, error);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">lua_pcall</span>(lua, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)) &#123;</span><br><span class="line">        <span class="type">const</span> <span class="type">char</span> *error = <span class="built_in">lua_tostring</span>(lua, <span class="number">-1</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%s\n ִrun script file failed.&quot;</span>, error);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <tags>
+        <tag>工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>MPI集群配置和mxnet分布式训练</title>
+    <url>/2017/10/18/mpi-setup-ubuntu/</url>
+    <content><![CDATA[<p>首先讲集群配置，mpi方案放弃openmpi，原因：在网上很少找到资料 &amp;&amp; 出错信息不友好。<br><span id="more"></span><br>集群（cluster）由 3 个主机构成：ThinkPad-T440p（master IP：192.168.1.106）与 VirtualBox 上a安装的 Ubuntu 16.04 LTS （node1 IP：192.168.1.109）、远程的 Erazer-X310-node（node2 IP：192.168.1.102 ）。</p>
+<h1 id="安装-mpich"><a href="#安装-mpich" class="headerlink" title="安装 mpich"></a>安装 mpich</h1><p>通过 apt-get 安装即可，安装的版本是 3.2-6build1(下载了源码作为备用安装选项)</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo apt-get install mpich mpich-doc</span><br></pre></td></tr></table></figure>
+<h1 id="配置-ssh-免登陆"><a href="#配置-ssh-免登陆" class="headerlink" title="配置 ssh 免登陆"></a>配置 ssh 免登陆</h1><p>这么做的目的是集群通过ssh通信，避免了频繁的登陆操作 ，首选在每台机器上通过 apt 安装 openssh，</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo apt-get install openssh-server openssh-client</span><br></pre></td></tr></table></figure>
+<p>在 master 上执行 <code>ssh -v localhost</code> ，输入密码后 ssh 到本地，执行 <code>ssh-keygen -t rsa</code>，在 ~/.ssh 目录下生成 id_rsa 、 id_rsa.pub 两个文件（也可将 rsa 命令替换为 dsa，没试过，是书上附录提供的方法，自己搜索下区别），   将 .pub 文件拷贝到 远程机的 .ssh 目录   　下，命令如下（在此之前 ssh 到目标机，证明可以联通再拷贝，以 node1 为例），本机执行 <code>scp ~/.ssh/id_rsa.pub   192.168.1.109：/home/hanxinle/.ssh/</code> ，然后在 ssh 到目标机的终端窗口进入到 node2 的 .ssh 目录，执行 <code>cat id_rsa.pub &gt;&gt; authorized_keys</code> ，生成了      authorized_keys 后 执行 <code>exit</code> 断开 ssh ，再执行 <code>ssh</code> 命令，看看是否省略了输入密码的过程。</p>
+<h1 id="配置共享文件夹"><a href="#配置共享文件夹" class="headerlink" title="配置共享文件夹"></a>配置共享文件夹</h1><p>这个步骤的目的是，使得 node1,node2 共享 master 的一个目录，将程序放到这个目录中来执行，node1,node2 有查看这个文件夹的权限就好（虚拟机这种情况），mpi 程序可以运行。</p>
+<p>对 node1 虚拟机通过 共享文件夹功能 实现，安装了虚拟机后，务必到上面菜单栏中找到安装增强功能菜单，增强功能会自动安装，待其装好后，在 VirtualBox 找到已经在本地建好的共享文件夹 cloud ，选择它，并且选择 <em>自动挂载和固定挂载</em>，这样免去每次开启虚拟机就设置共享文件夹的麻烦，进入虚拟机以后执行</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo mount -t vboxsf  cloud  /home/hanxinle/cloud/</span><br></pre></td></tr></table></figure>
+<p>即可实现挂载，不要等待，应该马上就就可以挂载好的。</p>
+<p>对 node2 通过 nfs 执行，在 master 上执行</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo apt-get install nfs-kernel-server</span><br></pre></td></tr></table></figure>
+<p>ssh 到 node2 上，同样执行</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo apt-get install nfs-kernel-server nfs-common</span><br></pre></td></tr></table></figure>
+<p>然后 在 master 上执行</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mkdir -p /home/hanxinle/cloud</span><br></pre></td></tr></table></figure>
+<p>然后执行 </p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo vim /etc/exports</span><br></pre></td></tr></table></figure>
+<p>在最后一行添加：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/home/hanxinle/cloud (此处有空格) *(rw,sync,no_root_squash,no_subtree_check)</span><br></pre></td></tr></table></figure><br>设置了共享文件夹的权限等，接着执行<code>exportfs - a</code>,继续执行：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo service nfs-kernel-server restart  </span><br><span class="line">sudo service portmap restart</span><br></pre></td></tr></table></figure><br>（这两个命令也可以是 sudo /etc/init.d/xxxx restart,xxxx 换成 nfs-kernel-server 、portmap），在node2这里安装好了 nfs-common 后在用户目录下建立一个 cloud 文件夹，然后执行<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">showmount -e 192.168.1.106</span><br></pre></td></tr></table></figure><br>看看有无 可挂载的 路径，有的话就挂载<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo mount -t nfs 192.168.1.106:/home/hanxinle/cloud  /home/haxinle/cloud</span><br></pre></td></tr></table></figure><br>挂载完毕，可以进入到这个cloud目录，看看和 master 的文件是否一样。</p>
+<h1 id="编辑-hosts"><a href="#编辑-hosts" class="headerlink" title="编辑 hosts"></a>编辑 hosts</h1><p>主机的命名和设备名称是一致的，不然有时候会遇到无法解析、找到 host 的问题，为了简便下次重新装机的过程可以将设备名称直接设置为 master 。在 master 编辑  /etc/hosts 文件， master 的 /etc/hosts 内容是：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">127.0.0.1 localhost</span><br><span class="line"></span><br><span class="line"># MPI SETUP</span><br><span class="line"></span><br><span class="line">192.168.1.106   ThinkPad-T440p</span><br><span class="line"></span><br><span class="line">192.168.1.109   hanxinle-VirtualBox</span><br><span class="line"></span><br><span class="line">192.168.1.102   Erazer-X310-node</span><br></pre></td></tr></table></figure>
+<p>node1 的 /etc/hosts 内容是：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">127.0.0.1 localhost</span><br><span class="line"></span><br><span class="line"># MPI SETUP</span><br><span class="line"></span><br><span class="line">192.168.1.106   ThinkPad-T440p</span><br><span class="line"></span><br><span class="line">192.168.1.109   hanxinle-VirtualBox</span><br></pre></td></tr></table></figure>
+<p>node2 的 /etc/hosts的内容是：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">127.0.0.1 localhost</span><br><span class="line"></span><br><span class="line"># MPI SETUP</span><br><span class="line"></span><br><span class="line">192.168.1.106  ThinkPad-T440p</span><br><span class="line"></span><br><span class="line">192.168.1.102   Erazer-X310-node</span><br></pre></td></tr></table></figure></p>
+<h1 id="其它说明"><a href="#其它说明" class="headerlink" title="其它说明"></a>其它说明</h1><p>1、运行程序的过程中，可能会遇到 node1、node2 无法 ssh 到 master，提示检查防火墙设置，在 master 上执行 sduo ufw disable，关闭防火墙问题解决。</p>
+<p>2、ssh port 22 refused 的解决方法。连接不上的情况发生在 1） ssh 连接上以后 执行exit，重新连接则出现端口 22 拒绝链接；2） ssh 成功后断网，再连接则无反应。</p>
+<p>原因：网络通信断开后在一定时间内端口不能被使用。<br>解决方案参考自<a href="https://ubuntuforums.org/showthread.php?t=1489846">这里</a>，请执行以下两个命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ssh -v localhost</span><br><span class="line">sudo /etc/init.d/ssh restart</span><br></pre></td></tr></table></figure>
+<p>网络上传播的不成功的解决方法：1） 重新安装openssh-client ， openssh-server ； 2）编辑 /etc/ssh/sshd_config 改编端口号到2222，重启 sudo service ssh restart or sudo service stop and sudo service start （大同小异的步骤）。不要尝试这些方法了。</p>
+<h1 id="编写测试程序"><a href="#编写测试程序" class="headerlink" title="编写测试程序"></a>编写测试程序</h1><figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;mpi.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>** argv)</span> </span>&#123;</span><br><span class="line">   <span class="comment">// Initialize the MPI environment. The two arguments to MPI Init are not</span></span><br><span class="line">   <span class="comment">// currently used by MPI implementations, but are there in case future</span></span><br><span class="line">   <span class="comment">// implementations might need the arguments.</span></span><br><span class="line">   <span class="built_in">MPI_Init</span>(<span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br><span class="line"> </span><br><span class="line">   <span class="comment">// Get the number of processes</span></span><br><span class="line">   <span class="type">int</span> world_size;</span><br><span class="line">   <span class="built_in">MPI_Comm_size</span>(MPI_COMM_WORLD, &amp;world_size);</span><br><span class="line"> </span><br><span class="line">  <span class="comment">// Get the rank of the process</span></span><br><span class="line">   <span class="type">int</span> world_rank;</span><br><span class="line">   <span class="built_in">MPI_Comm_rank</span>(MPI_COMM_WORLD, &amp;world_rank);</span><br><span class="line"> </span><br><span class="line">  <span class="comment">// Get the name of the processor</span></span><br><span class="line">   <span class="type">char</span> processor_name[MPI_MAX_PROCESSOR_NAME];</span><br><span class="line">   <span class="type">int</span> name_len;</span><br><span class="line">   <span class="built_in">MPI_Get_processor_name</span>(processor_name, &amp;name_len);</span><br><span class="line"> </span><br><span class="line">   <span class="comment">// Print off a hello world message</span></span><br><span class="line">   <span class="built_in">printf</span>(<span class="string">&quot;Hello world from processor %s, rank %d out of %d processors\n&quot;</span>,</span><br><span class="line">          processor_name, world_rank, world_size);</span><br><span class="line"> </span><br><span class="line">   <span class="comment">// Finalize the MPI environment. No more MPI calls can be made after this</span></span><br><span class="line">   <span class="built_in">MPI_Finalize</span>();</span><br><span class="line"></span><br><span class="line">   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>在 master 的 cloud 目录将上面文件命名为 hellompi.c 并保存，此时 node1、node2 是能在本地 cloud 文件夹看到 hellompi.c ，编译程序:<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mpicc hellompi.c -o a</span><br></pre></td></tr></table></figure><br>单机执行<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mpirun -np 4 ./a</span><br></pre></td></tr></table></figure><br>在master、node1、node2 执行：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mpirun -np 10 --hosts ThinkPad-T440p,Erazer-X310-node,hanxinle-VirtualBox ./a</span><br></pre></td></tr></table></figure></p>
+<p>注意，编译程序在所有环境配置无误后再执行程序，除了用 —hosts 指定 master + 代理的形式运行程序，还可以 新建立一个 mpi_file 文件，首行是 master 的 ip ，第二行是 node1 的ip，第三行是 node2 的 ip ，执行命令：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mpirun -np 10 --hostfile mpi_file ./a</span><br></pre></td></tr></table></figure><br>也就是说 执行程序 依赖 /etc/hosts 或者 本地写明 ip 的 hostfile 文件，且 mpi 程序执行过程中必须有主机 master 参与，可以单 master 主机，但不可缺少 master 主机。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><p>[1]. <a href="http://mpitutorial.com/tutorials/running-an-mpi-cluster-within-a-lan/">mpi tutorials - LAN  (with mpich)</a></p>
+<p>[2]. <a href="https://github.com/wesleykendall/mpitutorial">mpi tutorials 的 GitHub</a>    </p>
+<p>[3]. <a href="https://blog.csdn.net/zpf336/article/details/50825847">靠谱的 nfs 文件夹设置方法</a></p>
+<h1 id="mxnet运行分布式多机神经网络训练（2018-03-01）"><a href="#mxnet运行分布式多机神经网络训练（2018-03-01）" class="headerlink" title="mxnet运行分布式多机神经网络训练（2018-03-01）"></a>mxnet运行分布式多机神经网络训练（2018-03-01）</h1><p>Ubuntu 16.04 LTS，mxnet distribute training,由源码编译安装时根据文档,添加某个标志使其支持分布式训练,本地新建文件,首行为主机 IP,下一行及以后为 从机 IP.</p>
+<p>分布式训练命令如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">export PS_VERBOSE=1</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python ../../tools/launch.py -n 2 --launcher mpi -H mpi_file python train_mnist.py --network lenet --kv-store dist_syncINFO:root:Epoch[9] Batch [100] Speed: 155.30 samples/sec</span><br><span class="line"></span><br></pre></td></tr></table></figure>]]></content>
+      <tags>
+        <tag>工具</tag>
+        <tag>mpich</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>《Linux 多线程服务端编程》阅读与实践（1）</title>
+    <url>/2021/04/20/muduo-read-learn/</url>
+    <content><![CDATA[<h1 id="阅读小结"><a href="#阅读小结" class="headerlink" title="阅读小结"></a>阅读小结</h1><p>这篇博文是概括性的，目的在于理清作者的思路，作者有一套网络程序设计的教程，推荐学习。<br><span id="more"></span><br>前5章对 Linux 多线程做了细致的论述，对以下问题重点论述，解决。</p>
+<p>线程安全的对象生命期，需要能标记其所持资源是否被占用的程序功能，直到提出 shared_ptr/weak_ptr 这一解决方案。</p>
+<p>线程同步精要，给出精简有效的线程同步方案。对已经经过检验的经验要熟悉，不必求面面俱到。</p>
+<p>多线程编程模型——one loop per thread，每个线程持有一个事件管理(Reactor),每个线程可以处理多个 I/O，这个做法和个人网盘项目的做法是一致的。我需要多写一些程序，体会这种方案的益处，知其然也知其所以然。</p>
+<h1 id="实践：Libevent实现多线程-Reactor-线程池"><a href="#实践：Libevent实现多线程-Reactor-线程池" class="headerlink" title="实践：Libevent实现多线程 Reactor 线程池"></a>实践：Libevent实现多线程 Reactor 线程池</h1><p>该线程池的设计遵循one loop per thread思想，每个线程维护一个 Reactor。</p>
+<p>该线程池的链接是：</p>
+<p><a href="https://github.com/hanxinle/Xcpp/tree/main/src/libevent_learn/ch3_thread_pool">https://github.com/hanxinle/Xcpp/tree/main/src/libevent_learn/ch3_thread_pool</a></p>
+<p>更进一步的实践是一个网盘应用，当前实现的网盘原型链接是</p>
+<p><a href="https://github.com/hanxinle/XCloud-Disk">https://github.com/hanxinle/XCloud-Disk</a> 。</p>
+]]></content>
+      <tags>
+        <tag>网络编程</tag>
+        <tag>多线程</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>OBS 编译记录</title>
+    <url>/2023/06/29/obs-build/</url>
+    <content><![CDATA[<p>OBS 的编译还是有陷阱的，这次编译出来留一个文档。</p>
+<span id="more"></span>
+<p>还是用以前下载的源码和依赖尝试编译，昨天晚上在这里搞了很久，今天上午发现了问题并且解决了问题，以下是记录。</p>
+<h1 id="1-参考资料"><a href="#1-参考资料" class="headerlink" title="1 参考资料"></a>1 参考资料</h1><p><a href="https://github.com/obsproject/obs-studio/wiki/Build-Instructions-For-Windows">https://github.com/obsproject/obs-studio/wiki/Build-Instructions-For-Windows</a></p>
+<h1 id="2-系统说明"><a href="#2-系统说明" class="headerlink" title="2 系统说明"></a>2 系统说明</h1><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>类目</th>
+<th>信息</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>源码</td>
+<td>2019版</td>
+</tr>
+<tr>
+<td>编译工具</td>
+<td>vs2019</td>
+</tr>
+<tr>
+<td>DepsPath</td>
+<td>I:/obs_2019/dependencies2019/win32/include</td>
+</tr>
+<tr>
+<td>QTDIR</td>
+<td>C:/Qt/Qt5.14.2/5.14.2/msvc2017</td>
+</tr>
+<tr>
+<td>ENABLE_UI</td>
+<td>勾选</td>
+</tr>
+<tr>
+<td>BUILD_BROWSER</td>
+<td>不要勾选 （默认勾选的，要取消掉）</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h1 id="3-编译过程的坑"><a href="#3-编译过程的坑" class="headerlink" title="3 编译过程的坑"></a>3 编译过程的坑</h1><ol>
+<li>如果系统中曾经配置了 prebuild 的 FFmpeg 并且添加到环境变量 Path 中，会导致编译过程中找不到 FFmpeg 相关的库，导致编译出现错误；</li>
+<li>编译过程中记得去系统环境变量中找 Python 相关的环境 Anaconda，将它们全部删掉，我开始采用在其值后面添加 —— 字符的方式注释掉，发现还是会对编译有干扰。后续我卸载了 Anaconda 并且删除掉这些环境变量。</li>
+<li>编译过 WebRTC 的话会配置 depot_tools ，里面也有 Python 开发环境，记得在 Path 中删除。</li>
+<li>以前安装在 C:/Python27 我没有删除，但在 Path 中删掉了这个值。</li>
+</ol>
+<h1 id="4-总结"><a href="#4-总结" class="headerlink" title="4 总结"></a>4 总结</h1><p>没有这些陷阱，按照网上提供的编译帮助编译就可以了， 使用 cmake，注意 cmake 和  Visual Studio 的版本要求。生成工程后打开，按 F7 生成解决方案。</p>
+<p>生成的路径是 <strong>&lt;盘符&gt;:\obs_2019\obs-studio\build_2019\rundir\Debug\bin\32bit</strong></p>
+<p>生成成功不能运行的话，右击 INSTALL - 仅用于项目 - 仅生成 INSTALL ，可在配置的 安装目录中发现软件，可进入 bin 路径启动验证功能。</p>
+]]></content>
+      <tags>
+        <tag>OBS</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>使用 OBS 开发零散记录</title>
+    <url>/2023/07/04/obs-src-dev/</url>
+    <content><![CDATA[<p>这个笔记比较乱，记录下 OBS 源码分析和使用 OBS 开发的一些做法。</p>
+<span id="more"></span>
+<h1 id="我对源码修改的地方："><a href="#我对源码修改的地方：" class="headerlink" title="我对源码修改的地方："></a>我对源码修改的地方：</h1><ol>
+<li>I:\007_webrtc_ffmpeg_opencv_obs\obs_2019\obs-studio\plugins\win-capture\window-capture.c</li>
+</ol>
+<p>line 407, 最小化处理，原代码注释掉了。</p>
+<ol>
+<li>I:\007_webrtc_ffmpeg_opencv_obs\obs_2019\obs-studio\libobs\obs-windows.c</li>
+</ol>
+<p>将三处 data、plugin 的加载路径由上层改为本地。</p>
+<h1 id="分析源码"><a href="#分析源码" class="headerlink" title="分析源码"></a>分析源码</h1><p><img src="image-20230701181056276.png" alt="image-20230701181056276"></p>
+<p>代码的四大块，其中 frontend 是页面。</p>
+<p><img src="image-20230701181903678.png" alt="image-20230701181903678"></p>
+<p>主界面：OBSBasic.ui，</p>
+<p>F10，调试模式进入到 main 函数，解决方案里面搜 main( 不管用。</p>
+<p>I:\007_webrtc_ffmpeg_opencv_obs\obs_2019\obs-studio\UI\obs-app.cpp</p>
+<p>line: 2126 中，找到初始化语句 <em>program.OBSInit()</em>，在这个函数中，有条语句是：</p>
+<p><em>qRegisterMetaType<VoidFunc>()</em>，使用的信号不是基本信号的时候，要记得对信号进行注册，不然信号发不过去。</p>
+<p>继续跟踪函数，会看到追踪至 StartupOBS，内部有 obs_stratup，这个函数查看声明，前缀带有 EXPORT，说明是有库将其导出的，因此在后续的开发中，我们可以只调用这个函数开发就可以了。</p>
+<p>初始化中需要初始化音视频，创建基本界面，还会检查更新等，对我们来说关心的就是初始化音频和视频。</p>
+<p>obs 中加载插件的方式是 Loadlibray 和 GetProcAddress ，即加载库然后获取函数的名字再使用，程序销毁的时候做 Free 操作。还是再 OBSInit 中查看这些信息。</p>
+<p>obs_load_modules() ;</p>
+<p>音频设置 </p>
+<p>ResetAudio</p>
+<p><img src="image-20230701224233845.png" alt="image-20230701224233845"></p>
+<p><img src="image-20230701224142137.png" alt="image-20230701224142137"></p>
+<p><img src="image-20230701225306546.png" alt="image-20230701225306546"></p>
+<p>obs_reset_audio () 后续会用到这个库，是 libobs 导出的.</p>
+<p>obs_init_audio () </p>
+<p>视频设置</p>
+<p>ResetVideo</p>
+<p>AttemptToResetVideo</p>
+<p>obs_reset_video</p>
+<p>obs_init_video</p>
+<p>obs 根对象</p>
+<p>struct obs_core * obs = NULL; 整个工程的功能都依赖这个对象，比如音视频帧的获取等等。</p>
+<p>创建图像线程 obs_graphices_thread 预览功能。</p>
+<p>os_semaphore 是信号量相关，再video-io.c 中，点击录制会进入到其中执行有关逻辑。</p>
+<p>ResetOutputs（） 设置输出对象—-obs_output_create—录制相关，mux 复用器, 属于 ffmpeg 的复用。</p>
+<p>点击录制就会还会计进入 obs-ffmpeg-mux.c 中 ffmpeg_mux_start (void * data) 开始的</p>
+<h1 id="从录制开始"><a href="#从录制开始" class="headerlink" title="从录制开始"></a>从录制开始</h1><p>recordButton 以及槽函数 on_recordButton_clicked</p>
+<p>obs_output_start、obs_output_stop 是以后我们会学习使用的两种不同的流程。</p>
+<p>声音的采集需要有混音操作，可能比画面录制更复杂。</p>
+<p>窗口采集用 bitblt 只能采集有窗口句柄的窗口，无句柄的用 wgc,例如谷歌浏览器或者 vscode ，继续使用 bitblt 会出现黑屏。</p>
+<p>显示器采集源码在 duplicator-monitor-capture.c </p>
+<p>bitblt x264 采集源码的详细分析</p>
+<p>点击开始录制按钮后发生了什么？</p>
+<p>什么时候开始编码？</p>
+<p>视频帧是怎么存储？</p>
+<p>环形队列 circleBuffer 的方式.</p>
+<p>4个线程</p>
+<p>video_thread ：录制编码</p>
+<p>obs_graphics_thread 预览、采集</p>
+<p>audio_thread 音频输出</p>
+<p>CaptureThread 音频采集线程</p>
+<p>raw_frame 是信号量，</p>
+<p>os_sem_post os_sem_wait</p>
+<p>大项目记得看堆栈</p>
+<p>Load(savePath) 进入 win-wasapi 是音频采集相关的项目，</p>
+<p>osb-source.c 中有处理多路音频的数据，要比视频处理复杂。</p>
+<h1 id="开始移植工程"><a href="#开始移植工程" class="headerlink" title="开始移植工程"></a>开始移植工程</h1><p>学到了一个技巧，</p>
+<p>点击要查看的函数下断点，当执行到这里的时候，就可以看到程序填入的实际值，那么自己移植程序的时候，就可以将值直接填入然后继续移植工作，不需要再去代码中查找。</p>
+<p>带界面的窗口出问题记得使用 exit(0);</p>
+<p>obs 要先创建场景再创建源，然后才能使用。</p>
+]]></content>
+      <tags>
+        <tag>OBS</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>自然语言处理综述</title>
+    <url>/2019/11/15/nlp-mainline/</url>
+    <content><![CDATA[<p>本文是对前段时间学习自然语言处理（NLP）的总结。本文先介绍自然语言处理的内容，及其基于统计学的处理方式，在这个过程，逐渐矩阵化数据，看到矩阵化即可以想到机器学习方法的引入，预见到深度学习技术广泛应用的必然性。本文结尾我提供两个自己学习过程中建立的仓库，一个是对学习内容的总结，另一个是个对话机器人。<br><span id="more"></span><br>自然语言处理由以下几个任务构成：</p>
+<h1 id="分词"><a href="#分词" class="headerlink" title="分词"></a>分词</h1><p>个人理解，NLP 根据问题的定义所关注的是文本的规模是不一样的，如文本聚类/分类，是以文档规模考量，而命名实体识别(NER)，关注语言规模的则是文档中的词语。但和很多 NLP 任务一样，都绕不开分词这一操作，如果以文本为基本单位作为语言处理的对象，那语料是太稀疏，所做的处理泛化性太差太差了。这对语料的数量或者特征工程来说，尤其是深度学习以外的方法来说，几乎是不可能完成的任务。分词的方法有:</p>
+<h2 id="词典分词"><a href="#词典分词" class="headerlink" title="词典分词"></a>词典分词</h2><p>中文分词有两类方法，一类是基于词典分词，一类基于机器学习方法。词典分词需要两部分:词典和查词典的规则。通过词典查询到的字符串才会被认定为词。词典查词涉及齐夫定律:越新的词，它的词频越小，趋于 0 。因此可以构建词典来查词。</p>
+<p>词典分词的步骤：</p>
+<p>(1) 构建词典</p>
+<p>词典的样式如下：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center"></th>
+<th style="text-align:center"></th>
+<th style="text-align:center"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">词语1</td>
+<td style="text-align:center">词性1</td>
+<td style="text-align:center">词频1</td>
+</tr>
+<tr>
+<td style="text-align:center">词语2</td>
+<td style="text-align:center">词性2</td>
+<td style="text-align:center">词频2</td>
+</tr>
+<tr>
+<td style="text-align:center">…</td>
+<td style="text-align:center">…</td>
+<td style="text-align:center">…</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>在词典分词中，词性和词频都是可以忽略的，它在接下来的章节中才有用。</p>
+<p>(2) 从句子中切分单词(字符串)</p>
+<p>采用完全切分的方法，在文本的开头设置两个指针，for 循环向前移动，判断切分的字符串是否是步骤 1 中词典的元素，是的话，则记录为单词 ，保存之，继续寻找单词。</p>
+<p>这一方法有两个缺点:第一，效率低，双指针的循环遍历复杂度是 O(n^2) ;第二，会把长词切分为不同的短词汇( NLP 中认为长词的表达的信息比短词更丰富)。因此，最长匹配发应运而来，正向匹配的过程是与玩完全匹配法相似，逆向匹配法首位各放置一个指针，在这个固定尾指针，头指针向尾指针移动，同时判断截取的 string 是否是词典中的元素，是的话保存单词，我的理解是，保存为单词后，这段 string 内就不在继续遍历查词了，因为那样做，会把相对字少的单词找出来，失去了逆向匹配法的意义。上述两种方法得到单词后，按照单词的顺序，对文本进行切割，单词间插入空格。最后，还有双向匹配法，即上述两种方法同时采用，对得到的结果，有如下规则:第一，优先选择得到词数少的方案。第二，词数相同，则选择单字少的方案。第三，单字相同的情况，选取逆向最长匹配法的结果作为首选。</p>
+<p>这部分还提到了字典树和 AC 自动机技术，我的理解是，字典树是将字符串转化为字典树，通过定义遍历字典树的路径，找到该字典树(字符串)中所包含的单词。AC 自动机这里不做过多赘述，我还需要看书搞懂。</p>
+<h2 id="统计方法分词"><a href="#统计方法分词" class="headerlink" title="统计方法分词"></a>统计方法分词</h2><p>统计方法是统计训练数据什么是单词，以及该单词的词频(出现的次数)，将统计结果作为对目标文档的分类依据。统计方法需要数据，训练，用得到的模型来产生句子的分词序列。</p>
+<p>句子的模型就是句子出现的概率，这部分用到了马尔科夫模型，句子由单词构成，句子的概率等于单词序列的条件概率，简化为两个单词的条件概率，根据最大似然估计由二者频数算出，单词频数可由语料训练得到。</p>
+<p>训练需要的数据称为语料，语料是已经分词的句子(文章)。经过训练得到模型，模型包括两部分，一元模型(一个词的频率)和(两个连续相邻词的频率)。有了这个模型，就可以对未分词的句子/文章进行分词。</p>
+<p>有了模型，根据一元词的模型，可以构建词网，词网有个特色:第 i 行的词 $w$ 和第 $i + len(w)$ 行的词构成二元语法，依据词网可以构建词图，求解该图的最短路径，可以获得最佳的分词序列。</p>
+<h1 id="序列标注"><a href="#序列标注" class="headerlink" title="序列标注"></a>序列标注</h1><p>序列标注是方法，不是最终应用，序列标注技术可以用于分词，命名实体识别，词性标注。</p>
+<p>为什么需要序列标注，在前面词典分词的方法中，文本中的单词能否被识别，直接由词典决定，在词典中则能够识别，不在词典中则一定不能识别，一个语言的词汇是如此的丰富，这种方法对新词( OOV )无任何泛化能力，分词是将 NLP 处理数据的粒度由句子降为单词，提升对句子处理能力，序列标注则是将操作的粒度变为字符，以此提升对文本信息的敏感度。</p>
+<p>序列标注的语料形式如下:</p>
+<p>  字符1   , $label ∈ { B ， M ， E ， S }$ </p>
+<p>  字符2   , $label ∈ { B ， M ， E ， S }$ </p>
+<p>…</p>
+<p>有了每个字符的 label 值，分词的结果方式就是 将 string [ B:最近的 $E$ ] 作为单词．通过得到的单词，为每个单词加入新的 $label_E ∈ 实体 {人名 ， 地名， 物品 ，… }$ 则可进行实体识别，加入 $label_p ∈ { N,V,…}$ 等词性，则可以将序列标注用于词性标注。</p>
+<p>这一部分，引入了隐马尔科夫模型，隐马尔科夫模型有两部分，一部分可见 $y$ ，如 $label$，一部分不可见，记做 $x$。该模型能够 由 $y$ 映射到 $x$， 在 NLP 中即根据语料 $label$ 反推语料特征。(PS:隐马尔科夫模型有其它用处，这里是生成隐藏部分 )。</p>
+<p>马尔科夫模型的特点是，当前元素状态 $yt$ 仅由上个相邻元素状态 $yt-1$ 决定，与其它元素的状态无关。 而当前隐状态 $x$ 仅有当前时刻的显状态 $y$ 来决定。二者数学上都是条件概率。隐马尔科夫记做 $(π，A，B)$</p>
+<p><img src="yinmaerkefu.png" alt=""></p>
+<p>在这部分，感知机(神经网)，CRF 算法登场，用于序列标注。</p>
+<h1 id="命名实体识别"><a href="#命名实体识别" class="headerlink" title="命名实体识别"></a>命名实体识别</h1><p>多个单词构成的复合词，称作命名实体。命名实体识别包括实体边界识别和实体性质 $(人，物，地?)$ 识别两部分。不同的任务中，对实体是有不同的定义的，这类任务有两类方法，一类基于规则，一类基于统计学习，这部分应用前面提到的方法，作者直接调用开发包完成的。</p>
+<h1 id="信息抽取"><a href="#信息抽取" class="headerlink" title="信息抽取"></a>信息抽取</h1><p>信息抽取是指在文本中找到文本中新单词的过程，这是个新词发下的过程。它的步骤是:第一，提取文本中的词语，不论新旧。第二，用词典过滤掉已有的词，得到新词，第三，对新词进行删选，留下的词则是文本的信息描述。</p>
+<p>具体的，给定文本，切分得到新词后，对其有个测量值，左右搭配的丰富程度，叫做信息熵，记做 $H(X) h$，另一个是文本内内容搭配的固定程度，称作互信息，记做 $I(X,Y)$ 。信息熵表征信息量，它的值表征对时间 $X$ 不确定信息的减少量。其中，<br>$H ( X ) = - ∑ p (x) <em> log( x) , P ( X, Y )  =  P( X , Y ) / P ( X ) </em> P ( Y )$，计算了新词的信息熵和互信息后，将低于设定阈值的新词剔除，余下的新词就是文本中抽取的新信息。</p>
+<h1 id="关键词-句抽取"><a href="#关键词-句抽取" class="headerlink" title="关键词/句抽取"></a>关键词/句抽取</h1><h2 id="关键词抽取"><a href="#关键词抽取" class="headerlink" title="关键词抽取"></a>关键词抽取</h2><p>信息抽取关注的是文本中提取出的词语的新鲜程度，另一种需求是提取文本的关键信息的描述词，即关键词抽取。关键词抽取可以应用于单文档或者多文档，单文档中有词频法和 Textrank 算法。多文档应用 TF-IDF 算法。</p>
+<p>词频法过程，分词后统计词频，过滤掉停用词后，取m个单词，从中选取词频最高的n个单词，算法的复杂度是 $O (m* log n)$。该方法的缺点是，高频词未必是关键词，不一定能反应文本特色。</p>
+<p>如何确定一个高频词的重要程度呢？可由多文档验证，那么有 TF-IDF 算法如下：  </p>
+<script type="math/tex; mode=display">TF-IDF ( t ， D ) = TF ( t ， D ) / DF ( t )</script><p> 其中 $t$， $D$ 为词和包含 $t$ 的文档，$TF (t,D)$ 是 $t$ 在文档中出现的频次，$DF( t )$ 是包含 $t$ 的数量。该算法在大型语料库上，类似 ML 的学习过程，如果没有大型语料库 或者 硬件上无法实施这一算法，可以尝试下 TextRank 算法，这一算法，这一算法类似 Google 提出的 PageRank，PageRank 中的节点是网页，根据节点间连接的权重可以计算节点的重要程度， TextRank 算法中，节点变为了单词，迭代计算 单词的重要程度 </p>
+<script type="math/tex; mode=display">S( Vi  ) = (1 - d ) + d * (∑ 1 /  Out ( Vj)  * S( Vj))</script><p> 根据这一公式有如下结论:第一，节点给别的节点外链越多，每条外链的权重就越低；第二，一个节点如果都是这种权重很低的外链，在不断迭代中，该结点的权重会降低。</p>
+<p>对于文本，选定中心词，确定半径为定值的窗口，让窗口内每个词都连接到它，模拟了窗口内的单词都对中心词进行描述。(PS: 初始时所有值是1)</p>
+<h2 id="关键句抽取"><a href="#关键句抽取" class="headerlink" title="关键句抽取"></a>关键句抽取</h2><p>文档中难以有重复的句子，即缺少其它句子对该句子的描述，难以建立类似网页的那种多连接结构。因此，不能套用 TextRank 算法进行关键句提取。引入 BM25 算法，辅助进行关键句提取。BM25 是 TF-IDF 算法的改进，改进的是连接权重计算。 BM25 描述了一个句子与其它句子的相似度，即与其它句子的关联程度，一般认为，一个句子越是关键，那么文章中就会越多的对其进行解释，说明的语句，这些句子就与需要判断的句子有一定的相似性。 BM25 可以用于衡量多个词语与文档的关联程度。</p>
+<p>文档 $D$,$Q$ 为句子，由 短语$q1，q2，q3…$构成。 </p>
+<script type="math/tex; mode=display">BM(D，Q) =∑ IDF(qi)  *    k1 TF( qi， D )  /  b |D|</script><p>可视作 IDF 的加权和，常数 $k1$ 越大，$TF$ 频次对文档得分的证明影响大， 常数 $b$ 越大，文档长度第二分的负面影响越大。将 BM25 算法带入到 TextRank 算法中，$BM25 ( Vi ， Vj)$ 描述句子间的相似度，可得到句子重要性评分。正比于两个句子的相似度，反比于描述其它句子的总数。</p>
+<h1 id="现代NLP的共性"><a href="#现代NLP的共性" class="headerlink" title="现代NLP的共性"></a>现代NLP的共性</h1><p>接下来是文本聚类，文本分类，深度学习等算法。</p>
+<p>这些任务引入一个新的工具，词向量。也就是向量化后的文本用于现代NLP算法，词向量越来越重要，一些生成词向量的算法也要掌握。</p>
+<p>one-hot，假设某个特征有三个取值，如 $1 ，2 ， 3$，他们的含义是相似的。 但是计算平方和，有 $1，4$ 两种结果，说明不能以数字来标志该特征的取值。可以定义长度为 3 的向量，初始值为 $0$，三个值可以记做3个向量不同项取 1。</p>
+<p>$[1，0，0]，[0，1，0]，[0，0，1]$，互相间欧式距离都是 1。</p>
+<p>词袋模型这种特征提取方法，是将文档建立词典分词，取频数最大若干项放入词袋，也就是确定了文档向量的属性值和个数。遇到新的文档，先分词再取前 $n$ 个频数最大的单词与词袋中的词(属性)对比，不在词袋中则标记为 OOV，不予考虑。文档包含词袋中的词则将该属性记为1，不包含则置零，得到自身的特征向量。</p>
+<p>深度学习的引入，给 NLP 带来的突破，这和我以前做的 CV 方面有相似性。这个方向内容简单几句话能够能概括，学界亦有分歧。我的观点是，自然语言处理当作验证新的深度神经网络方法论的角色，而深度学习也是融合进自然语言处理方法论的一部分。最近马毅教授对机器学习（深度学习）技术理论进行了探索，并且有新书及新课程问世，推荐学习。</p>
+<h1 id="我的两个关于自然语言处理的-Github-仓库"><a href="#我的两个关于自然语言处理的-Github-仓库" class="headerlink" title="我的两个关于自然语言处理的 Github 仓库"></a>我的两个关于自然语言处理的 Github 仓库</h1><p>[1]. <a href="https://github.com/hanxinle/Xnlp">本文对应 GitHub 仓库</a></p>
+<p>[2]. <a href="https://github.com/hanxinle/XChatbot">对话机器人</a></p>
+]]></content>
+      <tags>
+        <tag>自然语言处理</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>OpenGL小记</title>
+    <url>/2023/01/07/opengl-1/</url>
+    <content><![CDATA[<h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><h2 id="写作目的"><a href="#写作目的" class="headerlink" title="写作目的"></a>写作目的</h2><p>记录 OpenGL 学习的环境准备工作，为了下一步学习扫清障碍。<br><span id="more"></span></p>
+<h2 id="GitHub-Repo-of-Mine"><a href="#GitHub-Repo-of-Mine" class="headerlink" title="GitHub Repo of Mine"></a>GitHub Repo of Mine</h2><p><a href="https://github.com/hanxinle/opengl_stuff">hanxinle/opengl_stuff</a></p>
+<h2 id="术语解释"><a href="#术语解释" class="headerlink" title="术语解释"></a>术语解释</h2><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="https://learnopengl-cn.github.io/">1 learn-opengl-cn</a><br><a href="https://github.com/JoeyDeVries/LearnOpenGL">2 资料1对应的 GitHub</a><br>3 <a href="https://github.com/TheCherno/OpenGL">TheCherno OpenGL 教程整理的工程</a><br>4 计算机图像学（使用OpenGL和C++）【书籍】</p>
+<!-- more -->]]></content>
+      <tags>
+        <tag>OpenGL</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>程序的内存布局</title>
+    <url>/2020/08/16/process-memory/</url>
+    <content><![CDATA[<p>在命令行中运行程序的过程，是命令行会对程序进行复制，然后创建一个进程运行这个程序。因此，程序的内存结构所涉及的操作系统术语应该是 <strong>Linux 内存管理</strong>。<br><span id="more"></span><br><img src="linux_process_mem.jpg" alt="linux 逻辑内存空间布局"><br><img src="linux_process_mem_all.jpg" alt="linux 逻辑内存空间布局-all"></p>
+<p>这样，本文套论的内容就把操作系统中进程这个概念与程序内存的概念联系起来。</p>
+<p>可以看到，从低地址到高地址，分别是代码段、全局数据段、未初始化数据段、堆、内存映射段（动态库映射）、栈（向低地址生长）以及内核空间，内核空间这段地址不能被用户代码读取，否则会触发段错误。</p>
+<p>这里新发现的现象是，内核会将自己的代码和数据在每个进程虚拟空间都映射一份，方便进程调用内核功能。所有进程的页目录页表、GDT、LDT 等内核数据结构，也全都被保存在内核区段内。</p>
+<p>程序的行为观察可以借助 ptrace、strace、gdb 断点、ltrace观察，甚至可以观测异常行为。而测内核的行为，可以借助 proc 文件系统。</p>
+<p>创建100个线程，观察/proc/slabinfo，可以看到进程控制块 PCB 增加，进程共享空间没有增加。创建多个进程，二者都增加。</p>
+<p>其它话题，例如进程状态、进程调度、文件系统也可以通过 /proc 获取信息。个人认为开发人员应该将这部分学习的重心放在了解系统的接口上面，就是与写程序直接相关的内容，熟悉系统接口的使用的优先级应该高于了解 Linux 系统的实现。</p>
+]]></content>
+      <tags>
+        <tag>gcc/gdb</tag>
+        <tag>Linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SRS 多种手段推拉流</title>
+    <url>/2021/07/18/push-pull-stream-with-srs/</url>
+    <content><![CDATA[<p>这篇文章记录几种与 SRS 之间推拉流的方法。<br><span id="more"></span></p>
+<h1 id="docker"><a href="#docker" class="headerlink" title="docker"></a>docker</h1><p>Docker 安装在 Windows 平台使用，这里备注两个使用时遇到的坑。一个是关于镜像保存，另一个是关于使用环境。容易使用的镜像因为对端口等有修改，所以每次使用后需要 commit，本地备份镜像的命令是：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker commit &lt;image-id&gt; &lt;usr-defined-name&gt;</span><br></pre></td></tr></table></figure></p>
+<p><usr-defined-name> 的建议的格式如下，不遵守格式会引发问题。<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;usr-name&gt;/&lt;container-name&gt;:&lt;tag&gt;</span><br></pre></td></tr></table></figure><br>我使用的名字是benjamin199/srs-4release:latest。<br>commit后的推送命令是：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">docker push benjamin199/srs-4release:latest</span><br></pre></td></tr></table></figure><br>推送时如果遇到如下报错：denied: requested access to the resource is denied.这就是因为镜像命名不规范而引发的错误，按照上述重新 commit 并且push可以解决这个问题。</p>
+<p>docker在Windows上使用还有其它的一些坑，需要如下操作避开。<br>首先，按照docker的教程开启 Hyper-V、Linux子系统，后续会少麻烦。另外，要在应用商店搜索Ubuntu，我安装的是Ubuntu18（不收费）。<br>其次，如果启动docker提示 WSL无法启动，正确的解决方法是：按照老外的方法，卸载docker重新安装最新版，不要花费时间去重新设置docker，重新设置的方式行不通。<br>最后，无法加载镜像，docker无法启动，提示端口被占用，或者permission dennied, can not access 等。遇到这类情况，重启系统。如果还有这类问题，重新安装最新版docker。</p>
+<p>docker部署后的推拉流命令分别如下：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -re -i a.flv -vcodec copy -acodec copy -f flv -y rtmp://localhost/live/livestream</span><br><span class="line"></span><br><span class="line">ffplay -x 640 -y 480 rtmp://localhost/live/livestream</span><br></pre></td></tr></table></figure></p>
+<h1 id="obs"><a href="#obs" class="headerlink" title="obs"></a>obs</h1><p>obs推拉流的坑在于密钥，实际上这是流的名字。使用obs的时候发现遇到一个问题，就是64位的软件会崩溃，因此操作使用32位。</p>
+<h1 id="webrtc拉流"><a href="#webrtc拉流" class="headerlink" title="webrtc拉流"></a>webrtc拉流</h1><p>webrtc拉流可以使用的配置文件是rtc2rtmp.conf，把rtc_server中的candidata修改为云主机的外部ip，启动srs<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cd srs/trunk</span><br><span class="line">./objs/srs -c conf/rtc2rtmp.conf</span><br></pre></td></tr></table></figure><br>启动srs后，本地需要推流以产生视频源，<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -re -i a.flv -vcodec copy -acodec copy -f flv -y rtmp://&lt;domain-name or ip&gt;/live/livestream</span><br></pre></td></tr></table></figure></p>
+<h1 id="vlc"><a href="#vlc" class="headerlink" title="vlc"></a>vlc</h1><h2 id="vlc推流"><a href="#vlc推流" class="headerlink" title="vlc推流"></a>vlc推流</h2><p>菜单栏选择“媒体”-“流”，在“打开媒体”中选择“添加”添加媒体后点击“串流”，在“流输出”中设置rtsp后点击添加，端口6554不变，路径填上11，“流输出”的“激活转码”不选择，“串流所有基本流”也不选择，最后单击“流”。</p>
+<h2 id="vlc拉流"><a href="#vlc拉流" class="headerlink" title="vlc拉流"></a>vlc拉流</h2><p>“媒体”——“打开网络串流”，如果是rtsp链接，可以填写如下rtsp://@:8554/11，其中@表示localhost，有些时候不添加可能会掉坑。</p>
+<h1 id="FFmpeg推拉流"><a href="#FFmpeg推拉流" class="headerlink" title="FFmpeg推拉流"></a>FFmpeg推拉流</h1><p>获取摄像头名称：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -list_devices true -f dshow -i dummy</span><br></pre></td></tr></table></figure><br>摄像头推流命令，其中-s控制的是分辨率:<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -f dshow -i video=&quot;HD Webcam eMeet C960&quot; -vcodec libx264 -acodec copy -preset:v ultrafast -tune:v zerolatency -s 320x240 -f flv rtmp://&lt;ip or domain-name&gt;/live/livestream4</span><br></pre></td></tr></table></figure><br>文件推流命令：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -re -i a.flv -vcodec copy -acodec copy -f flv -y rtmp://localhost/live/livestream</span><br></pre></td></tr></table></figure></p>
+]]></content>
+      <tags>
+        <tag>SRS</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Qt 开发随笔，不断更新ing</title>
+    <url>/2023/01/27/qt-tips/</url>
+    <content><![CDATA[<h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>文章记录一些开发时候遇到的问题和解决方法。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ol>
+<li>Qt Assistant（安装 Qt 时候选择安装，用于文档查询）<span id="more"></span>
+</li>
+</ol>
+<h1 id="问题和解决方法"><a href="#问题和解决方法" class="headerlink" title="问题和解决方法"></a>问题和解决方法</h1><ol>
+<li><p>Qt Design 设计的控件，编译工程后进行代码设计，代码补全方面不能正确识别控件对象。<br>解：VS2019 菜单栏选择“项目”-“重定目标解决方案”，接着菜单栏选择“项目”-“重新扫描解决方案”，后续只进行第 2 种操作即可在输入 ui 的时候自动列出 ui 持有的控件对象名。</p>
+</li>
+<li><p>如何添加图片文件，供 QIcon 或者 QImage 加载，像 vs 一样提供代码所在路径 “./1.png” 不成功。<br>解：新建资源文件，先添加 Prefix，填好后再向其中添加文件，文件是 picture 路径下的若干文件，代码中使用的路径值为 “:/imgs/picture/1.jpg” 及其它，代替 “./1.jpg”.</p>
+</li>
+<li><p>Clion 创建 Qt 工程无法编译的问题.</p>
+<p>创建 Qt 工程时候可以指明 Qt CMake prefix path，如果这一步自己忘了做，那么在 <em>CMakeLists.txt</em> 中可以添加</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set(CMAKE_PREFIX_PATH &quot;C:/Qt/Qt5.14.2/5.14.2/msvc2017&quot; )</span><br></pre></td></tr></table></figure>
+<p>，这个时候依旧是编译不过的。在 “File-Setting-build,Execution,Deployment-CMake” 的 CMake options 中添加 </p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">DCMAKE_PREFIX_PATH=C:/Qt/Qt5.14.2/5.14.2/msvc2017</span><br></pre></td></tr></table></figure>
+<p>保存设置。项目代码可以编译运行了。</p>
+<p>参考文献点击<a href="https://www.cnblogs.com/citrus/p/15926004.html">这个链接</a>。</p>
+</li>
+<li><p>Qt 工程添加 .ui 文件使其生效的方法</p>
+<p>选择了工程，选择添加新项，在 Qt 类目下，最简单的方法是选择添加 <em>Qt Widgets Class</em>，这样添加后即包括了 .ui 文件，还包括了 .h 和 .cpp 文件。如果单独添加了 ui 文件，那么在编辑这个 ui 文件后使其生效的方法是使用 uic 命令，比如添加了 login.ui ，可以运行如下命令生成 ui_login 文件。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">uic login.ui -o ui_login.h</span><br></pre></td></tr></table></figure>
+<p>然后在工程中添加类，同时会添加两个文件 logoin.h 和 login.cpp ，基类选择 QWidiget，login.h 头文件记得包含 ui_login.h 和 QWidget 文件，最后在 main 中生成 login 对象，调用 show 即可看到效果。</p>
+<p>但是每次修改 login.ui 文件，都需要调用 uic 命令，为了方便编译，选择<strong>工程- 属性-生成事件-生成前事件</strong> 中命令行添加 <em>uic login.ui -o ui_login.h</em>就好。</p>
+</li>
+</ol>
+<p>   刚刚测试了升级窗口部件，原来是设置后点击提升才有效果，接下来就可以在工程中添加刚刚设置的类，记得设置 Q_OBJECT 以及构造函数的编写，如果忘了写父类相关信息，会造成不显示等问题。</p>
+]]></content>
+      <tags>
+        <tag>Qt</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>C++ 特性之 promise/future 示例</title>
+    <url>/2023/06/27/promise-future/</url>
+    <content><![CDATA[<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><a href="https://en.cppreference.com/w/cpp/thread/promise">https://en.cppreference.com/w/cpp/thread/promise</a></p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><p>今天面试问到一个 C++ 一个异步转为同步的特性，</p>
+<span id="more"></span>
+<p>C++ 中可以通过 std::future 和 std::promise 实现同步。基本思路是:</p>
+<ol>
+<li>使用 std::promise 生成一个 promise 对象,该对象可在未来生成一个值或抛出异常。</li>
+<li>调用 promise 对象的 get_future 方法获取对应的 future 对象。该 future 对象可以获取 promise 对象设置的value或exception。</li>
+<li>promise 对象传递给设置值或抛出异常的线程。</li>
+<li>线程通过调用 future 对象的 get 方法来获取值或异常,该调用会阻塞直到 promise 对象设置为止。</li>
+<li>设置值或抛出异常的线程通过 promise 对象的 set_value 或 set_exception 来设置结果。</li>
+<li>get 方法获取结果后解除阻塞,主线程继续执行。这样,通过 future/promise,我们可以实现两个线程之间同步的值传递,主线程将阻塞等待结果。</li>
+</ol>
+<p>示例1：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;future&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">doSomeWork</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    std::promise&lt;<span class="type">int</span>&gt; prom;</span><br><span class="line">    std::future&lt;<span class="type">int</span>&gt; fut = prom.<span class="built_in">get_future</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> f = [&amp;prom]() &#123;</span><br><span class="line">        prom.<span class="built_in">set_value</span>(<span class="number">42</span>); <span class="comment">// 设置结果</span></span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="function">std::thread <span class="title">t</span><span class="params">(f)</span></span>;</span><br><span class="line">    <span class="keyword">auto</span> result = fut.<span class="built_in">get</span>(); <span class="comment">// 阻塞等待结果</span></span><br><span class="line">    t.<span class="built_in">join</span>();</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">auto</span> result = <span class="built_in">doSomeWork</span>();</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;The result is: &quot;</span> &lt;&lt; result &lt;&lt; <span class="string">&#x27;\n&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>示例2（来自参考文献）：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;future&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;numeric&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;chrono&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">accumulate</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    std::vector&lt;<span class="type">int</span>&gt;::iterator first, std::vector&lt;<span class="type">int</span>&gt;::iterator last, std::promise&lt;<span class="type">int</span>&gt; accumulate_promise)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> sum = std::<span class="built_in">accumulate</span>(first, last, <span class="number">0</span>);</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;1 accumulate running...&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">    accumulate_promise.<span class="built_in">set_value</span>(sum); <span class="comment">// Notify future</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">do_work</span><span class="params">(std::promise&lt;<span class="type">double</span>&gt; barrier)</span> </span>&#123;</span><br><span class="line">    std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">seconds</span>(<span class="number">1</span>));</span><br><span class="line"></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;5 thread do_work running   barrier.set_value().&quot;</span> &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">    barrier.<span class="built_in">set_value</span>(<span class="number">0.1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Demonstrate using promise&lt;int&gt; to transmit a result between threads.</span></span><br><span class="line">    std::vector&lt;<span class="type">int</span>&gt; numbers = &#123; <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span> &#125;;</span><br><span class="line">    std::promise&lt;<span class="type">int</span>&gt; accumulate_promise;</span><br><span class="line">    std::future&lt;<span class="type">int</span>&gt; accumulate_future = accumulate_promise.<span class="built_in">get_future</span>();</span><br><span class="line">    <span class="function">std::thread <span class="title">work_thread</span><span class="params">(accumulate, numbers.begin(), numbers.end(), std::move(accumulate_promise))</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// future::get() will wait until the future has a valid result and retrieves it.</span></span><br><span class="line">    <span class="comment">// Calling wait() before get() is not needed</span></span><br><span class="line">    <span class="comment">// accumulate_future.wait();  // wait for result</span></span><br><span class="line">    accumulate_future.<span class="built_in">wait</span>();</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;2 result=&quot;</span> &lt;&lt; accumulate_future.<span class="built_in">get</span>() &lt;&lt; <span class="string">&#x27;\n&#x27;</span>;</span><br><span class="line">    work_thread.<span class="built_in">join</span>(); <span class="comment">// wait for thread completion</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// Demonstrate using promise&lt;void&gt; to signal state between threads.</span></span><br><span class="line">    std::promise&lt;<span class="type">double</span>&gt; barrier;</span><br><span class="line">    std::future&lt;<span class="type">double</span>&gt; barrier_future = barrier.<span class="built_in">get_future</span>();</span><br><span class="line">    std::cout &lt;&lt;  <span class="string">&quot;3 before running thread do work.&quot;</span> &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">    <span class="function">std::thread <span class="title">new_work_thread</span><span class="params">(do_work, std::move(barrier))</span></span>;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;4 after unning thread do work.   barrier_future.wait(); &quot;</span> &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">    barrier_future.<span class="built_in">wait</span>();</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;6 double = &quot;</span> &lt;&lt; barrier_future.<span class="built_in">get</span>() &lt;&lt; std::endl;</span><br><span class="line">    new_work_thread.<span class="built_in">join</span>();</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;7 after join.&quot;</span> &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+]]></content>
+      <tags>
+        <tag>C++</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SICP 相关</title>
+    <url>/2023/02/23/sicp/</url>
+    <content><![CDATA[<p>首先进行环境安装，其次记录重要信息提示。</p>
+<span id="more"></span>
+<h1 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h1><h2 id="Ubuntu-下安装-MIT-Scheme"><a href="#Ubuntu-下安装-MIT-Scheme" class="headerlink" title="Ubuntu 下安装 MIT-Scheme"></a>Ubuntu 下安装 MIT-Scheme</h2><p>下载链接是：</p>
+<p>这个软件当前不再支持 Windows ，需要在类 Linux 环境运行。</p>
+<h2 id="DrRacket-sicp-package"><a href="#DrRacket-sicp-package" class="headerlink" title="DrRacket+sicp package"></a>DrRacket+sicp package</h2><p> 打开 DrRacket ，依次点击菜单 “File” - “Install Package”，输入 <strong>sicp</strong>，等待几分钟，可能需要网络加速器提高下载速度.</p>
+<p>安装结束后，可以在工作区域输入</p>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">#lang sicp</span><br><span class="line">(<span class="name">inc</span> <span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+<h2 id="Visual-Studio-Code"><a href="#Visual-Studio-Code" class="headerlink" title="Visual Studio Code"></a>Visual Studio Code</h2><p>安装两个插件，分别是 Magic Racket 和 AyaSEditor，后者是格式化插件，前者是用于编译运行的插件（前提还是 DrRacket 要安装好 sicp package），安装 MR 插件后要在这个插件的设置中，将 Racket.exe 的完整路径添加到 <em>Racket Path</em> 中，默认的位置是 <em>C:\Program Files\Racket\Racket.exe</em> 。</p>
+<p>测试安装效果，新建文件 hello_sicp.rkt，代码如下</p>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">#lang sicp</span><br><span class="line">(<span class="name"><span class="built_in">+</span></span> <span class="number">12</span> <span class="number">12</span>)</span><br></pre></td></tr></table></figure>
+<p>点击右上角Load File 按钮或者 Run File 按钮，命令行页面会输出 24，表示安装成功。</p>
+]]></content>
+      <tags>
+        <tag>Lisp/Scheme</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>状态模式实现与内存泄漏问题解决</title>
+    <url>/2023/01/14/state-design-pattern-and-memory-leak/</url>
+    <content><![CDATA[<h1 id="1-引言"><a href="#1-引言" class="headerlink" title="1 引言"></a>1 引言</h1><h2 id="1-1-写作背景"><a href="#1-1-写作背景" class="headerlink" title="1.1 写作背景"></a>1.1 写作背景</h2><p>我看的设计模式资料使用 C# 和 Java 实现，这两种语言不需要处理内存泄漏问题。后续发现按照资料仿写的 C++ 代码有内存泄漏的情况，于是尝试解决这个问题，对 C++ 有新的理解，故记录之。<span id="more"></span></p>
+<h2 id="1-2-参考资料"><a href="#1-2-参考资料" class="headerlink" title="1.2 参考资料"></a>1.2 参考资料</h2><ol>
+<li><a href="https://github.com/jaredtao/DesignPattern/tree/master/code/Behavior/State">本文参考的单例模式写法</a></li>
+<li><a href="https://github.com/JakubVojvoda/design-patterns-cpp/blob/master/state/State.cpp">补充实现</a></li>
+<li><a href="https://github.com/liu-jianhao/Cpp-Design-Patterns/tree/master/State">两种状态模式实现，第二种与资料1类似</a></li>
+<li>书籍-大话设计模式</li>
+<li>headfirst设计模式</li>
+<li>经典设计模式黑皮书.</li>
+<li><a href="https://github.com/Apress/design-patterns-in-modern-cpp">source code of Design Patterns in Modern cpp</a></li>
+<li><a href="https://kinddragon.github.io/vld/">Visual Leak Detector</a></li>
+</ol>
+<h1 id="２-问题的发现与检测"><a href="#２-问题的发现与检测" class="headerlink" title="２ 问题的发现与检测"></a>２ 问题的发现与检测</h1><h2 id="2-1-发现和分析问题"><a href="#2-1-发现和分析问题" class="headerlink" title="2.1 发现和分析问题"></a>2.1 发现和分析问题</h2><p>状态模式有个特点，即调用者调用状态A下的func1，其状态可<strong>自动</strong>切换为状态B，我在第一版的实现时重点在实现原型（从 Java / C# 翻译代码），<br>状态改变的代码是如下形式：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Class User;</span><br><span class="line">class IState()&#123;</span><br><span class="line">public:</span><br><span class="line">    virtual func(Context * ctx) = 0;</span><br><span class="line">&#125;；</span><br><span class="line"></span><br><span class="line">class State1:public IState &#123;</span><br><span class="line">public:</span><br><span class="line">    func(Context * ctx) &#123;</span><br><span class="line">        // some ops</span><br><span class="line">        ctx-&gt;setState(new State2);   //leak</span><br><span class="line">     &#125;</span><br><span class="line">&#125;；</span><br><span class="line"></span><br><span class="line">class State2:public IState &#123;</span><br><span class="line">public:</span><br><span class="line">    func(Context * ctx) &#123;</span><br><span class="line">        // some ops</span><br><span class="line">        ctx-&gt;setState(new State1);   //leak</span><br><span class="line">    &#125;</span><br><span class="line">&#125;；</span><br><span class="line"></span><br><span class="line">Class User &#123;</span><br><span class="line">public:</span><br><span class="line">    IState * stt_;</span><br><span class="line">    void setState(ISate * p) &#123;</span><br><span class="line">        if (nullptr != stt_)&#123;</span><br><span class="line">            delete stt_;</span><br><span class="line">            stt_ = p;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// this param cause mem link</span><br><span class="line">ctx-&gt;setState(new State1());</span><br></pre></td></tr></table></figure>
+<h2 id="2-2-检测问题"><a href="#2-2-检测问题" class="headerlink" title="2.2 检测问题"></a>2.2 检测问题</h2><p>上述实现，在切装状态的调用时，其会 new 个新对象，而没有释放，我尝试过在函数内部每次 new 对象传入函数，然后 delete 它，不出意外程序错误。检查内存泄漏的手段是在 vs2019 下实施的，样本代码如下：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#define _CRTDBG_MAP_ALLOC</span><br><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line">#include &lt;crtdbg.h&gt;</span><br><span class="line">// include other files.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">int main(int argc,char **argv)  &#123;</span><br><span class="line"></span><br><span class="line">    // my test code here.</span><br><span class="line">    // init User * pu;</span><br><span class="line">    // cause mem-leak.</span><br><span class="line">    pu-&gt;setState(new sa);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    _CrtDumpMemoryLeaks();</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>更新信息：写完初稿后不久，我开始使用 vld，其介绍和安装信息见参考资料 8，工具已经上传到 GitHub 仓库内，可以按照一般的添加库方法在 vs2019 内配置和使用，记得将 bin 路径下所有文件拷贝到 Debug 路径（.exe 所在路径），配置文件.ini 文件也可以一并拷贝，</p>
+<h1 id="3-使用单例模式"><a href="#3-使用单例模式" class="headerlink" title="3 使用单例模式"></a>3 使用单例模式</h1><p>这种写法是改变传入 setState 的对象指针的生成方法，在状态模式中，每种状态的紧紧需要该状态的一个实例即可表示当前主体所处于的状态，考虑引入单例模式，并且在引入的单例模式中，使用静态变量的写法如下，这段代码后面的篇幅再补充另一种单例写法并且阐述一些线程安全的问题。<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#define _CRTDBG_MAP_ALLOC</span><br><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line">#include &lt;crtdbg.h&gt;</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;thread&gt;</span><br><span class="line">#include &lt;chrono&gt;</span><br><span class="line">#include &lt;memory&gt;</span><br><span class="line"></span><br><span class="line">using namespace std;</span><br><span class="line"></span><br><span class="line">class User;</span><br><span class="line"></span><br><span class="line">class base &#123;</span><br><span class="line">public:</span><br><span class="line">    virtual void func1(User *u) = 0;</span><br><span class="line">    virtual void func2(User *u) = 0;</span><br><span class="line">    virtual ~base() &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class sa : public base &#123;</span><br><span class="line">public:</span><br><span class="line">   </span><br><span class="line">    static sa &amp;getInstance() &#123;</span><br><span class="line">        static sa r;</span><br><span class="line">        return r;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    void func1(User *u);</span><br><span class="line">    void func2(User *u);</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">    sa() &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class sb : public base &#123;</span><br><span class="line">public: </span><br><span class="line">    static sb &amp;getInstance() &#123;</span><br><span class="line">        static sb r;</span><br><span class="line">        return r;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    void func1(User *u);</span><br><span class="line">    void func2(User *u);</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">    sb() &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class User &#123;</span><br><span class="line">public:</span><br><span class="line">    User() &#123; p_ = nullptr; &#125;</span><br><span class="line">    base *p_; // ok</span><br><span class="line">    void setState(base *p) &#123; p_ = p; &#125;</span><br><span class="line">    void func1() &#123; p_-&gt;func1(this); &#125;</span><br><span class="line"></span><br><span class="line">    void func2() &#123; p_-&gt;func2(this); &#125;</span><br><span class="line"></span><br><span class="line">    ~User() &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">void sa::func1(User *u) &#123;</span><br><span class="line">    cout &lt;&lt; &quot;sa::func1&quot; &lt;&lt; endl;</span><br><span class="line"></span><br><span class="line">    u-&gt;setState(&amp;sb::getInstance());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void sb::func1(User *u) &#123;</span><br><span class="line">    cout &lt;&lt; &quot;sb::func1&quot; &lt;&lt; endl;</span><br><span class="line"></span><br><span class="line">    u-&gt;setState(&amp;sa::getInstance());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void sa::func2(User *u) &#123;</span><br><span class="line">    cout &lt;&lt; &quot;sa::func2&quot; &lt;&lt; endl;</span><br><span class="line"></span><br><span class="line">    u-&gt;setState(&amp;sb::getInstance());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void sb::func2(User *u) &#123;</span><br><span class="line">    cout &lt;&lt; &quot;sb::func2&quot; &lt;&lt; endl;</span><br><span class="line"></span><br><span class="line">    u-&gt;setState(&amp;sa::getInstance());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main() &#123;</span><br><span class="line">    shared_ptr&lt;User&gt; pu = make_shared&lt;User&gt;();</span><br><span class="line"></span><br><span class="line">    pu-&gt;setState(&amp;sa::getInstance());</span><br><span class="line"></span><br><span class="line">    for (int i = 0; i &lt; 20; i++) &#123;</span><br><span class="line"></span><br><span class="line">        if (i % 2 == 0) &#123;</span><br><span class="line">            pu-&gt;setState(&amp;sb::getInstance());</span><br><span class="line">            pu-&gt;func2();</span><br><span class="line">            pu-&gt;func1();</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            pu-&gt;setState(&amp;sa::getInstance());</span><br><span class="line">            pu-&gt;func1();</span><br><span class="line">            pu-&gt;func2();</span><br><span class="line">        &#125;</span><br><span class="line">        this_thread::sleep_for(chrono::seconds(1));</span><br><span class="line">    &#125;</span><br><span class="line">    pu.reset();</span><br><span class="line">    cout &lt;&lt; &quot;test done.&quot; &lt;&lt; endl;</span><br><span class="line">    system(&quot;pause&quot;);</span><br><span class="line">    _CrtDumpMemoryLeaks();</span><br><span class="line"></span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>上述代码还可以将 getInstance 函数重新实现为返回指针的形式，这样 setState 可以传入参数 sa::getInstance() 的形式，下面代码只包含核心的写法和用法，不包含main函数。单例模式有线程安全的问题需要考量，在这里不再论述。<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">class sa : public base &#123;</span><br><span class="line">public:</span><br><span class="line">    static sa *getInstance() &#123;</span><br><span class="line">        if (pa_ == nullptr) &#123;</span><br><span class="line">            return new sa;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            return pa_;</span><br><span class="line">        &#125;   </span><br><span class="line">    &#125;</span><br><span class="line">private:</span><br><span class="line">    static sa* pa_;</span><br><span class="line">    sa()&#123; pa_ = nullptr;&#125;</span><br><span class="line">&#125;;</span><br><span class="line">sa * sa::pa_ = nullptr; </span><br><span class="line">// .....</span><br><span class="line">    puser-&gt;setState(sa::getInstance());</span><br><span class="line">// .....</span><br><span class="line"></span><br></pre></td></tr></table></figure></p>
+<h1 id="4-使用智能指针"><a href="#4-使用智能指针" class="headerlink" title="4 使用智能指针"></a>4 使用智能指针</h1><p>写法变为 User 拥有了 share_ptr<IState> 变量替换原始指针，在 setState 中，参数传入派生类指针，写法是make_shared<Inherited Class>().下面是可运行的测试代码：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#define _CRTDBG_MAP_ALLOC</span><br><span class="line">#include &lt;stdlib.h&gt;</span><br><span class="line">#include &lt;crtdbg.h&gt;</span><br><span class="line">#include &lt;iostream&gt;</span><br><span class="line">#include &lt;thread&gt;</span><br><span class="line">#include &lt;chrono&gt;</span><br><span class="line">#include &lt;memory&gt;</span><br><span class="line"></span><br><span class="line">using namespace std;</span><br><span class="line"></span><br><span class="line">class User;</span><br><span class="line"></span><br><span class="line">class base &#123;</span><br><span class="line">public:</span><br><span class="line">    virtual void func1(User *u) = 0;</span><br><span class="line">    virtual void func2(User *u) = 0;</span><br><span class="line">    virtual ~base() &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class sa : public base &#123;</span><br><span class="line">public:</span><br><span class="line">    sa() &#123;&#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    void func1(User *u);</span><br><span class="line">    void func2(User *u);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class sb : public base &#123;</span><br><span class="line">public:</span><br><span class="line">    sb() &#123;&#125;</span><br><span class="line"> </span><br><span class="line">    void func1(User *u);</span><br><span class="line">    void func2(User *u);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">class User &#123;</span><br><span class="line">public:</span><br><span class="line">    User() &#123; p_ = nullptr; &#125;</span><br><span class="line">    shared_ptr&lt;base&gt; p_;</span><br><span class="line">    void setState(shared_ptr&lt;base&gt; p) &#123; p_ = p; &#125;</span><br><span class="line"></span><br><span class="line">    void func1() &#123; p_-&gt;func1(this); &#125;</span><br><span class="line">    void func2() &#123; p_-&gt;func2(this); &#125;</span><br><span class="line"></span><br><span class="line">    ~User() &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">void sa::func1(User *u) &#123;</span><br><span class="line">    cout &lt;&lt; &quot;sa::func1&quot; &lt;&lt; endl;</span><br><span class="line"></span><br><span class="line">    u-&gt;setState(make_shared&lt;sb&gt;());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void sb::func1(User *u) &#123;</span><br><span class="line">    cout &lt;&lt; &quot;sb::func1&quot; &lt;&lt; endl;</span><br><span class="line"></span><br><span class="line">    u-&gt;setState(make_shared&lt;sa&gt;());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void sa::func2(User *u) &#123;</span><br><span class="line">    cout &lt;&lt; &quot;sa::func2&quot; &lt;&lt; endl;</span><br><span class="line"></span><br><span class="line">    u-&gt;setState(make_shared&lt;sb&gt;());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void sb::func2(User *u) &#123;</span><br><span class="line">    cout &lt;&lt; &quot;sb::func2&quot; &lt;&lt; endl;</span><br><span class="line"></span><br><span class="line">    u-&gt;setState(make_shared&lt;sa&gt;());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main(int argc, char **argv) &#123;</span><br><span class="line">    shared_ptr&lt;User&gt; pu = make_shared&lt;User&gt;();</span><br><span class="line"></span><br><span class="line">    pu-&gt;setState(make_shared&lt;sa&gt;());</span><br><span class="line"></span><br><span class="line">    for (int i = 0; i &lt; 20; i++) &#123;</span><br><span class="line"></span><br><span class="line">        if (i % 2 == 0) &#123;</span><br><span class="line">            pu-&gt;setState(make_shared&lt;sb&gt;());</span><br><span class="line">            pu-&gt;func2();</span><br><span class="line">            pu-&gt;func1();</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            pu-&gt;setState(make_shared&lt;sa&gt;());</span><br><span class="line">            pu-&gt;func1();</span><br><span class="line">            pu-&gt;func2();</span><br><span class="line">        &#125;</span><br><span class="line">        this_thread::sleep_for(chrono::seconds(1));</span><br><span class="line">    &#125;</span><br><span class="line">    pu.reset();</span><br><span class="line">    cout &lt;&lt; &quot;test done.&quot; &lt;&lt; endl;</span><br><span class="line">    system(&quot;pause&quot;);</span><br><span class="line">    _CrtDumpMemoryLeaks();</span><br><span class="line"></span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></p>
+<h1 id="5-其它研究"><a href="#5-其它研究" class="headerlink" title="5 其它研究"></a>5 其它研究</h1><p>查看俄文作者的《Design Pattern with Modern C++》(2018)后发现，在上例的 func1 或者 func2 中有一种写法是保留 new 对象传参：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">void sa::func1(User *u)&#123;</span><br><span class="line">    pu-&gt;setState(new sb());</span><br><span class="line">    delete this;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>经过测试，发现这种写法在程序运行时会出现野指针导致崩溃，即需要使用的指针指向的对象已经释放。</p>
+<p>并且，在 main 中，出现对 setState 的调用后，其 new 形式传参的内存泄漏时不能避免的。</p>
+<p>另外，对于 CrtDumpMemoryLeaks() 的位置如果放置在 system 前，则会出现在 return 0 程序结束前，过早检查资源的情况。</p>
+<p>最后，对于 main 中使用 shared_ptr<User>，后续测试其一直保持 use_count 保持为 1，导致 User 对象资源不释放，在程序结束前添加 pu.reset() 将其引用技术置为0，后续测试无内存泄漏问题。</p>
+]]></content>
+      <tags>
+        <tag>C++</tag>
+        <tag>设计模式</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>技术的简单性、累积性和组合性</title>
+    <url>/2021/04/21/tech-talk/</url>
+    <content><![CDATA[<p>刚刚在公众号“道哥的黑板报”，看了道哥最新的文章《如何看待一项技术：技术的本质》，文中的观点与我最近的感悟不谋而合。<span id="more"></span>但道哥思考得更深刻，得出的结论更加广博。</p>
+<p>技术是简单的，不是复杂的。技术可以是新的生产力，也可以是新的体验。新的生产力的表现在于提升了生产效率，解决了问题，这是实践主义和实用主义者应当关心的内容。新的体验是理论研究的范畴，新的理论可以和生产力和解决问题没有关系，一种可能的情况是，提供了新的解决问题的思路，但暂时还没有体现出生产力。</p>
+<p>技术很简单，道哥把技术的要素定义为：效率、成本、通用性、安全。其中效率是技术的主要价值目标，是一项新技术的出发点和根本。技术提升了效率，获得了新的能力。效率提升后，技术还需要进一步解决成本问题、通用性问题、安全问题，才能够扩大影响力和普及程度，形成生生不息的良性循环，进而改变世界。</p>
+<p>道哥以工业革命为例，简述了技术诞生-改进-改变世界的全过程。纵观每一次影响世界的技术革命，我们几乎都能看到类似的生命周期，一项新技术诞生之初，先解决效率问题，再依次解决成本、通用性和安全问题，最后新技术走向普及。</p>
+<p>并且道哥给出了技术人员可以怎么做：“通过「结构与组合」的方式。如果玩过一款叫「文明」的游戏，就会理解「科技树」这个概念。科技树非常形象的表达了，一项新的科技的诞生，是以其他已有科技为基础的。那么技术的创造方式就在于，通过不同现有技术之间的组合，搭建出一种新的结构，去解决一个特定的问题。因此从某种意义上来说，技术即解决方案。</p>
+<p>这里面的玄妙之处，在于如何搭建出一种的结构。不同的人会选用不同的原子技术，来搭建出不同的结构。而结构搭建的方式，则体现了各种各样的奇思妙想，或者背后有着某种理论指导。这是充满了知识和创意的地方。也是通过这样的结构搭建，才有效解决了效率、成本、通用性和安全的问题。因此原子技术很重要，结构也很重要。技术的创造方式，就是结构与组合。瓦特在改进纽科门蒸汽机时，做的两项设计改进：分离式的冷凝器，以及曲柄传动，就是典型的结构与组合的再设计，进而解决了纽科门蒸汽机的成本和通用性的问题。</p>
+<p>所有的技术扒开来看，都不神秘，都可以用很简单的原理和语言来描绘。”</p>
+<p>我的经验是，在结构和组合前，一定要先建立一个整体的大局观，然后从最有正反馈的地方着手，即先跑起来，然后边积累边改进，改进的具体方法就是结构和组合的方式，即注意整体中短板部分的改进。</p>
+<p>这样一点点积累，一个点只有组合为一个部件才是有生命力的，而改进的对象就是一个个部件。其次才是部件的组合，道哥讲述了结构性和组合性，我则发现最适合自己的是整体性-累积性，累积到部件再和道哥的理论研究结合起来，最大效率吸收旧技术的精华，同时催生新技术，迸发新技术的能量。</p>
+]]></content>
+      <tags>
+        <tag>技术思考</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Vim 教程</title>
+    <url>/2021/08/31/vim-note/</url>
+    <content><![CDATA[<h1 id="个性化的配置文件"><a href="#个性化的配置文件" class="headerlink" title="个性化的配置文件"></a>个性化的配置文件</h1><span id="more"></span>
+<p>注释是一个双引号 “</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&quot;plugins manage</span><br><span class="line">call plug#begin()</span><br><span class="line">Plug &#x27;ycm-core/YouCompleteMe&#x27;</span><br><span class="line">call plug#end()</span><br><span class="line"></span><br><span class="line">packloadall</span><br><span class="line">silent! helptags ALL</span><br><span class="line"></span><br><span class="line">noremap ; :</span><br><span class="line">inoremap jk &lt;esc&gt;</span><br><span class="line">inoremap &#x27; &#x27;&#x27;&lt;esc&gt;i</span><br><span class="line">inoremap &quot; &quot;&quot;&lt;esc&gt;i</span><br><span class="line">inoremap ( ()&lt;esc&gt;i</span><br><span class="line">inoremap [ []&lt;esc&gt;i</span><br><span class="line">inoremap &#123; &#123;&#125;&lt;esc&gt;i</span><br><span class="line"></span><br><span class="line">noremap &lt;f1&gt; &lt;c-]&gt;</span><br><span class="line">noremap &lt;f2&gt; &lt;c-t&gt;</span><br><span class="line"></span><br><span class="line">syntax on</span><br><span class="line">filetype plugin indent on</span><br><span class="line"></span><br><span class="line">set autoindent</span><br><span class="line">set expandtab</span><br><span class="line">set tabstop=4</span><br><span class="line">set shiftwidth=4</span><br><span class="line">set backspace=2</span><br><span class="line"></span><br><span class="line">colorscheme murphy</span><br></pre></td></tr></table></figure>
+<h1 id="版本恢复，错误处理"><a href="#版本恢复，错误处理" class="headerlink" title="版本恢复，错误处理"></a>版本恢复，错误处理</h1><p>.swap 文件，能够防止 ssh 中断而导致编写的文件内容丢失，若当前目录下存在 .swap 文件，书上说是可以设置跳转文件的路径的。</p>
+<p>可选操作：</p>
+<p><code>r</code> 恢复内容</p>
+<p><code>d</code> 删除内容</p>
+<p>设置 .swap 目录，防止多个 .swap 文件污染当前路径，在 .vimrc 中输入</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">set directory=$HOME/.vim/swap//   # 最后是两个斜杠 //</span><br></pre></td></tr></table></figure>
+<h1 id="查找-跳转"><a href="#查找-跳转" class="headerlink" title="查找/跳转"></a>查找/跳转</h1><h2 id="文件内跳转"><a href="#文件内跳转" class="headerlink" title="文件内跳转"></a>文件内跳转</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>按键</th>
+<th>操作</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hjkl</code></td>
+<td>方向跳转</td>
+<td>搭配数字操作更快，如 <code>22j</code>，向下跳转 22 行</td>
+</tr>
+<tr>
+<td><code>&#123; / &#125;</code></td>
+<td>段落跳转</td>
+<td></td>
+</tr>
+<tr>
+<td><code>( / )</code></td>
+<td>句子开头、结尾</td>
+<td></td>
+</tr>
+<tr>
+<td><code>gg/G</code></td>
+<td>文件尾/文件头</td>
+<td></td>
+</tr>
+<tr>
+<td><code>Ctrl +b / Ctrl +f</code></td>
+<td>翻页</td>
+<td></td>
+</tr>
+<tr>
+<td><code>WBE/wbe</code></td>
+<td>逐单词跳转</td>
+<td>区别在于大写字母操作跳转力度大</td>
+</tr>
+<tr>
+<td><code>f/F &lt;字母&gt;</code></td>
+<td>同一行前后查找、跳转</td>
+<td>向前/向后 跳转到匹配的第一个字母处</td>
+</tr>
+<tr>
+<td><code>t/T &lt;字母&gt;</code></td>
+<td>同一行前后查找、跳转</td>
+<td>向前/向后 跳转到匹配的第一个字母的前一个字符处</td>
+</tr>
+<tr>
+<td><code>d f &lt;字母&gt;</code></td>
+<td>删除所有字符，到匹配的第一个字母</td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>其它跳转操作 </li>
+</ul>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>按键</th>
+<th>操作</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>: /&lt;string &gt;</code></td>
+<td><code>查找 &lt;string&gt;</code>，<code>n</code> 下个查找结果</td>
+<td></td>
+</tr>
+<tr>
+<td><code>*</code></td>
+<td>同一个单词跳转</td>
+<td></td>
+</tr>
+<tr>
+<td><code>&#39;. (单引号，后句号)</code></td>
+<td>上一次修改的行</td>
+<td></td>
+</tr>
+<tr>
+<td>`. (esc 下面的按键，后句号)</td>
+<td>上一次修改的点</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="文件间跳转"><a href="#文件间跳转" class="headerlink" title="文件间跳转"></a>文件间跳转</h2><p>首先，未启动vim 时打开多个文件：</p>
+<p><code>vim file1 file2 ...</code> 便可以打开所有想要打开的文件</p>
+<p>若 vim 已经启动：</p>
+<p>输入</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">:e file</span><br></pre></td></tr></table></figure>
+<p>可以再打开一个文件，并且此时vim里会显示出file文件的内容。</p>
+<p>同一个窗口中切换文件</p>
+<p><code>Ctrl+6</code>     两文件间的切换，打开过两个文件才能切换</p>
+<p><code>:bn</code>          下一个文件</p>
+<p><code>:bp</code>          上一个文件</p>
+<p>组合拳：</p>
+<p><code>:ls</code>          列出打开的文件，带编号</p>
+<p><code>:b1~n</code>      切换至第n个文件</p>
+<h1 id="窗口切分、跳转、移动、调整大小"><a href="#窗口切分、跳转、移动、调整大小" class="headerlink" title="窗口切分、跳转、移动、调整大小"></a>窗口切分、跳转、移动、调整大小</h1><p><code>:sp</code>       垂直切分窗口</p>
+<p><code>:vs</code>       水平切分窗口</p>
+<p><code>C-w-r</code>   切换窗口；</p>
+<p><code>C-w-c</code>   关闭窗口；</p>
+<p><code>Ctrl+w+方向键</code>    切换到前／下／上／后一个窗格</p>
+<p><code>Ctrl+w+h/j/k/l</code>   同上</p>
+<p><code>Ctrl+ww</code>              依次向后切换到下一个窗格中</p>
+<p>移动整个窗口内容方便查看：</p>
+<p><code>Ctrl+w，HJKL</code>    将当前窗口移动到屏幕的 左/底/上/右</p>
+<p>调整窗口大小的命令：</p>
+<p><code>Ctrl+w，=</code>         所有窗口恢复到同样大小</p>
+<p><code>:resize +&lt;数字&gt;</code>  高度增加 N 行</p>
+<p><code>:resize -&lt;数字&gt;</code>  高度减小 N 行</p>
+<p><code>:vertical resize +&lt;数字&gt;</code>    宽度增加 </p>
+<p><code>:vertical resize -&lt;数字&gt;</code>    宽度减小</p>
+<h1 id="文本操作"><a href="#文本操作" class="headerlink" title="文本操作"></a>文本操作</h1><p><code>c</code> 修改命令，如 <code>cw</code>  输入后就进入插入模式</p>
+<p><code>o</code> 另起一行并进入插入模式</p>
+<p><code>x</code> 删除一个字符</p>
+<p><code>d</code> 剪切，当删除用</p>
+<p><code>y</code> 复制</p>
+<p><code>p</code> 粘贴</p>
+<h1 id="插件"><a href="#插件" class="headerlink" title="插件"></a>插件</h1><h2 id="安装-vim"><a href="#安装-vim" class="headerlink" title="安装 vim"></a>安装 vim</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/vim/vim.git</span><br><span class="line">cd vim/src</span><br><span class="line">./configure --enable-python3interp=yes --enable-cscope --enable-fontset --with-python3-config-dir=/usr/lib/python3.6/config-3.6m-x86_64-linux-gnu --with-python3-command=/usr/bin/python3.6</span><br><span class="line">make</span><br><span class="line">sudo make install</span><br></pre></td></tr></table></figure>
+<h2 id="安装插件管理工具-vim-plug"><a href="#安装插件管理工具-vim-plug" class="headerlink" title="安装插件管理工具 vim-plug"></a>安装插件管理工具 vim-plug</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.github.com/junegunn/vim-plug/master/plug.vim</span><br></pre></td></tr></table></figure>
+<p>设置 .vimrc （注意：那两个# 不是注释），把要安装的插件名字放在单引号中，就复制GitHub 用户+ 仓库名就行，以 <code>YouCompleteMe</code> 为例。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">call plug#begin()</span><br><span class="line">Plug &#x27;ycm-core/YouCompleteMe&#x27;</span><br><span class="line">call plug#end()</span><br></pre></td></tr></table></figure>
+<p>启动 vim，执行以下命令安装插件。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">:PlugInstall </span><br></pre></td></tr></table></figure>
+<h2 id="安装-YouCompleteMe"><a href="#安装-YouCompleteMe" class="headerlink" title="安装 YouCompleteMe"></a>安装 <code>YouCompleteMe</code></h2><p>对于 <code>YouCompleteMe</code>，安装一是要KeXue上网同步代码，二是要在里面执行下安装脚本 install.sh，这样在启动的时候才不会提示 ycmd 服务器没有启动的问题。</p>
+<p>我在 Ubuntu18.08 LTS 上成功安装的，记录下过程。</p>
+<p>升级安装gcc-8、g++-8，这个 apt 命令就搞定，还得执行个命令（<a href="https://blog.csdn.net/maoni99999/article/details/117378664">参考文献</a>）</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo apt-get install g++-8</span><br><span class="line">sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8</span><br></pre></td></tr></table></figure>
+<p>然后进入到 <code>YouCompleteMe</code> 目录，执行</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sh install.sh        # 或者 ./install.sh  </span><br></pre></td></tr></table></figure>
+<p>我执行 <code>./install.py --all</code> 中间会报错。</p>
+<h2 id="读源码的工具-ctags"><a href="#读源码的工具-ctags" class="headerlink" title="读源码的工具 ctags"></a>读源码的工具 ctags</h2><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo apt-get install ctags</span><br></pre></td></tr></table></figure>
+<p>进入源码目录，执行</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ctags -R</span><br></pre></td></tr></table></figure>
+<p>用 vim 打开文件，想查询定义就按 <f1>，想看声明就按 <f2>，这两个键在 .vimrc 中有配置。取代了 <code>Crtl+t</code>/<code>Crtl+]</code>。</p>
+<h1 id="在-Visual-Studio-等-IDE-中常用的设置"><a href="#在-Visual-Studio-等-IDE-中常用的设置" class="headerlink" title="在 Visual Studio 等 IDE 中常用的设置"></a>在 Visual Studio 等 IDE 中常用的设置</h1><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 输入模式下：jk 代替 esc ，减少左手找案件的操作</span><br><span class="line">imap jk &lt;esc&gt;</span><br><span class="line"></span><br><span class="line"># 命令模式下，分号代替冒号，减少按 shift 的操作</span><br><span class="line">noremap ; :</span><br></pre></td></tr></table></figure>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a><strong>参考资料</strong></h1><p>[1] <a href="https://www.w3cschool.cn/vim/cjtr1pu3.html">w3cscchool 的教程</a></p>
+<p>[2] <a href="https://www.imooc.com/learn/1129">慕课网 PegasusWang 的高质量免费教程</a></p>
+<p>[3] <a href="https://zhuanlan.zhihu.com/p/113316942">Chrome插件Vimium使用教程</a></p>
+]]></content>
+      <tags>
+        <tag>工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Ubuntu/Winodws 开发环境打点备忘</title>
+    <url>/2023/06/19/ubuntu-tools/</url>
+    <content><![CDATA[<h1 id="1-引言"><a href="#1-引言" class="headerlink" title="1 引言"></a>1 引言</h1><p>之前写过 vim 的教程，还写过 emacs 使用教程，自己整理了一份 emacs.d 文件，每次装机了就拿出来。</p>
+<p>这一次是配置共享文件，这个不仅可以用于虚拟机，也可以用于 Windows 系统与远程开发机同步文件，并且方便在本地使用一些编码工具。</p>
+<span id="more"></span>
+<p>刚刚在 ip 地址是 192.168.0.3 的 vmware pro 虚拟机搭建成功了，暂时告别 vmware 自带的共享文件夹了，因为共享文件夹的权限问题，有些文件编译不成功，所以想到用 samba服务，在上家公司工作的时候，需要帮着嵌入式部门解决问题，这个服务其实也没有配置成功，真的是蛋疼，工作效率别提多低了。</p>
+<h1 id="2-Samba-安装步骤"><a href="#2-Samba-安装步骤" class="headerlink" title="2 Samba 安装步骤"></a>2 Samba 安装步骤</h1><ol>
+<li><p>执行命令行</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo apt-get install samba</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>编辑 /etc/smb.conf，跳到文件尾部，插入如下内容</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line">[smb_share] # 会在共享中显示的名字</span><br><span class="line">	comment = share</span><br><span class="line">	path = /home/hanxinle/smb_share # 绝对路径，记得去创建文件夹</span><br><span class="line">	writable = yes</span><br><span class="line">	browseable = yes</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建 smba 用户，按照提示出入密码</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sudo smbpasswd -a hanxinle</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>重启服务，实际上我是先重启后，无法使用服务才根据资料创建的 smba 用户</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">sudo /etc/init.d/smbd restart</span><br><span class="line">sudo /etc/init.d/nmbd restart</span><br><span class="line">systemctl restart smb</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Winodws 文件夹中输入 \192.168.0.103，会弹出名为 smb_share 的网络资源，打开后进入，这一步骤可能要输入用户名和密码。</p>
+</li>
+<li><p>可以下一次输入 \\ip 后，右击网络资源，选择映射到本地磁盘，选择一个没有使用的盘符，进入后编辑的文件会自动同步到 Ubuntu 系统.</p>
+</li>
+</ol>
+<h1 id="3-Windows-按照域名访问-vmware-虚拟机"><a href="#3-Windows-按照域名访问-vmware-虚拟机" class="headerlink" title="3 Windows 按照域名访问 vmware 虚拟机"></a>3 Windows 按照域名访问 vmware 虚拟机</h1><p>首先，VM 中的 Ubuntu 以 root 权限编辑 /etc/hosts 文件，假设虚拟机 ip 是 192.168.0.103 则添加如下内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">192.168.0.103   rtc.com</span><br></pre></td></tr></table></figure>
+<p>在 Windows 10 中找到路径 <em>C:\Windows\System32\drivers\etc</em>，以管理员身份打开该路径中的 <em>hosts</em> 文件，添加如下内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">192.168.0.103   rtc.com</span><br></pre></td></tr></table></figure>
+<p>Windows 10 中执行 ping 命令即可验证。</p>
+<h1 id="4-Windows-系统局域网传输文件"><a href="#4-Windows-系统局域网传输文件" class="headerlink" title="4 Windows 系统局域网传输文件"></a>4 Windows 系统局域网传输文件</h1><p>将要分享的文件放入文件夹，然后将该文件夹分享给 Everyone，另一台 Windows 中 <em>WIN+R</em> 后执行 \\<pc1的ip>，即可访问分享的文件夹，和配置 samba 并访问相似。 </p>
+]]></content>
+      <tags>
+        <tag>工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Visual Studio dll的编写和使用</title>
+    <url>/2014/10/22/vc-dll/</url>
+    <content><![CDATA[<blockquote>
+<p>装载、链接、库（特别是 <em>Linux</em> 平台相关内容）<br><span id="more"></span><br>以前根据本科毕业设计写过一篇关于 VC++6.0 创建 dll 共享的博客，这篇文字简述下 vs2017 下创建动态链接库的操作。</p>
+</blockquote>
+<p>更新：</p>
+<p>现在创建 dll 及使用 dll 不需要原来那么复杂的做法。使用 dll 在同一个解决方案中，创建使用 dll 的项目，设置好项目依赖并且配置好即可使用，无需加载、卸载 dll 过程。</p>
+<p>在 vs2017 动态链接库项目中，自己以前经常程序莫名崩溃，一个原因是在解决方案中没有设置项目依赖关系，另一个原因是在 dll 项目中，需要在“项目属性-链接器-高级-导入库”中进行设置，导出 lib、dll 文件，使用时包含头文件，并且配置好包含路径、库路径、执行路径（dll  所咋路径）就不会再出错了。</p>
+<h2 id="1-dll-不同创建方法"><a href="#1-dll-不同创建方法" class="headerlink" title="1 .dll 不同创建方法"></a>1 <em>.dll</em> 不同创建方法</h2><h3 id="1-1-def-方式"><a href="#1-1-def-方式" class="headerlink" title="1.1 def 方式"></a>1.1 <em>def</em> 方式</h3><p><em>VC++6.0</em> 中，当写好了函数声明及实现文件后，可以添加 .def 文件， 注明要导出的函数即可。<br><figure class="highlight c++"><table><tr><td class="code"><pre><span class="line">LIBRARY <span class="string">&quot;dlltest&quot;</span></span><br><span class="line"></span><br><span class="line">EXPORTS add@<span class="number">1</span></span><br><span class="line">EXPORTS sub@<span class="number">2</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure><br>vs2017 中，创建项目类型中的“动态链接库(DLL)”和这种方式类似，可以添加自己的接口文件和实现文件，添加 .def 文件，在 EXPORTS 下写明函数名即可。<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">LIBRARY</span><br><span class="line"></span><br><span class="line">EXPORTS</span><br><span class="line">add</span><br><span class="line">sub</span><br></pre></td></tr></table></figure></p>
+<h3 id="1-2-具有导出项方式"><a href="#1-2-具有导出项方式" class="headerlink" title="1.2 具有导出项方式"></a>1.2 具有导出项方式</h3><p>这是 vs2017 中另一种创建 DLL 的方式，该方式为外部导出方式，生成的文件可以给其它模块调用。在项目创建时可以选择“具有导出项的动态链接库(DLL)”。在一 .h 文件中，会有如下内容（DLL2 是工程名字）：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">#ifdef DLL2_EXPORTS</span><br><span class="line">#define DLL2_API __declspec(dllexport)</span><br><span class="line">#else</span><br><span class="line">#define DLL2_API __declspec(dllimport)</span><br><span class="line">#endif</span><br></pre></td></tr></table></figure><br>将自己编写的接口及实现文件可以拷贝到这个工程中，并且在接口文件上面添加上述内容，同时在需要导出的类、函数、变量等名字前添加 <em>DLL2_API</em>, 如果少量编码，将导出项写在 DLL 入口文件也可以，不需要标记 <em>DLL2_API</em>， 这个工程生的 .def 需要自己手动添加现有项，或者自行创建。</p>
+<h2 id="2-dll-调用"><a href="#2-dll-调用" class="headerlink" title="2 dll 调用"></a>2 dll 调用</h2><p>编译得到 .dll、.lib 文件后，放入相应位置，同一个解决方案中，可在解决方案属性中设置其它项目依赖该 dll 项目，遇到找不到库的情况，配置库目录及预加载的库。</p>
+<h3 id="2-1-显式链接——动态调用"><a href="#2-1-显式链接——动态调用" class="headerlink" title="2.1 显式链接——动态调用"></a>2.1 显式链接——动态调用</h3><p>显式链接是应用程序在执行过程中控制加载、卸载 <em>dll</em> 文件，具有更好的灵活性。加载 <em>dll</em> 获得句柄，获得函数地址，存储在函数指针中调用 dll 中函数，调用结束后释放句柄。</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">void</span>)</span>  </span>&#123;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">int</span><span class="params">(*pMax)</span><span class="params">(<span class="type">int</span> a,<span class="type">int</span> b)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">int</span><span class="params">(*pMin)</span><span class="params">(<span class="type">int</span> a,<span class="type">int</span> b)</span></span>;</span><br><span class="line"></span><br><span class="line">HINSTANCE hDLL;</span><br><span class="line">pMax MaxHDLL=<span class="built_in">LoadLibrary</span>(<span class="string">&quot;MyDll.dll&quot;</span>);<span class="comment">//加载动态链接库MyDll.dll文件；</span></span><br><span class="line">Max=(pMax)<span class="built_in">GetProcAddress</span>(hDLL,<span class="string">&quot;Max&quot;</span>);</span><br><span class="line"><span class="type">int</span> maxV=<span class="built_in">Max</span>(<span class="number">5</span>,<span class="number">8</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;比较的结果为%d\n&quot;</span>,maxV);</span><br><span class="line"><span class="built_in">FreeLibrary</span>(hDLL);<span class="comment">//卸载MyDll.dll文件；</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="2-2-隐式链接——静态调用"><a href="#2-2-隐式链接——静态调用" class="headerlink" title="2.2 隐式链接——静态调用"></a>2.2 隐式链接——静态调用</h3><p>隐式链接就是在程序开始执行时就将 <em>dll</em> 文件加载到应用程序当中，通过 comment 实现，如下所示：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> comment(lib，<span class="string">&quot;MyDll.lib&quot;</span>)</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span>  </span>&#123;</span><br><span class="line"><span class="type">int</span> result;</span><br><span class="line">result=<span class="built_in">min</span>(<span class="number">8</span>,<span class="number">10</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;比较的结果为%d\n&quot;</span>,result);</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>（PS：该方式看似简单，看是我这边佛系编译，遇到问题真是头大）</p>
+]]></content>
+      <tags>
+        <tag>Windows</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Windows程序设计总结</title>
+    <url>/2017/08/10/windows-programing-note/</url>
+    <content><![CDATA[<h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><h2 id="文章背景"><a href="#文章背景" class="headerlink" title="文章背景"></a>文章背景</h2><p>对于Windows程序设计抓住主线进行总结，包括 Win32 和少量MFC和Qt的内容。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><span id="more"></span>
+<h1 id="正文和GitHub"><a href="#正文和GitHub" class="headerlink" title="正文和GitHub"></a>正文和GitHub</h1><p>访问以下<a href="https://github.com/hanxinle/Windows-Develop-Notes">链接</a>，可以看到教程在 ReadMe 中，并且有工程。</p>
+]]></content>
+      <tags>
+        <tag>Qt</tag>
+        <tag>Windows</tag>
+        <tag>MFC</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>WebRTC 库在 Windows 平台编译（支持 H.264）</title>
+    <url>/2022/09/21/webrtc-build-on-windows/</url>
+    <content><![CDATA[<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
+<li><a href="https://avdancedu.com/2bafd6cf/">音视跳动李超老师的 WebRTC 编译博客</a></li>
+<li><a href="https://webrtc.org/support/overview">WebRTC Support(官网)</a></li>
+</ol>
+<h1 id="编译环境准备"><a href="#编译环境准备" class="headerlink" title="编译环境准备"></a>编译环境准备</h1><p>根据官方文档：</p>
+<p><a href="https://webrtc.googlesource.com/src/+/main/docs/native-code/development/">https://webrtc.googlesource.com/src/+/main/docs/native-code/development/</a></p>
+<span id="more"></span>
+<p>Windows 平台编译 WebRTC 与编译 Chromium 软件配置和操作大多一致，可以参考编译Chromium 文档编译 WebRTC，编译Chromium 文档的网址是：</p>
+<p><a href="https://chromium.googlesource.com/chromium/src/+/refs/heads/main/docs/windows_build_instructions.md">https://chromium.googlesource.com/chromium/src/+/refs/heads/main/docs/windows_build_instructions.md</a> 。</p>
+<p>编译WebRTC需满足如下硬件要求：</p>
+<ol>
+<li>CPU型号为 intel；</li>
+<li>内存大于等于 8G；</li>
+<li>存放源码的硬盘是 NTFS 文件系统，容量建议大于等于100G。</li>
+</ol>
+<p>软件要求：</p>
+<ul>
+<li><p>Git</p>
+<p>下载地址：<a href="https://git-scm.com/">https://git-scm.com/</a></p>
+</li>
+<li><p>Visual Studio 2019</p>
+<p>下载地址：<a href="https://visualstudio.microsoft.com/zh-hans/vs/">https://visualstudio.microsoft.com/zh-hans/vs/</a> ,</p>
+<p>其它版本可在名为“MSDN,i tell you”网站下载，网址是 <a href="https://msdn.itellyou.cn/">https://msdn.itellyou.cn/</a> </p>
+<p>必要组件：</p>
+<p>选择 “Windows” 页面下的 .Net 桌面开发，使用 C++ 的桌面开发、通用 Windows 平台开发。</p>
+<p>在 单个组件 标签下，找到并勾选 用于x86和x64的Visual C++ MFC、用于x86和X64的Visual C++ ATL、Clang/C2(实验)、带有Spectre缓解措施的Visual C++ ATL(x86/x64)、带有Spectre缓解措施的Visual C++ MFC(x86/x64)。</p>
+</li>
+<li><p>Windows sdk 和 Debugging Tools for Windows</p>
+<p>Windows10 编译 WebRTC 所需的 Windows SDK 版本最低要求是10.0.19041.0，如果系统没有安装满足版本要求Windows SDK。请访问  <a href="https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk/">https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk/</a> 下载 .iso 文件，安装时选择 <strong>Debugging Tools for Windows</strong>。</p>
+</li>
+<li><p>depot tool</p>
+</li>
+</ul>
+<p>depot_tool下载地址是</p>
+<p><a href="https://storage.googleapis.com/chrome-infra/depot_tools.zip">https://storage.googleapis.com/chrome-infra/depot_tools.zip</a></p>
+<p>若文件保存路径包含中文，请将depot_tools.zip移动到<strong>英文</strong>路径下，例如C:\bjm_tools\，右击depot_tools.zip,选择 解压到depot_tools（英文版解压软件命令是extract files to “depot_tools\”）.</p>
+<p>将C:\bjm_tools\depot_tools添加到系统 path 路径，然后选定该项，单击 <strong>上移</strong> ，将其移动到顶部，缺少这一步会导致depot_tools命令与系统原有软件命令冲突时系统不会优先选择depot_tools工具所支持的命令，产生错误。</p>
+<h1 id="编译过程"><a href="#编译过程" class="headerlink" title="编译过程"></a>编译过程</h1><p>运行 x86 Native Tools Command Prompt for VS 2019 专业版，设置环境变量：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">// 设置depot_tools使用本地VS进行编译</span><br><span class="line"><span class="built_in">set</span> DEPOT_TOOLS_WIN_TOOLCHAIN=0</span><br><span class="line">// 设置编译工具（GYP == Generate Your Projects）</span><br><span class="line"><span class="built_in">set</span> GYP_GENERATORS=ninja,msvs-ninja</span><br><span class="line">// 设置VS路径</span><br><span class="line"><span class="built_in">set</span> GYP_MSVS_OVERRIDE_PATH=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise</span><br><span class="line">// 设置VS版本</span><br><span class="line"><span class="built_in">set</span> GYP_MSVS_VERSION=2019</span><br><span class="line">// 指明vs2019_install路径</span><br><span class="line"><span class="built_in">set</span> vs2019_install=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>如果是 vs2017，则设置以下变量（本人没有使用）：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">// 设置depot_tools使用本地VS进行编译</span><br><span class="line"><span class="built_in">set</span> DEPOT_TOOLS_WIN_TOOLCHAIN=0</span><br><span class="line">// 设置编译工具（GYP == Generate Your Projects）</span><br><span class="line"><span class="built_in">set</span> GYP_GENERATORS=ninja,msvs-ninja</span><br><span class="line">// 设置VS路径</span><br><span class="line"><span class="built_in">set</span> GYP_MSVS_OVERRIDE_PATH=C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional</span><br><span class="line">// 设置VS版本</span><br><span class="line"><span class="built_in">set</span> GYP_MSVS_VERSION=2017</span><br><span class="line">// 指明vs2017_install路径</span><br><span class="line"><span class="built_in">set</span> vs2017_install=C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional</span><br></pre></td></tr></table></figure>
+<p>因为网络问题，我在第一次启动 cmd 的时候设置了 Git 代理</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git config --global http.proxy <span class="string">&quot;127.0.0.1:1080&quot;</span></span><br><span class="line">git config --global https.proxy <span class="string">&quot;127.0.0.1:1080&quot;</span></span><br></pre></td></tr></table></figure>
+<p>后来重启 cmd 又设置了系统代理（榨干ssr 最有一点流量）：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">set</span> http_proxy=127.0.0.1:1080</span><br><span class="line"><span class="built_in">set</span> https_proxy=127.0.0.1:1080</span><br></pre></td></tr></table></figure>
+<p>设置后执行:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gclient</span><br></pre></td></tr></table></figure>
+<p>该命令会安装其它所有编译 WebRTC源码所需要的、针对Windows平台特定的工具，例如 msysgit 和Python。</p>
+<p>执行 gclient 命令后，输入命令:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">where</span> python</span><br></pre></td></tr></table></figure>
+<p>确保 python.bat 出现在任何 python.exe 前再继续操作.</p>
+<p>设置 git ，然后下载源码:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git config --global user.name <span class="string">&quot;xxxx&quot;</span></span><br><span class="line">git config --global user.email <span class="string">&quot;xxxxx@yy.com&quot;</span></span><br><span class="line">git config --global core.autocrlf <span class="literal">false</span></span><br><span class="line">git config --global core.filemode <span class="literal">false</span></span><br><span class="line">git config --global branch.autosetuprebase always</span><br></pre></td></tr></table></figure>
+<p>下载源码过程是：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">// 创建名为 webrtc-checkout 的文件夹</span><br><span class="line"><span class="built_in">mkdir</span> webrtc-checkout</span><br><span class="line">// 进入 webrtc-checkout</span><br><span class="line"><span class="built_in">cd</span> webrtc-checkout</span><br><span class="line">// 下载源码</span><br><span class="line">fetch --nohooks webrtc</span><br><span class="line">// 同步为最新版源码</span><br><span class="line">gclient <span class="built_in">sync</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 进入 src </span></span><br><span class="line"><span class="built_in">cd</span> src</span><br></pre></td></tr></table></figure>
+<p>李超老师的博客提到如下编译流程：</p>
+<p>首先，生成目录和编译库</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> src</span><br><span class="line">$ gn gen out/Default</span><br><span class="line">$ ninja -C out/Default</span><br></pre></td></tr></table></figure>
+<p>接着，再生成 vs 工程，用于调试学习</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ gn gen --ide=vs out\Default</span><br></pre></td></tr></table></figure>
+<p>这个流程是我 2023 年 6 月份使用的，对 2021-05 和 2021-08 两个版本的源码都能编译。</p>
+<p>在 2021 年，Default 是编译不过的。现在想当时的原因可能如下：</p>
+<ol>
+<li>编译环境变化，我现在把要设置的环境变量都写入到了系统环境变量中；</li>
+<li>2021 生成的待编译文件有 —ide=vs 选项，对其有干扰；</li>
+<li>现在使用了新的 Windows SDK 或者 VS2022 的关系；</li>
+<li>depot_tool 的更新；</li>
+<li>命令行的更换，我使用的是 develop prompt command for vs2019;</li>
+</ol>
+<p>2021 使用的生成 x86 debug with H.264 的 libwebrtc.lib 待编译文件命令是：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gn gen out/x86/vs2019ffmpeg_nolibcxx_nolld_notests --ide=vs2019 --args=<span class="string">&quot;target_cpu=\&quot;x86\&quot; is_debug = true  treat_warnings_as_errors = false</span></span><br><span class="line"><span class="string">use_custom_libcxx = false use_lld = false  rtc_use_h264 = true proprietary_codecs = true is_component_ffmpeg = true enable_iterator_debugging = true ffmpeg_branding = \&quot;Chrome\&quot; rtc_include_tests = false&quot;</span></span><br></pre></td></tr></table></figure>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>含义</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>out/x86/dh264ffmpeg</td>
+<td>工程存放路径</td>
+<td></td>
+</tr>
+<tr>
+<td>—ide=vs2017</td>
+<td>编译工程所用 IDE 工具</td>
+<td></td>
+</tr>
+<tr>
+<td>target_cpu=\”x86\”</td>
+<td>webrtc.lib 是32位</td>
+<td></td>
+</tr>
+<tr>
+<td>target_winuwp_family=\”desktop\”</td>
+<td>webrtc.lib用于Windows桌面程序</td>
+<td>后续生成工程不再指定这个参数的值</td>
+</tr>
+<tr>
+<td>is_debug=true</td>
+<td>生成的静态库用于debug模式</td>
+<td>默认debug模式，查看方法见表后正文</td>
+</tr>
+<tr>
+<td>treat_warnings_as_errors=false</td>
+<td>设置编译过程不将警告当作错误，避免中断编译过程</td>
+<td>如果忘记关闭需要更改源码，详见后文</td>
+</tr>
+<tr>
+<td>rtc_use_h264=true</td>
+<td>支持H.264编码</td>
+<td></td>
+</tr>
+<tr>
+<td>proprietary_codecs=true</td>
+<td>支持所有编解码方案开关开启</td>
+<td></td>
+</tr>
+<tr>
+<td>is_component_ffmpeg=true</td>
+<td>编译ffmpeg模块用于支持H.264解码</td>
+<td></td>
+</tr>
+<tr>
+<td>ffmpeg_branding=\”Chrome\”</td>
+<td>设置编译的ffmpeg多媒体播放设置适配Chrome系统</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>上述命令耗时4336ms，Windows平台 H.264 解码用ffmpeg，ffmpeg解码需要用到Clang，is_clang选项默认为true，如果不用Clang，将不支持H.264解码。具体信息请访问 <a href="https://bugs.chromium.org/p/webrtc/issues/detail?id=9213">https://bugs.chromium.org/p/webrtc/issues/detail?id=9213</a> 。4.5 节会对详细说明这个网址涉及的内容。</p>
+<p>补充一个创建 WebRTC工程后查看配置参数的命令，即在命令行中输入</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gn args out/x86/vs2019ffmpeg_nolibcxx_nolld_notests –list</span><br></pre></td></tr></table></figure>
+<p>可以查看生成该工程可设置的所有参数，以及每个参数的当前值、默认值、该值的含义等信息。</p>
+<p>执行</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gn args out/x86/vs2019ffmpeg_nolibcxx_nolld_notests –list=&lt;参数名&gt;</span><br></pre></td></tr></table></figure>
+<p>可以查看特定参数的值。</p>
+<p>编译 WebRTC 工程</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ninja -C out/x86/vs2019ffmpeg_nolibcxx_nolld_notests</span><br></pre></td></tr></table></figure>
+<p>测试编译：</p>
+<p>进入到生成目录 <em>out/x86/vs2019ffmpeg_nolibcxx_nolld_notests</em>，运行命令保存log并查看结果.</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">vidoe_engine_tests.exe &gt; video_engine_tests_log.txt</span><br></pre></td></tr></table></figure>
+<h1 id="创建-peerconnection-工程测试编译的库"><a href="#创建-peerconnection-工程测试编译的库" class="headerlink" title="创建 peerconnection 工程测试编译的库"></a>创建 peerconnection 工程测试编译的库</h1><p>启动vs2019，打开资源管理器进入WebRTC 源码路径，在 /examples/server 下拷贝 data_socket.cc、data_socket.h、main.c、peer_channel.cc、peer_channel.h、utils.cc、utils.h 到 bjm_peerconnetcion_server 路径下，并且导入该工程；pc_client 示例程序所在路径是 src/examples/client，拷贝conductor.cc、conductor.h、defaults.cc、defaults.h、flag_defs.h、main.cc、main_wnd.cc、main_wnd.h、peer_connection_client.cc、peer_connection_server.h 到 pc_client 所在路径并且导入工程。</p>
+<p><strong>对 server 配置 </strong>include 路径和库路径，在“链接器-输入”中添加：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ws2_32.lib</span><br><span class="line">winmm.lib</span><br><span class="line">webrtc.lib</span><br><span class="line">my_webrtc.lib    </span><br></pre></td></tr></table></figure>
+<p>PS: my_webrtc.lib 是自制.</p>
+<p><strong>对 client ，配置</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ws2_32.lib</span><br><span class="line">winmm.lib</span><br><span class="line">strmiids.lib</span><br><span class="line">amstrmid.lib</span><br><span class="line">dmoguids.lib</span><br><span class="line">wmcodecdspuuid.lib</span><br><span class="line">crypt32.lib</span><br><span class="line">iphlpapi.lib</span><br><span class="line">secur32.lib</span><br><span class="line">rtc_json.lib</span><br><span class="line">msdmo.lib</span><br><span class="line">webrtc.lib</span><br><span class="line">ffmpeg.dll.lib</span><br><span class="line">my_webrtc.lib</span><br></pre></td></tr></table></figure>
+<p>PS: my_webrtc.lib 是自制.</p>
+<p>编译结束后，先启动 pc_server，再启动两个 pc_client ,单击 ”connect” 按钮，计算机上如果有两个摄像头，就可以互相看到对方。</p>
+<p>PS: 我还保留了几个脚本工具用于测试环节提取 lib、头文件、将 obj 文件制作成为 lib。</p>
+<h1 id="Q-amp-A"><a href="#Q-amp-A" class="headerlink" title="Q&amp;A"></a>Q&amp;A</h1><p>1、如果设置了 is_clang=false，会出现什么问题及解决方法是什么？</p>
+<p>答：几个文件如 /modules/audio_processing/agc2/rnn_vad/features_extraction.cc</p>
+<p>代码报错，提示不能对数据 窄化(narrowing) 操作。需要对该行报错的变量使用 static_cast&lt;窄化后的类型&gt; ，参考 <a href="https://en.cppreference.com/w/cpp/language/static_cast">https://en.cppreference.com/w/cpp/language/static_cast</a> 。</p>
+<p>另有 TaskQueue 模块个别文件提示对象访问权限问题，根据报错信息打开源码，定位到报错的行，将 protected 改为 public。</p>
+<p>最严重的问题是无法编译 ffmpeg，因为VS对C11支持不完全，提示找不到头文件，无法通过拷贝相应头文件到VS的include 目录解决这个问题。</p>
+<p>2、如果不设置 treat_warnings_as_errors=false 会出现什么情况？如何解决？</p>
+<p>答：在执行ninja –C &lt;工程路径&gt; 命令后，编译过程会被频繁打断。需要定位到警告信息产生的代码文件相应的行，在行的前后加入 #pragma warning (disable:&lt;警告编号&gt;)。</p>
+<p>3、因为编译工程频繁更改代码，如何能统计自己更改了哪些代码以及做了何种更改？</p>
+<p>答：命令行环境进入 webrtc-checkout/src 路径,执行 git diff 即可看到对源码的修改记录。建议用Visual Studio Code(下文称VSC)修改代码，修改后保存代码但不要退出VSC，若需要恢复到修改前的代码，切换到文件标签，不断按 Cril+Z,即可撤销修改，保存文件。再执行 git diff 即可看到源码无修改。</p>
+<p>4、如何查看自己下载的WebRTC版本信息。</p>
+<p>答：执行 gclient revinfo –a 。</p>
+<p>5、这些参数是不是一成不变的？开发人员可以不了解直接采用 webrtc.lib？</p>
+<p>答：每个版本控制生成工程的参数都有可能发生变化，本文档 v1.1版撰写时 v1.0版的一些参数已经不再被使用，由其它参数覆盖、替代或干脆移除某参数涉及的模块。第二个问题的答案为是，开发人员不需要了解具体参数的含义，这也是本文档的意义——节约时间。</p>
+<p>6、H.264 编解码支持所依赖的 ffmpeg 编译及测试方案执行</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>WebRTC 生成工程参数</th>
+<th>编译器</th>
+<th>C++ 标准库版本</th>
+<th>链接器</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>is_clang=false</td>
+<td>MSVC cl.exe</td>
+<td>MSVC lib</td>
+<td>MSVC link.exe</td>
+<td></td>
+</tr>
+<tr>
+<td>is_clang=false  use_custom_libcxx=true  use_lld=true</td>
+<td>Clang</td>
+<td>Google custom  libcxx</td>
+<td>lld</td>
+<td>默认参数</td>
+</tr>
+<tr>
+<td>is_clang=true  use_custom_libcxx=false</td>
+<td>Clang</td>
+<td>MSVC lib</td>
+<td>lld</td>
+<td></td>
+</tr>
+<tr>
+<td>is_clang=true  use_custom_libcxx=false  use_lld=flase</td>
+<td>Clang</td>
+<td>MSVC lib</td>
+<td>MSVC link.exe</td>
+<td>本文档使用参数设置</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>此处需要特别说明使用 H.264 编解码支持的x86 debug 版webrtc.lib 的项目属性配置方案。WebRTC 若要支持 H.264 解码，需要添加 ffmpeg 模块。编译此模块在Windows 系统需要Clang 编译器支持。因此在生成 webrtc.lib 工程时，相关参数要与上表的最后一列一致。</p>
+<p>7、Windows 平台对 H.264 支持情况</p>
+<p>2021年编译的时候我记录了如下信息，近期没有重新编译，进展情况自行查官方信息吧：</p>
+<blockquote>
+<p>WebRTC官方宣布 Windows 系统使用vs原生工具集则不支持 H.264 编解码，截至本文档撰写完毕这个 bug依旧没有解决。这是网址：</p>
+<p><a href="https://bugs.chromium.org/p/webrtc/issues/detail?id=9213%23c13">https://bugs.chromium.org/p/webrtc/issues/detail?id=9213#c13</a></p>
+</blockquote>
+]]></content>
+      <tags>
+        <tag>WebRTC</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>hexo搭建环境完毕后写博客的步骤</title>
+    <url>/2020/10/27/write-blog-step-by-step/</url>
+    <content><![CDATA[<h1 id="一-发布博客的操作流程"><a href="#一-发布博客的操作流程" class="headerlink" title="一 发布博客的操作流程"></a>一 发布博客的操作流程</h1><p>1 创建新博文<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;博文标题&quot;</span></span><br></pre></td></tr></table></figure><br><span id="more"></span><br>编辑博客，保存。</p>
+<p>参考: <a href="https://hexo.io/docs/writing.html">Writing</a></p>
+<p>2 启动本地服务器地址查看博客<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure></p>
+<p>参考: <a href="https://hexo.io/docs/server.html">Server</a></p>
+<p>3 推送到 Github(hanxinle.github.io)<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$  hexo g &amp;&amp; hexo d</span><br></pre></td></tr></table></figure></p>
+<p>PS: 下面这个命令是教程介绍的，亲测会删掉自己添加的封面等文件，慎用。<br><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$  hexo clean &amp;&amp; hexo g &amp;&amp; hexo d</span><br></pre></td></tr></table></figure></p>
+<p>参考: <a href="https://hexo.io/docs/generating.html">Generating</a></p>
+<p>参考: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+<ul>
+<li>GitHub页面更新</li>
+</ul>
+<p>更新有延迟，需要等大约1分钟，刷新博客首页可以看到新部署。</p>
+<h1 id="二-在博文中显示公式的方法"><a href="#二-在博文中显示公式的方法" class="headerlink" title="二 在博文中显示公式的方法"></a>二 在博文中显示公式的方法</h1><p>1 在需要插入公式的博客中添加设置条目mathjax并设置值为true:<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">---</span><br><span class="line">title: A Title</span><br><span class="line">date: 2020-02-08 10:39:55</span><br><span class="line">tags:</span><br><span class="line">- tag1</span><br><span class="line">- tag2</span><br><span class="line">categories:</span><br><span class="line">- parent</span><br><span class="line">- child</span><br><span class="line"></span><br><span class="line">mathjax: true</span><br><span class="line">---</span><br></pre></td></tr></table></figure></p>
+<p>2 主题next添加公式支持的方法【该博客采用的方案】<br>修改主题所在的_config.yml 文件内容如下（搜索math后修改）<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">math:</span><br><span class="line">  # Default (true) will load mathjax / katex script on demand.</span><br><span class="line">  # That is it only render those page which has `mathjax: true` in Front-matter.</span><br><span class="line">  # If you set it to false, it will load mathjax / katex srcipt EVERY PAGE.</span><br><span class="line">  enable: true</span><br><span class="line">  per_page: true</span><br><span class="line"></span><br><span class="line">  # hexo-renderer-pandoc (or hexo-renderer-kramed) required for full MathJax support.</span><br><span class="line">  mathjax:</span><br><span class="line">    enable: true</span><br><span class="line">    # See: https://mhchem.github.io/MathJax-mhchem/</span><br><span class="line">    mhchem: true</span><br></pre></td></tr></table></figure></p>
+<p>博客的根目录的 _config.yml 文件不需要修改。</p>
+<p>测试公式：   $ f(x) = a+b $</p>
+<p>3 主题butterfly的步骤有3个</p>
+<ul>
+<li><p>安装插件　　</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">npm install hexo-math --save</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在站点配置文件 _config.yml 中添加：　　</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">math:</span><br><span class="line">  engine: &#x27;mathjax&#x27; # or &#x27;katex&#x27;</span><br><span class="line">  mathjax:</span><br><span class="line">    # src: custom_mathjax_source</span><br><span class="line">    config:</span><br><span class="line">      # MathJax config</span><br></pre></td></tr></table></figure></li>
+<li>在 next 主题配置文件中 themes/butterfly/_config.yml 中将 mathJax 设为 true:</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># MathJax Support</span><br><span class="line">mathjax:</span><br><span class="line">  enable: true</span><br><span class="line">  per_page: false</span><br><span class="line">  cdn: //cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML</span><br></pre></td></tr></table></figure>
+<h1 id="三-图片显示的方法"><a href="#三-图片显示的方法" class="headerlink" title="三 图片显示的方法"></a>三 图片显示的方法</h1><p>在public路径下找到和博客文件同名的文件夹，将图像文件放入其中，在博客中直接引用即可，例如下文<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">![](1.jpg)</span><br></pre></td></tr></table></figure><br>显示如下：<br><img src="1.jpg" alt=""></p>
+<h1 id="四-删掉已经发布的博客的方法"><a href="#四-删掉已经发布的博客的方法" class="headerlink" title="四 删掉已经发布的博客的方法"></a>四 删掉已经发布的博客的方法</h1><p>参考资料：夏普通.2020-10-13.<a href="https://blog.csdn.net/qq_34243930/article/details/109046120#:~:text=%E5%85%B7%E4%BD%93%E6%AD%A5%E9%AA%A4%E5%A6%82%E4%B8%8B%201%20%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%8C%E5%8E%BB%E6%96%87%E4%BB%B6%E5%A4%B9%20source%2F_posts%20%E4%B8%8B%E5%88%A0%E9%99%A4%E4%BD%A0%E6%83%B3%E8%A6%81%E5%88%A0%E9%99%A4%E7%9A%84%E6%96%87%E7%AB%A0%202%20%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%8C%E5%88%A0%E9%99%A4%20.deploy_git,%E5%90%8E%EF%BC%8C%E5%86%8D%E6%89%A7%E8%A1%8C%20hexo%20g%20%EF%BC%8C%20hexo%20g%20%E5%8D%B3%E5%8F%AF%E3%80%82%20%E5%8F%91%E7%8E%B0%E6%96%87%E7%AB%A0%E5%88%A0%E9%99%A4%E6%88%90%E5%8A%9F%E2%9C%94">用Github Pages+Hexo搭建博客之(七)如何删除一篇已经发布的文章 #成功解决：同时删除掉.deploy_git文件夹</a></p>
+<p>步骤如下：</p>
+<ol>
+<li>删掉 <code>source/_posts</code> 下的 .md 博客文件 ;</li>
+<li>删除 <code>.deploy_git</code> 文件夹；</li>
+<li>执行 <code>hexo clean</code>，再执行 <code>hexo g &amp;&amp; hexo d</code>。</li>
+</ol>
+]]></content>
+      <tags>
+        <tag>工具</tag>
+      </tags>
+  </entry>
+</search>

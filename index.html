@@ -1,0 +1,2501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"hanxinle.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="hanxinle199@gmail.com">
+<meta property="og:type" content="website">
+<meta property="og:title" content="科学学习与工程笔记">
+<meta property="og:url" content="https://hanxinle.github.io/index.html">
+<meta property="og:site_name" content="科学学习与工程笔记">
+<meta property="og:description" content="hanxinle199@gmail.com">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="川辣孙悟空(Goku)">
+<meta property="article:tag" content="C&#x2F;C++,ASM,lisp,emacs,机器学习,计算机视觉,NLP...">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://hanxinle.github.io/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : true,
+    isPost : false,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>科学学习与工程笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="科学学习与工程笔记" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">科学学习与工程笔记</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">动脑动手</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/hanxinle" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content index posts-expand">
+            
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2024/03/29/hexo_slide/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/03/29/hexo_slide/" class="post-title-link" itemprop="url">补充 hexo 博客的使用</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-03-29 22:59:24" itemprop="dateCreated datePublished" datetime="2024-03-29T22:59:24+08:00">2024-03-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-01-28 12:32:19" itemprop="dateModified" datetime="2025-01-28T12:32:19+08:00">2025-01-28</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>恢复重建</p>
+<p>删除</p>
+<p>更新</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2023/12/02/hardware-notes/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/12/02/hardware-notes/" class="post-title-link" itemprop="url">开发环境问题处理</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-12-02 14:08:34" itemprop="dateCreated datePublished" datetime="2023-12-02T14:08:34+08:00">2023-12-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-02-03 12:31:43" itemprop="dateModified" datetime="2024-02-03T12:31:43+08:00">2024-02-03</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-一些教训"><a href="#1-一些教训" class="headerlink" title="1 一些教训"></a>1 一些教训</h1><p>非必要不升级系统，导致很多经典软件不能用，最后重新安装系统解决这些问题的.</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/12/02/hardware-notes/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2023/10/06/h264-concept/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/10/06/h264-concept/" class="post-title-link" itemprop="url">H.264 总结</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-10-06 19:23:15" itemprop="dateCreated datePublished" datetime="2023-10-06T19:23:15+08:00">2023-10-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-11-25 22:17:42" itemprop="dateModified" datetime="2023-11-25T22:17:42+08:00">2023-11-25</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><img src="h264_1.png" alt=""></p>
+<p>这个图片是经过概念梳理后做的信息提取说明图，但是理清了 H.264 的内部关系，并且对 H.264 的结构和网络传输的概念予以说明，H.264 的传输说明应该关注的是 RTP 等协议，这些都有专门的 RFC 文档和对应的开源库。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2023/07/22/gitsamples/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/07/22/gitsamples/" class="post-title-link" itemprop="url">Git 案例</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-07-22 11:29:54" itemprop="dateCreated datePublished" datetime="2023-07-22T11:29:54+08:00">2023-07-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-07-23 16:57:49" itemprop="dateModified" datetime="2023-07-23T16:57:49+08:00">2023-07-23</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>本文记录记录一些实际操作的案例，可以结合 <a href="https://hanxinle.github.io/2019/09/29/github-note/">GitHub 基本操作教程</a> 在工作中熟悉 Git 的使用。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/07/22/gitsamples/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2023/07/09/cpp-skill/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/07/09/cpp-skill/" class="post-title-link" itemprop="url">C/C++ 技术随笔</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-07-09 22:10:37" itemprop="dateCreated datePublished" datetime="2023-07-09T22:10:37+08:00">2023-07-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-07-22 12:14:41" itemprop="dateModified" datetime="2023-07-22T12:14:41+08:00">2023-07-22</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <ol>
+<li><p>单例模式的目的是确保唯一实例，确切的说是为了在应用程序的进程空间中确保唯一实例，刚刚在视频处理器的使用中被这种设计小小震撼一下：</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/07/09/cpp-skill/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2023/07/04/obs-src-dev/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/07/04/obs-src-dev/" class="post-title-link" itemprop="url">使用 OBS 开发零散记录</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-07-04 09:52:56 / 修改时间：21:57:58" itemprop="dateCreated datePublished" datetime="2023-07-04T09:52:56+08:00">2023-07-04</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>这个笔记比较乱，记录下 OBS 源码分析和使用 OBS 开发的一些做法。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/07/04/obs-src-dev/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2023/06/29/obs-build/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/06/29/obs-build/" class="post-title-link" itemprop="url">OBS 编译记录</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-29 20:39:15" itemprop="dateCreated datePublished" datetime="2023-06-29T20:39:15+08:00">2023-06-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-06-30 20:18:27" itemprop="dateModified" datetime="2023-06-30T20:18:27+08:00">2023-06-30</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>OBS 的编译还是有陷阱的，这次编译出来留一个文档。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/06/29/obs-build/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2023/06/27/promise-future/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/06/27/promise-future/" class="post-title-link" itemprop="url">C++ 特性之 promise/future 示例</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-06-27 19:26:49 / 修改时间：19:36:07" itemprop="dateCreated datePublished" datetime="2023-06-27T19:26:49+08:00">2023-06-27</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><a target="_blank" rel="noopener" href="https://en.cppreference.com/w/cpp/thread/promise">https://en.cppreference.com/w/cpp/thread/promise</a></p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><p>今天面试问到一个 C++ 一个异步转为同步的特性，</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/06/27/promise-future/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2023/06/19/ubuntu-tools/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/06/19/ubuntu-tools/" class="post-title-link" itemprop="url">Ubuntu/Winodws 开发环境打点备忘</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-19 16:59:15" itemprop="dateCreated datePublished" datetime="2023-06-19T16:59:15+08:00">2023-06-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-06-20 21:32:54" itemprop="dateModified" datetime="2023-06-20T21:32:54+08:00">2023-06-20</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-引言"><a href="#1-引言" class="headerlink" title="1 引言"></a>1 引言</h1><p>之前写过 vim 的教程，还写过 emacs 使用教程，自己整理了一份 emacs.d 文件，每次装机了就拿出来。</p>
+<p>这一次是配置共享文件，这个不仅可以用于虚拟机，也可以用于 Windows 系统与远程开发机同步文件，并且方便在本地使用一些编码工具。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/06/19/ubuntu-tools/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2023/03/14/lua-cpp/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/03/14/lua-cpp/" class="post-title-link" itemprop="url">C++和lua混合程序设计</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-03-14 17:00:18" itemprop="dateCreated datePublished" datetime="2023-03-14T17:00:18+08:00">2023-03-14</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-10-04 08:46:30" itemprop="dateModified" datetime="2023-10-04T08:46:30+08:00">2023-10-04</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h1><h2 id="库编译"><a href="#库编译" class="headerlink" title="库编译"></a>库编译</h2><p>从官网下载的版本是 5.1.4 ，配合《lua设计与实现》在 Linux/Windows 编译，在 Windows 上编译的过程中
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/03/14/lua-cpp/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2023/02/23/sicp/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/02/23/sicp/" class="post-title-link" itemprop="url">SICP 相关</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2023-02-23 10:00:37 / 修改时间：10:27:00" itemprop="dateCreated datePublished" datetime="2023-02-23T10:00:37+08:00">2023-02-23</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>首先进行环境安装，其次记录重要信息提示。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/02/23/sicp/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2023/01/27/qt-tips/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/01/27/qt-tips/" class="post-title-link" itemprop="url">Qt 开发随笔，不断更新ing</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-01-27 20:31:02" itemprop="dateCreated datePublished" datetime="2023-01-27T20:31:02+08:00">2023-01-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-07-07 22:03:01" itemprop="dateModified" datetime="2023-07-07T22:03:01+08:00">2023-07-07</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>文章记录一些开发时候遇到的问题和解决方法。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ol>
+<li>Qt Assistant（安装 Qt 时候选择安装，用于文档查询）
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/01/27/qt-tips/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2023/01/14/state-design-pattern-and-memory-leak/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/01/14/state-design-pattern-and-memory-leak/" class="post-title-link" itemprop="url">状态模式实现与内存泄漏问题解决</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-01-14 14:33:51" itemprop="dateCreated datePublished" datetime="2023-01-14T14:33:51+08:00">2023-01-14</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-01-20 16:04:17" itemprop="dateModified" datetime="2023-01-20T16:04:17+08:00">2023-01-20</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-引言"><a href="#1-引言" class="headerlink" title="1 引言"></a>1 引言</h1><h2 id="1-1-写作背景"><a href="#1-1-写作背景" class="headerlink" title="1.1 写作背景"></a>1.1 写作背景</h2><p>我看的设计模式资料使用 C# 和 Java 实现，这两种语言不需要处理内存泄漏问题。后续发现按照资料仿写的 C++ 代码有内存泄漏的情况，于是尝试解决这个问题，对 C++ 有新的理解，故记录之。
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/01/14/state-design-pattern-and-memory-leak/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2023/01/07/opengl-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/01/07/opengl-1/" class="post-title-link" itemprop="url">OpenGL小记</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-01-07 22:14:02" itemprop="dateCreated datePublished" datetime="2023-01-07T22:14:02+08:00">2023-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-03-22 18:22:32" itemprop="dateModified" datetime="2023-03-22T18:22:32+08:00">2023-03-22</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><h2 id="写作目的"><a href="#写作目的" class="headerlink" title="写作目的"></a>写作目的</h2><p>记录 OpenGL 学习的环境准备工作，为了下一步学习扫清障碍。<br>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/01/07/opengl-1/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2022/09/21/webrtc-build-on-windows/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/09/21/webrtc-build-on-windows/" class="post-title-link" itemprop="url">WebRTC 库在 Windows 平台编译（支持 H.264）</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-09-21 15:05:11" itemprop="dateCreated datePublished" datetime="2022-09-21T15:05:11+08:00">2022-09-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-06-22 14:26:24" itemprop="dateModified" datetime="2023-06-22T14:26:24+08:00">2023-06-22</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
+<li><a target="_blank" rel="noopener" href="https://avdancedu.com/2bafd6cf/">音视跳动李超老师的 WebRTC 编译博客</a></li>
+<li><a target="_blank" rel="noopener" href="https://webrtc.org/support/overview">WebRTC Support(官网)</a></li>
+</ol>
+<h1 id="编译环境准备"><a href="#编译环境准备" class="headerlink" title="编译环境准备"></a>编译环境准备</h1><p>根据官方文档：</p>
+<p><a target="_blank" rel="noopener" href="https://webrtc.googlesource.com/src/+/main/docs/native-code/development/">https://webrtc.googlesource.com/src/+/main/docs/native-code/development/</a></p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/09/21/webrtc-build-on-windows/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2021/08/31/vim-note/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/08/31/vim-note/" class="post-title-link" itemprop="url">Vim 教程</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-08-31 09:34:43" itemprop="dateCreated datePublished" datetime="2021-08-31T09:34:43+08:00">2021-08-31</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-01-17 00:11:54" itemprop="dateModified" datetime="2023-01-17T00:11:54+08:00">2023-01-17</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="个性化的配置文件"><a href="#个性化的配置文件" class="headerlink" title="个性化的配置文件"></a>个性化的配置文件</h1>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/08/31/vim-note/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2021/07/18/push-pull-stream-with-srs/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/07/18/push-pull-stream-with-srs/" class="post-title-link" itemprop="url">SRS 多种手段推拉流</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-07-18 17:34:11" itemprop="dateCreated datePublished" datetime="2021-07-18T17:34:11+08:00">2021-07-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-12-28 21:34:21" itemprop="dateModified" datetime="2022-12-28T21:34:21+08:00">2022-12-28</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>这篇文章记录几种与 SRS 之间推拉流的方法。<br>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/07/18/push-pull-stream-with-srs/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2021/04/21/tech-talk/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/04/21/tech-talk/" class="post-title-link" itemprop="url">技术的简单性、累积性和组合性</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-21 21:09:16" itemprop="dateCreated datePublished" datetime="2021-04-21T21:09:16+08:00">2021-04-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-12-16 23:23:09" itemprop="dateModified" datetime="2022-12-16T23:23:09+08:00">2022-12-16</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>刚刚在公众号“道哥的黑板报”，看了道哥最新的文章《如何看待一项技术：技术的本质》，文中的观点与我最近的感悟不谋而合。
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/04/21/tech-talk/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2021/04/20/muduo-read-learn/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/04/20/muduo-read-learn/" class="post-title-link" itemprop="url">《Linux 多线程服务端编程》阅读与实践（1）</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-20 15:31:29" itemprop="dateCreated datePublished" datetime="2021-04-20T15:31:29+08:00">2021-04-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-12-15 22:13:32" itemprop="dateModified" datetime="2022-12-15T22:13:32+08:00">2022-12-15</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="阅读小结"><a href="#阅读小结" class="headerlink" title="阅读小结"></a>阅读小结</h1><p>这篇博文是概括性的，目的在于理清作者的思路，作者有一套网络程序设计的教程，推荐学习。<br>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/04/20/muduo-read-learn/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2020/12/16/compliation-system-by-gcc/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/12/16/compliation-system-by-gcc/" class="post-title-link" itemprop="url">借助 gcc 理解编译系统（compilation system）</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-16 23:01:48" itemprop="dateCreated datePublished" datetime="2020-12-16T23:01:48+08:00">2020-12-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-12-16 23:22:20" itemprop="dateModified" datetime="2022-12-16T23:22:20+08:00">2022-12-16</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="1-编译系统-gcc-概述"><a href="#1-编译系统-gcc-概述" class="headerlink" title="1 编译系统(gcc)概述"></a>1 编译系统(gcc)概述</h2>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/12/16/compliation-system-by-gcc/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2020/10/27/write-blog-step-by-step/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/10/27/write-blog-step-by-step/" class="post-title-link" itemprop="url">hexo搭建环境完毕后写博客的步骤</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-27 23:55:57" itemprop="dateCreated datePublished" datetime="2020-10-27T23:55:57+08:00">2020-10-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-02-03 12:34:24" itemprop="dateModified" datetime="2024-02-03T12:34:24+08:00">2024-02-03</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="一-发布博客的操作流程"><a href="#一-发布博客的操作流程" class="headerlink" title="一 发布博客的操作流程"></a>一 发布博客的操作流程</h1><p>1 创建新博文<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;博文标题&quot;</span></span><br></pre></td></tr></table></figure><br>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/10/27/write-blog-step-by-step/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2020/10/16/gdb-note/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/10/16/gdb-note/" class="post-title-link" itemprop="url">gdb 使用</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-16 23:01:18" itemprop="dateCreated datePublished" datetime="2020-10-16T23:01:18+08:00">2020-10-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-03-24 18:12:42" itemprop="dateModified" datetime="2023-03-24T18:12:42+08:00">2023-03-24</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ol>
+<li><a href="[hanxinle/100-gdb-tips: A collection of gdb tips. 100 maybe just mean many here. (github.com"> A collection of gdb tips</a>](<a target="_blank" rel="noopener" href="https://github.com/hanxinle/100-gdb-tips">https://github.com/hanxinle/100-gdb-tips</a>))</li>
+<li><a target="_blank" rel="noopener" href="https://github.com/hellogcc/100-gcc-tips">A collection of gcc tips</a></li>
+</ol>
+<h1 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h1>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/10/16/gdb-note/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2020/08/16/process-memory/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/08/16/process-memory/" class="post-title-link" itemprop="url">程序的内存布局</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-16 23:02:04" itemprop="dateCreated datePublished" datetime="2020-08-16T23:02:04+08:00">2020-08-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-06-27 19:35:44" itemprop="dateModified" datetime="2023-06-27T19:35:44+08:00">2023-06-27</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>在命令行中运行程序的过程，是命令行会对程序进行复制，然后创建一个进程运行这个程序。因此，程序的内存结构所涉及的操作系统术语应该是 <strong>Linux 内存管理</strong>。<br>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/08/16/process-memory/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2019/11/15/nlp-mainline/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/11/15/nlp-mainline/" class="post-title-link" itemprop="url">自然语言处理综述</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-15 10:30:47" itemprop="dateCreated datePublished" datetime="2019-11-15T10:30:47+08:00">2019-11-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-12-15 21:44:09" itemprop="dateModified" datetime="2022-12-15T21:44:09+08:00">2022-12-15</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>本文是对前段时间学习自然语言处理（NLP）的总结。本文先介绍自然语言处理的内容，及其基于统计学的处理方式，在这个过程，逐渐矩阵化数据，看到矩阵化即可以想到机器学习方法的引入，预见到深度学习技术广泛应用的必然性。本文结尾我提供两个自己学习过程中建立的仓库，一个是对学习内容的总结，另一个是个对话机器人。<br>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/11/15/nlp-mainline/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2019/09/29/github-note/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/09/29/github-note/" class="post-title-link" itemprop="url">GitHub 使用</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-09-29 01:39:23" itemprop="dateCreated datePublished" datetime="2019-09-29T01:39:23+08:00">2019-09-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-07-22 12:14:03" itemprop="dateModified" datetime="2023-07-22T12:14:03+08:00">2023-07-22</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <span id="more"></span>
+<h1 id="最新：更新一些-GitHub-使用异常的故障排查"><a href="#最新：更新一些-GitHub-使用异常的故障排查" class="headerlink" title="最新：更新一些 GitHub 使用异常的故障排查"></a>最新：更新一些 GitHub 使用异常的故障排查</h1><ol>
+<li>问题1： Connection reset by 20.205.243.166 port 22</li>
+</ol>
+<p>​    解决方法：C://User/<usr-name> 中编辑 /.ssh/config 给文件加上以下内容后再，重启git bash。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Host github.com</span><br><span class="line">    User git</span><br><span class="line">    ProxyCommand connect -H 127.0.0.1:7890 %h %p</span><br></pre></td></tr></table></figure>
+<h2 id="1-本地-repo"><a href="#1-本地-repo" class="headerlink" title="1 本地 repo"></a>1 本地 repo</h2><ul>
+<li><p>设置姓名和邮箱</p>
+<p><code>git config --global user.name &quot;xxxx&quot;</code></p>
+<p><code>git config --global user.email &quot;xxxx@yyy.zzz&quot;</code></p>
+<!-- more --></li>
+<li><p>创建并初始化本地空仓库</p>
+<p><code>git init &lt;repo_name&gt;</code></p>
+</li>
+<li><p>查看提交的状态</p>
+<p><code>git status</code></p>
+</li>
+<li><p>暂存区中添加更改</p>
+<p><code>git add &lt;file_name&gt;</code></p>
+</li>
+<li><p>记录一行提交信息</p>
+<p><code>git commit -m &quot;commit info&quot;</code></p>
+</li>
+<li><p>提交记录</p>
+<p><code>git log</code></p>
+</li>
+<li><p>忽略特定格式文件格式</p>
+<p><code>touch .gitignore  &amp;&amp; vim .gitigonre</code></p>
+<p><code>*.out *.py</code></p>
+<p>原有创建的格式用 git rm —cached <file_name> 忽略<br>常用工程的 <a target="_blank" rel="noopener" href="https://github.com/github/gitignore">ignore文件</a>。</p>
+</li>
+<li><p>回滚操作</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git reset --hard &lt;commit ID&gt;   # &lt;commit ID&gt; 有两种，一种很长，一种截取前一种的若干字符表示</span><br><span class="line">git push -f -u origin main     # 好坑，参考资料写 master</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>解决push冲突</p>
+<p>假设用户1修改了 xxx文件，并且 push 了，我这边再修改后 push 会提示拒绝，有冲突，查看冲突：</p>
+<p><code>git diff master origin/master</code></p>
+<p>建议将该文件备份，然后执行以下操作(备份，先拉取再合并：</p>
+</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">git pull</span><br><span class="line">vim xxx  PS 对其进行更改</span><br><span class="line">git add xxx</span><br><span class="line">git commit &quot;my work&quot;</span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>GitHub 创建本地仓库缓存，在本地构建 GitHub 云端方法</p>
+<p>(1) 在机器 a 上执行以下语句，可在该机建立了一个暂存区。</p>
+</li>
+</ul>
+<p>​    <code>git init --bare /home/hanxinle/xdisk.git</code></p>
+<p>   （2）在机器 b 执行</p>
+<p><code>git clone hanxinle@xx.mm.yy.zz:/home/hanxinle/xdisk.git</code></p>
+<p>则将 repo 拉取到本地，在本地创建文件等更改后，在本地可执行 add，commit，push 操作。</p>
+<p>   （3）其它机器执行</p>
+<p><code>git clone hanxinle@xx.mm.yy.zz:/home/hanxinle/xdisk.git</code></p>
+<p>则可以在得到与机器b一致的 repo。</p>
+<hr>
+<h2 id="2-远程-repo"><a href="#2-远程-repo" class="headerlink" title="2 远程 repo"></a>2 远程 repo</h2><ul>
+<li><p>查看分支</p>
+<p><code>git branch</code></p>
+</li>
+<li><p>创建分支</p>
+<p><code>git branch &lt;branch_name</code></p>
+</li>
+<li><p>切换到分支</p>
+<p><code>git checkout &lt;branch_name&gt;</code></p>
+</li>
+<li><p>创建并且切换</p>
+<p><code>git checkout -b &lt;branch_name&gt;</code></p>
+</li>
+<li><p>分支合并(位于 master )</p>
+<p><code>git merge &lt;sub_branch_name&gt;</code></p>
+<p>同步后可以删除这个子分支</p>
+<p><code>git branch -d &lt;sub_branch_name&gt;</code></p>
+</li>
+<li><p>分支同步</p>
+<p><code>git push origin &lt;loacl_branch_name&gt;</code>   （将本地分支同步到服务器）</p>
+</li>
+<li><p>分支删除与重命名</p>
+<p><code>git brach -D/-d  PS 删除 see git -h</code></p>
+<p>远端分支重命名(创建本地分支—&gt;同步到远端—&gt;删除远端同名分支—&gt;原本地分支重命名—&gt;推送到远端)</p>
+<p><code>git checkout -b &lt;local_branch&gt;</code></p>
+<p><code>git push origin &lt;local_branch&gt;</code></p>
+<p><code>git push --delete origin &lt;local_name&gt;</code></p>
+<p><code>git commit -m &lt;local_name&gt; &lt;new_branch_name&gt;</code></p>
+<p><code>git push origin &lt;new_branch_name&gt;</code></p>
+</li>
+<li><p>tag 管理</p>
+<p>网页端 release 中管理，和 commit 的哈希值相关。</p>
+</li>
+</ul>
+<hr>
+<h2 id="3-免密操作"><a href="#3-免密操作" class="headerlink" title="3 免密操作"></a>3 免密操作</h2><p>执行命令 <code>ssh-keygen</code>，一路回车,在 .ssh 文件夹中, id_rsa 为私有, id_rsa.pub 为公有,在 Github 中点击右上角自己的头像,选择 setting ,在 ssh 相关设置中,点击 NEW SSH KEY ,将 id_rsa.pub 的内容复制进来,此时 push 还是需要用户名密码,有两种方式可以免输入,一种是编辑.git/config 文件，将 url=https:xxxxx 更改,它的值在网页端打开 github repo 的时候,选择 clone or download 按钮,会有 use ssh 一项,点击这一项,复制 url 链接到.git/config 文件替换 url=<url_value> 这一项.</p>
+<p>另一种方式是在 clone 命令时,不要通过 https 命令操作,直接通过上面这个 ssh 的 url 方式操作.</p>
+<hr>
+<h2 id="4-fork-后用-upstream-同步原始-repo-最新情况"><a href="#4-fork-后用-upstream-同步原始-repo-最新情况" class="headerlink" title="4 fork 后用 upstream 同步原始 repo 最新情况"></a>4 fork 后用 upstream 同步原始 repo 最新情况</h2><ul>
+<li><p>首先 git clone 到本地</p>
+</li>
+<li><p>查看远端分支</p>
+<p><code>git remote -v</code></p>
+</li>
+<li><p>添加upstream分支</p>
+<p><code>git remote add upstream git@xxxx.git</code></p>
+</li>
+<li><p>将upstream版本拉到本地</p>
+<p><code>git fetch upstream</code></p>
+</li>
+<li><p>再合并upstream master</p>
+<p><code>git merge upstream/master</code></p>
+</li>
+<li><p>最后push到远端</p>
+<p><code>git push origin master</code></p>
+</li>
+</ul>
+<hr>
+<h2 id="5-其它-repo-选项"><a href="#5-其它-repo-选项" class="headerlink" title="5 其它 repo 选项"></a>5 其它 repo 选项</h2><ul>
+<li><p>Issue</p>
+<p>bug提交</p>
+</li>
+<li><p>Projects</p>
+<p>项目进度管理</p>
+</li>
+<li><p>Wiki </p>
+<p>项目的介绍,可以制作网页,补充其它必要的文档,背景</p>
+</li>
+<li><p>Gist </p>
+<p>代码\文档的片段</p>
+</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2017/10/18/mpi-setup-ubuntu/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2017/10/18/mpi-setup-ubuntu/" class="post-title-link" itemprop="url">MPI集群配置和mxnet分布式训练</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-10-18 20:36:43" itemprop="dateCreated datePublished" datetime="2017-10-18T20:36:43+08:00">2017-10-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-01-17 00:12:32" itemprop="dateModified" datetime="2023-01-17T00:12:32+08:00">2023-01-17</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>首先讲集群配置，mpi方案放弃openmpi，原因：在网上很少找到资料 &amp;&amp; 出错信息不友好。<br>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/10/18/mpi-setup-ubuntu/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2017/08/10/windows-programing-note/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2017/08/10/windows-programing-note/" class="post-title-link" itemprop="url">Windows程序设计总结</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-08-10 22:36:08" itemprop="dateCreated datePublished" datetime="2017-08-10T22:36:08+08:00">2017-08-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-12-17 22:45:03" itemprop="dateModified" datetime="2022-12-17T22:45:03+08:00">2022-12-17</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><h2 id="文章背景"><a href="#文章背景" class="headerlink" title="文章背景"></a>文章背景</h2><p>对于Windows程序设计抓住主线进行总结，包括 Win32 和少量MFC和Qt的内容。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/08/10/windows-programing-note/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2014/10/22/vc-dll/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2014/10/22/vc-dll/" class="post-title-link" itemprop="url">Visual Studio dll的编写和使用</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2014-10-22 23:01:06" itemprop="dateCreated datePublished" datetime="2014-10-22T23:01:06+08:00">2014-10-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-12-16 23:04:44" itemprop="dateModified" datetime="2022-12-16T23:04:44+08:00">2022-12-16</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>装载、链接、库（特别是 <em>Linux</em> 平台相关内容）<br>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2014/10/22/vc-dll/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">川辣孙悟空(Goku)</p>
+  <div class="site-description" itemprop="description">hanxinle199@gmail.com</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">川辣孙悟空(Goku)</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/pangu@4/dist/browser/pangu.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+          load: ['[tex]/mhchem'],
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+          packages: {'[+]': ['mhchem']},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

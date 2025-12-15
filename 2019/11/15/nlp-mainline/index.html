@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"hanxinle.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="本文是对前段时间学习自然语言处理（NLP）的总结。本文先介绍自然语言处理的内容，及其基于统计学的处理方式，在这个过程，逐渐矩阵化数据，看到矩阵化即可以想到机器学习方法的引入，预见到深度学习技术广泛应用的必然性。本文结尾我提供两个自己学习过程中建立的仓库，一个是对学习内容的总结，另一个是个对话机器人。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自然语言处理综述">
+<meta property="og:url" content="https://hanxinle.github.io/2019/11/15/nlp-mainline/index.html">
+<meta property="og:site_name" content="科学学习与工程笔记">
+<meta property="og:description" content="本文是对前段时间学习自然语言处理（NLP）的总结。本文先介绍自然语言处理的内容，及其基于统计学的处理方式，在这个过程，逐渐矩阵化数据，看到矩阵化即可以想到机器学习方法的引入，预见到深度学习技术广泛应用的必然性。本文结尾我提供两个自己学习过程中建立的仓库，一个是对学习内容的总结，另一个是个对话机器人。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://hanxinle.github.io/2019/11/15/nlp-mainline/yinmaerkefu.png">
+<meta property="article:published_time" content="2019-11-15T02:30:47.000Z">
+<meta property="article:modified_time" content="2022-12-15T13:44:09.705Z">
+<meta property="article:author" content="川辣孙悟空(Goku)">
+<meta property="article:tag" content="自然语言处理">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://hanxinle.github.io/2019/11/15/nlp-mainline/yinmaerkefu.png">
+
+<link rel="canonical" href="https://hanxinle.github.io/2019/11/15/nlp-mainline/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>自然语言处理综述 | 科学学习与工程笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="科学学习与工程笔记" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">科学学习与工程笔记</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">动脑动手</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/hanxinle" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2019/11/15/nlp-mainline/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          自然语言处理综述
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-15 10:30:47" itemprop="dateCreated datePublished" datetime="2019-11-15T10:30:47+08:00">2019-11-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-12-15 21:44:09" itemprop="dateModified" datetime="2022-12-15T21:44:09+08:00">2022-12-15</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文是对前段时间学习自然语言处理（NLP）的总结。本文先介绍自然语言处理的内容，及其基于统计学的处理方式，在这个过程，逐渐矩阵化数据，看到矩阵化即可以想到机器学习方法的引入，预见到深度学习技术广泛应用的必然性。本文结尾我提供两个自己学习过程中建立的仓库，一个是对学习内容的总结，另一个是个对话机器人。<br><span id="more"></span><br>自然语言处理由以下几个任务构成：</p>
+<h1 id="分词"><a href="#分词" class="headerlink" title="分词"></a>分词</h1><p>个人理解，NLP 根据问题的定义所关注的是文本的规模是不一样的，如文本聚类/分类，是以文档规模考量，而命名实体识别(NER)，关注语言规模的则是文档中的词语。但和很多 NLP 任务一样，都绕不开分词这一操作，如果以文本为基本单位作为语言处理的对象，那语料是太稀疏，所做的处理泛化性太差太差了。这对语料的数量或者特征工程来说，尤其是深度学习以外的方法来说，几乎是不可能完成的任务。分词的方法有:</p>
+<h2 id="词典分词"><a href="#词典分词" class="headerlink" title="词典分词"></a>词典分词</h2><p>中文分词有两类方法，一类是基于词典分词，一类基于机器学习方法。词典分词需要两部分:词典和查词典的规则。通过词典查询到的字符串才会被认定为词。词典查词涉及齐夫定律:越新的词，它的词频越小，趋于 0 。因此可以构建词典来查词。</p>
+<p>词典分词的步骤：</p>
+<p>(1) 构建词典</p>
+<p>词典的样式如下：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center"></th>
+<th style="text-align:center"></th>
+<th style="text-align:center"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">词语1</td>
+<td style="text-align:center">词性1</td>
+<td style="text-align:center">词频1</td>
+</tr>
+<tr>
+<td style="text-align:center">词语2</td>
+<td style="text-align:center">词性2</td>
+<td style="text-align:center">词频2</td>
+</tr>
+<tr>
+<td style="text-align:center">…</td>
+<td style="text-align:center">…</td>
+<td style="text-align:center">…</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>在词典分词中，词性和词频都是可以忽略的，它在接下来的章节中才有用。</p>
+<p>(2) 从句子中切分单词(字符串)</p>
+<p>采用完全切分的方法，在文本的开头设置两个指针，for 循环向前移动，判断切分的字符串是否是步骤 1 中词典的元素，是的话，则记录为单词 ，保存之，继续寻找单词。</p>
+<p>这一方法有两个缺点:第一，效率低，双指针的循环遍历复杂度是 O(n^2) ;第二，会把长词切分为不同的短词汇( NLP 中认为长词的表达的信息比短词更丰富)。因此，最长匹配发应运而来，正向匹配的过程是与玩完全匹配法相似，逆向匹配法首位各放置一个指针，在这个固定尾指针，头指针向尾指针移动，同时判断截取的 string 是否是词典中的元素，是的话保存单词，我的理解是，保存为单词后，这段 string 内就不在继续遍历查词了，因为那样做，会把相对字少的单词找出来，失去了逆向匹配法的意义。上述两种方法得到单词后，按照单词的顺序，对文本进行切割，单词间插入空格。最后，还有双向匹配法，即上述两种方法同时采用，对得到的结果，有如下规则:第一，优先选择得到词数少的方案。第二，词数相同，则选择单字少的方案。第三，单字相同的情况，选取逆向最长匹配法的结果作为首选。</p>
+<p>这部分还提到了字典树和 AC 自动机技术，我的理解是，字典树是将字符串转化为字典树，通过定义遍历字典树的路径，找到该字典树(字符串)中所包含的单词。AC 自动机这里不做过多赘述，我还需要看书搞懂。</p>
+<h2 id="统计方法分词"><a href="#统计方法分词" class="headerlink" title="统计方法分词"></a>统计方法分词</h2><p>统计方法是统计训练数据什么是单词，以及该单词的词频(出现的次数)，将统计结果作为对目标文档的分类依据。统计方法需要数据，训练，用得到的模型来产生句子的分词序列。</p>
+<p>句子的模型就是句子出现的概率，这部分用到了马尔科夫模型，句子由单词构成，句子的概率等于单词序列的条件概率，简化为两个单词的条件概率，根据最大似然估计由二者频数算出，单词频数可由语料训练得到。</p>
+<p>训练需要的数据称为语料，语料是已经分词的句子(文章)。经过训练得到模型，模型包括两部分，一元模型(一个词的频率)和(两个连续相邻词的频率)。有了这个模型，就可以对未分词的句子/文章进行分词。</p>
+<p>有了模型，根据一元词的模型，可以构建词网，词网有个特色:第 i 行的词 $w$ 和第 $i + len(w)$ 行的词构成二元语法，依据词网可以构建词图，求解该图的最短路径，可以获得最佳的分词序列。</p>
+<h1 id="序列标注"><a href="#序列标注" class="headerlink" title="序列标注"></a>序列标注</h1><p>序列标注是方法，不是最终应用，序列标注技术可以用于分词，命名实体识别，词性标注。</p>
+<p>为什么需要序列标注，在前面词典分词的方法中，文本中的单词能否被识别，直接由词典决定，在词典中则能够识别，不在词典中则一定不能识别，一个语言的词汇是如此的丰富，这种方法对新词( OOV )无任何泛化能力，分词是将 NLP 处理数据的粒度由句子降为单词，提升对句子处理能力，序列标注则是将操作的粒度变为字符，以此提升对文本信息的敏感度。</p>
+<p>序列标注的语料形式如下:</p>
+<p>  字符1   , $label ∈ { B ， M ， E ， S }$ </p>
+<p>  字符2   , $label ∈ { B ， M ， E ， S }$ </p>
+<p>…</p>
+<p>有了每个字符的 label 值，分词的结果方式就是 将 string [ B:最近的 $E$ ] 作为单词．通过得到的单词，为每个单词加入新的 $label_E ∈ 实体 {人名 ， 地名， 物品 ，… }$ 则可进行实体识别，加入 $label_p ∈ { N,V,…}$ 等词性，则可以将序列标注用于词性标注。</p>
+<p>这一部分，引入了隐马尔科夫模型，隐马尔科夫模型有两部分，一部分可见 $y$ ，如 $label$，一部分不可见，记做 $x$。该模型能够 由 $y$ 映射到 $x$， 在 NLP 中即根据语料 $label$ 反推语料特征。(PS:隐马尔科夫模型有其它用处，这里是生成隐藏部分 )。</p>
+<p>马尔科夫模型的特点是，当前元素状态 $yt$ 仅由上个相邻元素状态 $yt-1$ 决定，与其它元素的状态无关。 而当前隐状态 $x$ 仅有当前时刻的显状态 $y$ 来决定。二者数学上都是条件概率。隐马尔科夫记做 $(π，A，B)$</p>
+<p><img src="yinmaerkefu.png" alt=""></p>
+<p>在这部分，感知机(神经网)，CRF 算法登场，用于序列标注。</p>
+<h1 id="命名实体识别"><a href="#命名实体识别" class="headerlink" title="命名实体识别"></a>命名实体识别</h1><p>多个单词构成的复合词，称作命名实体。命名实体识别包括实体边界识别和实体性质 $(人，物，地?)$ 识别两部分。不同的任务中，对实体是有不同的定义的，这类任务有两类方法，一类基于规则，一类基于统计学习，这部分应用前面提到的方法，作者直接调用开发包完成的。</p>
+<h1 id="信息抽取"><a href="#信息抽取" class="headerlink" title="信息抽取"></a>信息抽取</h1><p>信息抽取是指在文本中找到文本中新单词的过程，这是个新词发下的过程。它的步骤是:第一，提取文本中的词语，不论新旧。第二，用词典过滤掉已有的词，得到新词，第三，对新词进行删选，留下的词则是文本的信息描述。</p>
+<p>具体的，给定文本，切分得到新词后，对其有个测量值，左右搭配的丰富程度，叫做信息熵，记做 $H(X) h$，另一个是文本内内容搭配的固定程度，称作互信息，记做 $I(X,Y)$ 。信息熵表征信息量，它的值表征对时间 $X$ 不确定信息的减少量。其中，<br>$H ( X ) = - ∑ p (x) <em> log( x) , P ( X, Y )  =  P( X , Y ) / P ( X ) </em> P ( Y )$，计算了新词的信息熵和互信息后，将低于设定阈值的新词剔除，余下的新词就是文本中抽取的新信息。</p>
+<h1 id="关键词-句抽取"><a href="#关键词-句抽取" class="headerlink" title="关键词/句抽取"></a>关键词/句抽取</h1><h2 id="关键词抽取"><a href="#关键词抽取" class="headerlink" title="关键词抽取"></a>关键词抽取</h2><p>信息抽取关注的是文本中提取出的词语的新鲜程度，另一种需求是提取文本的关键信息的描述词，即关键词抽取。关键词抽取可以应用于单文档或者多文档，单文档中有词频法和 Textrank 算法。多文档应用 TF-IDF 算法。</p>
+<p>词频法过程，分词后统计词频，过滤掉停用词后，取m个单词，从中选取词频最高的n个单词，算法的复杂度是 $O (m* log n)$。该方法的缺点是，高频词未必是关键词，不一定能反应文本特色。</p>
+<p>如何确定一个高频词的重要程度呢？可由多文档验证，那么有 TF-IDF 算法如下：  </p>
+<script type="math/tex; mode=display">TF-IDF ( t ， D ) = TF ( t ， D ) / DF ( t )</script><p> 其中 $t$， $D$ 为词和包含 $t$ 的文档，$TF (t,D)$ 是 $t$ 在文档中出现的频次，$DF( t )$ 是包含 $t$ 的数量。该算法在大型语料库上，类似 ML 的学习过程，如果没有大型语料库 或者 硬件上无法实施这一算法，可以尝试下 TextRank 算法，这一算法，这一算法类似 Google 提出的 PageRank，PageRank 中的节点是网页，根据节点间连接的权重可以计算节点的重要程度， TextRank 算法中，节点变为了单词，迭代计算 单词的重要程度 </p>
+<script type="math/tex; mode=display">S( Vi  ) = (1 - d ) + d * (∑ 1 /  Out ( Vj)  * S( Vj))</script><p> 根据这一公式有如下结论:第一，节点给别的节点外链越多，每条外链的权重就越低；第二，一个节点如果都是这种权重很低的外链，在不断迭代中，该结点的权重会降低。</p>
+<p>对于文本，选定中心词，确定半径为定值的窗口，让窗口内每个词都连接到它，模拟了窗口内的单词都对中心词进行描述。(PS: 初始时所有值是1)</p>
+<h2 id="关键句抽取"><a href="#关键句抽取" class="headerlink" title="关键句抽取"></a>关键句抽取</h2><p>文档中难以有重复的句子，即缺少其它句子对该句子的描述，难以建立类似网页的那种多连接结构。因此，不能套用 TextRank 算法进行关键句提取。引入 BM25 算法，辅助进行关键句提取。BM25 是 TF-IDF 算法的改进，改进的是连接权重计算。 BM25 描述了一个句子与其它句子的相似度，即与其它句子的关联程度，一般认为，一个句子越是关键，那么文章中就会越多的对其进行解释，说明的语句，这些句子就与需要判断的句子有一定的相似性。 BM25 可以用于衡量多个词语与文档的关联程度。</p>
+<p>文档 $D$,$Q$ 为句子，由 短语$q1，q2，q3…$构成。 </p>
+<script type="math/tex; mode=display">BM(D，Q) =∑ IDF(qi)  *    k1 TF( qi， D )  /  b |D|</script><p>可视作 IDF 的加权和，常数 $k1$ 越大，$TF$ 频次对文档得分的证明影响大， 常数 $b$ 越大，文档长度第二分的负面影响越大。将 BM25 算法带入到 TextRank 算法中，$BM25 ( Vi ， Vj)$ 描述句子间的相似度，可得到句子重要性评分。正比于两个句子的相似度，反比于描述其它句子的总数。</p>
+<h1 id="现代NLP的共性"><a href="#现代NLP的共性" class="headerlink" title="现代NLP的共性"></a>现代NLP的共性</h1><p>接下来是文本聚类，文本分类，深度学习等算法。</p>
+<p>这些任务引入一个新的工具，词向量。也就是向量化后的文本用于现代NLP算法，词向量越来越重要，一些生成词向量的算法也要掌握。</p>
+<p>one-hot，假设某个特征有三个取值，如 $1 ，2 ， 3$，他们的含义是相似的。 但是计算平方和，有 $1，4$ 两种结果，说明不能以数字来标志该特征的取值。可以定义长度为 3 的向量，初始值为 $0$，三个值可以记做3个向量不同项取 1。</p>
+<p>$[1，0，0]，[0，1，0]，[0，0，1]$，互相间欧式距离都是 1。</p>
+<p>词袋模型这种特征提取方法，是将文档建立词典分词，取频数最大若干项放入词袋，也就是确定了文档向量的属性值和个数。遇到新的文档，先分词再取前 $n$ 个频数最大的单词与词袋中的词(属性)对比，不在词袋中则标记为 OOV，不予考虑。文档包含词袋中的词则将该属性记为1，不包含则置零，得到自身的特征向量。</p>
+<p>深度学习的引入，给 NLP 带来的突破，这和我以前做的 CV 方面有相似性。这个方向内容简单几句话能够能概括，学界亦有分歧。我的观点是，自然语言处理当作验证新的深度神经网络方法论的角色，而深度学习也是融合进自然语言处理方法论的一部分。最近马毅教授对机器学习（深度学习）技术理论进行了探索，并且有新书及新课程问世，推荐学习。</p>
+<h1 id="我的两个关于自然语言处理的-Github-仓库"><a href="#我的两个关于自然语言处理的-Github-仓库" class="headerlink" title="我的两个关于自然语言处理的 Github 仓库"></a>我的两个关于自然语言处理的 Github 仓库</h1><p>[1]. <a target="_blank" rel="noopener" href="https://github.com/hanxinle/Xnlp">本文对应 GitHub 仓库</a></p>
+<p>[2]. <a target="_blank" rel="noopener" href="https://github.com/hanxinle/XChatbot">对话机器人</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/" rel="tag"># 自然语言处理</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/09/29/github-note/" rel="prev" title="GitHub 使用">
+      <i class="fa fa-chevron-left"></i> GitHub 使用
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/08/16/process-memory/" rel="next" title="程序的内存布局">
+      程序的内存布局 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E8%AF%8D"><span class="nav-number">1.</span> <span class="nav-text">分词</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%8D%E5%85%B8%E5%88%86%E8%AF%8D"><span class="nav-number">1.1.</span> <span class="nav-text">词典分词</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%9F%E8%AE%A1%E6%96%B9%E6%B3%95%E5%88%86%E8%AF%8D"><span class="nav-number">1.2.</span> <span class="nav-text">统计方法分词</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BA%8F%E5%88%97%E6%A0%87%E6%B3%A8"><span class="nav-number">2.</span> <span class="nav-text">序列标注</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%91%BD%E5%90%8D%E5%AE%9E%E4%BD%93%E8%AF%86%E5%88%AB"><span class="nav-number">3.</span> <span class="nav-text">命名实体识别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BF%A1%E6%81%AF%E6%8A%BD%E5%8F%96"><span class="nav-number">4.</span> <span class="nav-text">信息抽取</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E8%AF%8D-%E5%8F%A5%E6%8A%BD%E5%8F%96"><span class="nav-number">5.</span> <span class="nav-text">关键词&#x2F;句抽取</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E8%AF%8D%E6%8A%BD%E5%8F%96"><span class="nav-number">5.1.</span> <span class="nav-text">关键词抽取</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E5%8F%A5%E6%8A%BD%E5%8F%96"><span class="nav-number">5.2.</span> <span class="nav-text">关键句抽取</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%8E%B0%E4%BB%A3NLP%E7%9A%84%E5%85%B1%E6%80%A7"><span class="nav-number">6.</span> <span class="nav-text">现代NLP的共性</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%88%91%E7%9A%84%E4%B8%A4%E4%B8%AA%E5%85%B3%E4%BA%8E%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86%E7%9A%84-Github-%E4%BB%93%E5%BA%93"><span class="nav-number">7.</span> <span class="nav-text">我的两个关于自然语言处理的 Github 仓库</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">川辣孙悟空(Goku)</p>
+  <div class="site-description" itemprop="description">hanxinle199@gmail.com</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">川辣孙悟空(Goku)</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/pangu@4/dist/browser/pangu.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+          load: ['[tex]/mhchem'],
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+          packages: {'[+]': ['mhchem']},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

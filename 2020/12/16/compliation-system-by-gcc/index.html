@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"hanxinle.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="1 编译系统(gcc)概述">
+<meta property="og:type" content="article">
+<meta property="og:title" content="借助 gcc 理解编译系统（compilation system）">
+<meta property="og:url" content="https://hanxinle.github.io/2020/12/16/compliation-system-by-gcc/index.html">
+<meta property="og:site_name" content="科学学习与工程笔记">
+<meta property="og:description" content="1 编译系统(gcc)概述">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://hanxinle.github.io/2020/12/16/compliation-system-by-gcc/compilation_system_1.png">
+<meta property="article:published_time" content="2020-12-16T15:01:48.000Z">
+<meta property="article:modified_time" content="2022-12-16T15:22:20.696Z">
+<meta property="article:author" content="川辣孙悟空(Goku)">
+<meta property="article:tag" content="gcc&#x2F;gdb">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://hanxinle.github.io/2020/12/16/compliation-system-by-gcc/compilation_system_1.png">
+
+<link rel="canonical" href="https://hanxinle.github.io/2020/12/16/compliation-system-by-gcc/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>借助 gcc 理解编译系统（compilation system） | 科学学习与工程笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="科学学习与工程笔记" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">科学学习与工程笔记</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">动脑动手</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/hanxinle" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2020/12/16/compliation-system-by-gcc/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          借助 gcc 理解编译系统（compilation system）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-16 23:01:48" itemprop="dateCreated datePublished" datetime="2020-12-16T23:01:48+08:00">2020-12-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-12-16 23:22:20" itemprop="dateModified" datetime="2022-12-16T23:22:20+08:00">2022-12-16</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="1-编译系统-gcc-概述"><a href="#1-编译系统-gcc-概述" class="headerlink" title="1 编译系统(gcc)概述"></a>1 编译系统(gcc)概述</h2><span id="more"></span>
+<p>通常，使用 gcc 编译程序 <code>gcc hello.c -o hello</code> 可以直接得到可执行的二进制文件 <em>hello</em>。然而，程序从源文件（文本）到可执行文件（二进制文件）要经历以下阶段:预处理，编译，汇编，链接，每个阶段处理后，都会得到新的文件，新的文件记录当前操作的信息，并且用于生成下一步操作。</p>
+<p>编译系统由预处理器、编译器、汇编器和链接器组成，它将源程序文件“翻译”为二进制的可执行目标程序。编译系统工作流程及生成的文件如图所示。</p>
+<p><img src="compilation_system_1.png" alt="compilation system"></p>
+<p>在 gcc 中，每个阶段的操作见表1.</p>
+<p><center>表1 编译系统命令</center></p>
+<style>
+.tablelines table, .tablelines td, .tablelines th {
+        border: 1px solid black;
+        }
+</style>
+
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>命令</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>预处理</td>
+<td><code>gcc -E</code></td>
+<td>-E -DXXX 定义XXX</td>
+</tr>
+<tr>
+<td>编译</td>
+<td>gcc -S</td>
+<td>生成汇编文件</td>
+</tr>
+<tr>
+<td>汇编</td>
+<td>gcc -c</td>
+<td>生成机器码</td>
+</tr>
+<tr>
+<td>链接</td>
+<td>gcc</td>
+<td>生成可执行文件</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>{: .tablelines}</p>
+<h2 id="2-编译系统-gcc-详述"><a href="#2-编译系统-gcc-详述" class="headerlink" title="2 编译系统(gcc)详述"></a>2 编译系统(gcc)详述</h2><p><em>f_sum.h</em> 的内容是：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">f_sum</span><span class="params">(<span class="type">int</span> a, <span class="type">int</span> b)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> a+b;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br><em>hello.c</em> 的内容是：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;f_sum.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">int</span> var_sum = <span class="number">0</span>;</span><br><span class="line">    <span class="built_in">printf</span> (<span class="string">&quot;makefile OK!\n&quot;</span>);</span><br><span class="line">    var_sum = f_sum(<span class="number">2</span>,<span class="number">3</span>);</span><br><span class="line">    <span class="built_in">printf</span> (<span class="string">&quot;Sum is %d\n&quot;</span>,var_sum);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-1-源程序"><a href="#2-1-源程序" class="headerlink" title="2.1 源程序"></a>2.1 源程序</h3><p>利用 <em>hexdump</em> 命令可以查看源程序对应的 ASCII 码（以及对应程序源码）。</p>
+<figure class="highlight plaintext"><figcaption><span>-C  hello.c``` 输出如下：</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+<p>00000000  23 69 6e 63 6c 75 64 65  20 3c 73 74 64 69 6f 2e  |#include <stdio.|
+00000010  68 3e 0a 23 69 6e 63 6c  75 64 65 20 22 66 5f 73  |h>.#include “f_s|<br>00000020  75 6d 2e 68 22 0a 0a 2f  2f 69 6e 74 20 66 5f 73  |um.h”..//int f_s|<br>00000030  75 6d 28 69 6e 74 20 61  2c 69 6e 74 20 62 29 3b  |um(int a,int b);|<br>00000040  0a 0a 69 6e 74 20 6d 61  69 6e 28 29 20 7b 0a 20  |..int main() {. |<br>00000050  20 20 20 69 6e 74 20 76  61 72 5f 73 75 6d 20 3d  |   int var_sum =|<br>00000060  20 30 3b 0a 20 20 20 20  70 72 69 6e 74 66 20 28  | 0;.    printf (|<br>00000070  22 6d 61 6b 65 66 69 6c  65 20 4f 4b 21 5c 6e 22  |”makefile OK!\n”|<br>00000080  29 3b 0a 20 20 20 20 76  61 72 5f 73 75 6d 20 3d  |);.    var_sum =|<br>00000090  20 66 5f 73 75 6d 28 32  2c 33 29 3b 0a 20 20 20  | f_sum(2,3);.   |<br>000000a0  20 70 72 69 6e 74 66 20  28 22 53 75 6d 20 69 73  | printf (“Sum is|<br>000000b0  20 25 64 5c 6e 22 2c 76  61 72 5f 73 75 6d 29 3b  | %d\n”,var_sum);|<br>000000c0  0a 20 20 20 20 72 65 74  75 72 6e 20 30 3b 0a 7d  |.    return 0;.}|<br>*<br>000000d1<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">可以看到，*hello.c* 的长度是 0xd1 字节。</span><br><span class="line"></span><br><span class="line">### 2.2 预处理阶段</span><br><span class="line"></span><br><span class="line">预处理阶段完成的工作有，头文件的插入、宏定义的展开及条件编译的处理。</span><br><span class="line"></span><br><span class="line">预处理的命令是 ```gcc -E```，执行如下命令,</span><br><span class="line"></span><br><span class="line"> ```gcc -E hello.c -o hello.i```</span><br><span class="line"></span><br><span class="line">查看 ```hello.i``` 的内容如下(不加上 -o hello.i 就会直接显示预处理结果，和下面相同)：</span><br><span class="line"></span><br></pre></td></tr></table></figure><br>(省略大量 stdio.h 的代码)<br>……</p>
+<h1 id="868-“-usr-include-stdio-h”-3-4"><a href="#868-“-usr-include-stdio-h”-3-4" class="headerlink" title="868 “/usr/include/stdio.h” 3 4"></a>868 “/usr/include/stdio.h” 3 4</h1><h1 id="2-“hello-c”-2"><a href="#2-“hello-c”-2" class="headerlink" title="2 “hello.c” 2"></a>2 “hello.c” 2</h1><h1 id="1-“f-sum-h”-1"><a href="#1-“f-sum-h”-1" class="headerlink" title="1 “f_sum.h” 1"></a>1 “f_sum.h” 1</h1><h1 id="1-“f-sum-h”"><a href="#1-“f-sum-h”" class="headerlink" title="1 “f_sum.h”"></a>1 “f_sum.h”</h1><p>int f_sum(int a, int b) {<br>    return a+b;<br>}</p>
+<h1 id="3-“hello-c”-2"><a href="#3-“hello-c”-2" class="headerlink" title="3 “hello.c” 2"></a>3 “hello.c” 2</h1><p>int main() {<br>    int var_sum = 0;<br>    printf (“makefile OK!\n”);<br>    var_sum = f_sum(2,3);<br>    printf (“Sum is %d\n”,var_sum);<br>    return 0;<br>}<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">观察宏定义展开及条件条件编译的源程序 ```test_gcc_e.c``` 的内容如下：</span><br></pre></td></tr></table></figure></p>
+<h1 id="include"><a href="#include" class="headerlink" title="include "></a>include <stdio.h></h1><h1 id="define-LENGTH-1024"><a href="#define-LENGTH-1024" class="headerlink" title="define LENGTH 1024"></a>define LENGTH 1024</h1><p>int main(void) {</p>
+<h1 id="ifdef-TEST"><a href="#ifdef-TEST" class="headerlink" title="ifdef TEST"></a>ifdef TEST</h1><pre><code>printf (&quot;TEST Defined!\n &quot;);
+</code></pre><h1 id="endif"><a href="#endif" class="headerlink" title="endif"></a>endif</h1><pre><code>printf (&quot;Value of LENGTH is %d\n&quot;,1024);
+
+return 0;
+</code></pre><p>}</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">执行 ```gcc -E test_gcc_e.c``` 得到：</span><br></pre></td></tr></table></figure>
+<p>……(省略的代码)<br>int main(void) {<br>    printf (“Value of LENGTH is %d\n”,1024);</p>
+<pre><code>return 0;
+</code></pre><p>}<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">可以看到 LENGTH 的 值经过预处理已经被替换为 1024。</span><br><span class="line"></span><br><span class="line">执行 ```gcc -E -DTEST```</span><br><span class="line"></span><br></pre></td></tr></table></figure><br>int main(void) {</p>
+<pre><code>printf (&quot;TEST Defined!\n &quot;); //TEST defined
+
+
+printf (&quot;Value of LENGTH is %d\n&quot;,1024);
+
+return 0;
+</code></pre><p>}<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">### 2.3 编译阶段</span><br><span class="line"></span><br><span class="line">编译得到汇编程序，文件后缀为 *.s*，命令是 ```gcc -S```，执行 ```gcc -S hello.i``` 或者 ```gcc -S hello.c``` ，有：</span><br></pre></td></tr></table></figure></p>
+<pre><code>    .file   &quot;hello.c&quot;
+    .text
+    .globl  f_sum
+    .type   f_sum, @function
+</code></pre><p>f_sum:<br>.LFB0:<br>        .cfi_startproc<br>        pushq   %rbp<br>        .cfi_def_cfa_offset 16<br>        .cfi_offset 6, -16<br>        movq    %rsp, %rbp<br>        .cfi_def_cfa_register 6<br>        movl    %edi, -4(%rbp)<br>        movl    %esi, -8(%rbp)<br>        movl    -4(%rbp), %edx<br>        movl    -8(%rbp), %eax<br>        addl    %edx, %eax<br>        popq    %rbp<br>        .cfi_def_cfa 7, 8<br>        ret<br>        .cfi_endproc<br>.LFE0:<br>        .size   f_sum, .-f_sum<br>        .section        .rodata<br>.LC0:<br>        .string “makefile OK!”<br>.LC1:<br>        .string “Sum is %d\n”<br>        .text<br>        .globl  main<br>        .type   main, @function<br>main:<br>.LFB1:<br>        .cfi_startproc<br>        pushq   %rbp<br>        .cfi_def_cfa_offset 16<br>        .cfi_offset 6, -16<br>        movq    %rsp, %rbp<br>        .cfi_def_cfa_register 6<br>        subq    $16, %rsp<br>        movl    $0, -4(%rbp)<br>        leaq    .LC0(%rip), %rdi<br>        call    puts@PLT<br>        movl    $3, %esi<br>        movl    $2, %edi<br>        call    f_sum<br>        movl    %eax, -4(%rbp)<br>        movl    -4(%rbp), %eax<br>        movl    %eax, %esi<br>        leaq    .LC1(%rip), %rdi<br>        movl    $0, %eax<br>        call    printf@PLT<br>        movl    $0, %eax<br>        leave<br>        .cfi_def_cfa 7, 8<br>        ret<br>        .cfi_endproc<br>.LFE1:<br>        .size   main, .-main<br>        .ident  “GCC: (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0”<br>        .section        .note.GNU-stack,””,@progbits</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">程序主要分为 LFB0、LFB1 两个模块，分别是 f_sum.h 和 main.c 对应的汇编代码。</span><br><span class="line">其中 ```call    puts@PLT``` 调用的是 *printf* 函数，</span><br></pre></td></tr></table></figure>
+<p>movl    $3, %esi<br>movl    $2, %edi<br>call    f_sum<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">```call f_sum``` 调用的是 *f_sum* 函数，f_sum 中执行 addl 是求和运算。</span><br><span class="line">### 2.4 汇编阶段</span><br><span class="line"></span><br><span class="line">汇编阶段用汇编文件生成机器码，命令是 ```gcc -c ```。</span><br><span class="line"></span><br><span class="line">执行 ```gcc -c hello.s``` 得到 *hello.o*，执行 ```objdump -d hello.o``` 查看 *hello.o* 内容，</span><br></pre></td></tr></table></figure><br>hello.o：     文件格式 elf64-x86-64<br>Disassembly of section .text:</p>
+<p>0000000000000000 <f_sum>:<br>   0:   55                      push   %rbp<br>   1:   48 89 e5                mov    %rsp,%rbp<br>   4:   89 7d fc                mov    %edi,-0x4(%rbp)<br>   7:   89 75 f8                mov    %esi,-0x8(%rbp)<br>   a:   8b 55 fc                mov    -0x4(%rbp),%edx<br>   d:   8b 45 f8                mov    -0x8(%rbp),%eax<br>  10:   01 d0                   add    %edx,%eax<br>  12:   5d                      pop    %rbp<br>  13:   c3                      retq</p>
+<p>0000000000000014 <main>:<br>  14:   55                      push   %rbp<br>  15:   48 89 e5                mov    %rsp,%rbp<br>  18:   48 83 ec 10             sub    $0x10,%rsp<br>  1c:   c7 45 fc 00 00 00 00    movl   $0x0,-0x4(%rbp)<br>  23:   48 8d 3d 00 00 00 00    lea    0x0(%rip),%rdi        # 2a <main+0x16><br>  2a:   e8 00 00 00 00          callq  2f <main+0x1b><br>  2f:   be 03 00 00 00          mov    $0x3,%esi<br>  34:   bf 02 00 00 00          mov    $0x2,%edi<br>  39:   e8 00 00 00 00          callq  3e <main+0x2a><br>  3e:   89 45 fc                mov    %eax,-0x4(%rbp)<br>  41:   8b 45 fc                mov    -0x4(%rbp),%eax<br>  44:   89 c6                   mov    %eax,%esi<br>  46:   48 8d 3d 00 00 00 00    lea    0x0(%rip),%rdi        # 4d <main+0x39><br>  4d:   b8 00 00 00 00          mov    $0x0,%eax<br>  52:   e8 00 00 00 00          callq  57 <main+0x43><br>  57:   b8 00 00 00 00          mov    $0x0,%eax<br>  5c:   c9                      leaveq<br>  5d:   c3                      retq<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">第一行指明目标平台，第二行指出是对机器码的反汇编文件，尖括号 &lt;&gt; 指明对哪个函数的反汇编，左边是机器码，右边是对应的汇编带啊吗。</span><br><span class="line"></span><br><span class="line">可以看到在调用函数的语句处，*callq* 指令的地址是 00 00 00 00，并没有填入有效的函数地址，经过链接才填入，此时的文件被称作可重定位目标文件，即各节代码都是以 0 地址作为开始，但是将它们链接在一起时，会放入不重叠的地址空间。</span><br><span class="line"></span><br><span class="line">### 2.5 链接阶段</span><br><span class="line"></span><br><span class="line">汇编阶段生成的目标机器码并没有填入调用函数的地址，链接阶段完成这一过程。链接阶段为各个模块的目标代码在程序空间（运行时进程空间、虚拟地址）中指定它们独立的、不重叠的位置和区间，这个过程叫做“布局”。对未确定的目标地址，如汇编阶段 *callq* 指令全 0 的地址，需要用布局后的对应的函数地址填充，这个过程称作“重定位”。执行 ```gcc hello.o -o hello``` 生成文件 *hello*，然后执行 ```objdump -d hello``` ，显示如下：</span><br></pre></td></tr></table></figure><br>000000000000069e <main>:<br> 69e:   55                      push   %rbp<br> 69f:   48 89 e5                mov    %rsp,%rbp<br> 6a2:   48 83 ec 10             sub    $0x10,%rsp<br> 6a6:   c7 45 fc 00 00 00 00    movl   $0x0,-0x4(%rbp)<br> 6ad:   48 8d 3d c0 00 00 00    lea    0xc0(%rip),%rdi        # 774 <_IO_stdin_used+0x4><br> 6b4:   e8 97 fe ff ff          callq  550 <a href="&#x6d;&#97;&#x69;&#108;&#116;&#x6f;&#58;&#x70;&#x75;&#x74;&#115;&#64;&#x70;&#108;&#x74;">&#x70;&#x75;&#x74;&#115;&#64;&#x70;&#108;&#x74;</a><br> 6b9:   be 03 00 00 00          mov    $0x3,%esi<br> 6be:   bf 02 00 00 00          mov    $0x2,%edi<br> 6c3:   e8 c2 ff ff ff          callq  68a <f_sum><br> 6c8:   89 45 fc                mov    %eax,-0x4(%rbp)<br> 6cb:   8b 45 fc                mov    -0x4(%rbp),%eax<br> 6ce:   89 c6                   mov    %eax,%esi<br> 6d0:   48 8d 3d aa 00 00 00    lea    0xaa(%rip),%rdi        # 781 <_IO_stdin_used+0x11><br> 6d7:   b8 00 00 00 00          mov    $0x0,%eax<br> 6dc:   e8 7f fe ff ff          callq  560 <a href="&#x6d;&#x61;&#105;&#108;&#116;&#x6f;&#58;&#112;&#114;&#105;&#110;&#x74;&#102;&#x40;&#x70;&#x6c;&#x74;">&#112;&#114;&#105;&#110;&#x74;&#102;&#x40;&#x70;&#x6c;&#x74;</a><br> 6e1:   b8 00 00 00 00          mov    $0x0,%eax<br> 6e6:   c9                      leaveq<br> 6e7:   c3                      retq<br> 6e8:   0f 1f 84 00 00 00 00    nopl   0x0(%rax,%rax,1)<br> 6ef:   00</p>
+<p>```</p>
+<p>将 0x550、0x68a 分别填入 <em>callq</em> 地址，对 <em>f_sum</em>调用使用了静态链接，在程序创建后就已经确定。查看 <em>printf</em> 调用地址发现该地址位于 <em>section.plt</em>，并且对应一条跳转指令，这涉及动态链接概念，创建可执行文件时仍不确定 <em>printf</em> 所在位置，需要运行时才能确定函数地址，当前暂时只想一个辅助代码的位置 <em>.plt</em> 处。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/gcc-gdb/" rel="tag"># gcc/gdb</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/10/27/write-blog-step-by-step/" rel="prev" title="hexo搭建环境完毕后写博客的步骤">
+      <i class="fa fa-chevron-left"></i> hexo搭建环境完毕后写博客的步骤
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/04/20/muduo-read-learn/" rel="next" title="《Linux 多线程服务端编程》阅读与实践（1）">
+      《Linux 多线程服务端编程》阅读与实践（1） <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E7%BC%96%E8%AF%91%E7%B3%BB%E7%BB%9F-gcc-%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">1 编译系统(gcc)概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E7%BC%96%E8%AF%91%E7%B3%BB%E7%BB%9F-gcc-%E8%AF%A6%E8%BF%B0"><span class="nav-number">2.</span> <span class="nav-text">2 编译系统(gcc)详述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-%E6%BA%90%E7%A8%8B%E5%BA%8F"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 源程序</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#868-%E2%80%9C-usr-include-stdio-h%E2%80%9D-3-4"><span class="nav-number"></span> <span class="nav-text">868 “&#x2F;usr&#x2F;include&#x2F;stdio.h” 3 4</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E2%80%9Chello-c%E2%80%9D-2"><span class="nav-number"></span> <span class="nav-text">2 “hello.c” 2</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E2%80%9Cf-sum-h%E2%80%9D-1"><span class="nav-number"></span> <span class="nav-text">1 “f_sum.h” 1</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E2%80%9Cf-sum-h%E2%80%9D"><span class="nav-number"></span> <span class="nav-text">1 “f_sum.h”</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E2%80%9Chello-c%E2%80%9D-2"><span class="nav-number"></span> <span class="nav-text">3 “hello.c” 2</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#include"><span class="nav-number"></span> <span class="nav-text">include </span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#define-LENGTH-1024"><span class="nav-number"></span> <span class="nav-text">define LENGTH 1024</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ifdef-TEST"><span class="nav-number"></span> <span class="nav-text">ifdef TEST</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#endif"><span class="nav-number"></span> <span class="nav-text">endif</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">川辣孙悟空(Goku)</p>
+  <div class="site-description" itemprop="description">hanxinle199@gmail.com</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">川辣孙悟空(Goku)</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/pangu@4/dist/browser/pangu.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

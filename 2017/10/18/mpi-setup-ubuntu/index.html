@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"hanxinle.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="首先讲集群配置，mpi方案放弃openmpi，原因：在网上很少找到资料 &amp;&amp; 出错信息不友好。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MPI集群配置和mxnet分布式训练">
+<meta property="og:url" content="https://hanxinle.github.io/2017/10/18/mpi-setup-ubuntu/index.html">
+<meta property="og:site_name" content="科学学习与工程笔记">
+<meta property="og:description" content="首先讲集群配置，mpi方案放弃openmpi，原因：在网上很少找到资料 &amp;&amp; 出错信息不友好。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2017-10-18T12:36:43.000Z">
+<meta property="article:modified_time" content="2023-01-16T16:12:32.055Z">
+<meta property="article:author" content="川辣孙悟空(Goku)">
+<meta property="article:tag" content="工具">
+<meta property="article:tag" content="mpich">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://hanxinle.github.io/2017/10/18/mpi-setup-ubuntu/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MPI集群配置和mxnet分布式训练 | 科学学习与工程笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="科学学习与工程笔记" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">科学学习与工程笔记</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">动脑动手</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/hanxinle" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2017/10/18/mpi-setup-ubuntu/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="川辣孙悟空(Goku)">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MPI集群配置和mxnet分布式训练
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-10-18 20:36:43" itemprop="dateCreated datePublished" datetime="2017-10-18T20:36:43+08:00">2017-10-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-01-17 00:12:32" itemprop="dateModified" datetime="2023-01-17T00:12:32+08:00">2023-01-17</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>首先讲集群配置，mpi方案放弃openmpi，原因：在网上很少找到资料 &amp;&amp; 出错信息不友好。<br><span id="more"></span><br>集群（cluster）由 3 个主机构成：ThinkPad-T440p（master IP：192.168.1.106）与 VirtualBox 上a安装的 Ubuntu 16.04 LTS （node1 IP：192.168.1.109）、远程的 Erazer-X310-node（node2 IP：192.168.1.102 ）。</p>
+<h1 id="安装-mpich"><a href="#安装-mpich" class="headerlink" title="安装 mpich"></a>安装 mpich</h1><p>通过 apt-get 安装即可，安装的版本是 3.2-6build1(下载了源码作为备用安装选项)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install mpich mpich-doc</span><br></pre></td></tr></table></figure>
+<h1 id="配置-ssh-免登陆"><a href="#配置-ssh-免登陆" class="headerlink" title="配置 ssh 免登陆"></a>配置 ssh 免登陆</h1><p>这么做的目的是集群通过ssh通信，避免了频繁的登陆操作 ，首选在每台机器上通过 apt 安装 openssh，</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install openssh-server openssh-client</span><br></pre></td></tr></table></figure>
+<p>在 master 上执行 <code>ssh -v localhost</code> ，输入密码后 ssh 到本地，执行 <code>ssh-keygen -t rsa</code>，在 ~/.ssh 目录下生成 id_rsa 、 id_rsa.pub 两个文件（也可将 rsa 命令替换为 dsa，没试过，是书上附录提供的方法，自己搜索下区别），   将 .pub 文件拷贝到 远程机的 .ssh 目录   　下，命令如下（在此之前 ssh 到目标机，证明可以联通再拷贝，以 node1 为例），本机执行 <code>scp ~/.ssh/id_rsa.pub   192.168.1.109：/home/hanxinle/.ssh/</code> ，然后在 ssh 到目标机的终端窗口进入到 node2 的 .ssh 目录，执行 <code>cat id_rsa.pub &gt;&gt; authorized_keys</code> ，生成了      authorized_keys 后 执行 <code>exit</code> 断开 ssh ，再执行 <code>ssh</code> 命令，看看是否省略了输入密码的过程。</p>
+<h1 id="配置共享文件夹"><a href="#配置共享文件夹" class="headerlink" title="配置共享文件夹"></a>配置共享文件夹</h1><p>这个步骤的目的是，使得 node1,node2 共享 master 的一个目录，将程序放到这个目录中来执行，node1,node2 有查看这个文件夹的权限就好（虚拟机这种情况），mpi 程序可以运行。</p>
+<p>对 node1 虚拟机通过 共享文件夹功能 实现，安装了虚拟机后，务必到上面菜单栏中找到安装增强功能菜单，增强功能会自动安装，待其装好后，在 VirtualBox 找到已经在本地建好的共享文件夹 cloud ，选择它，并且选择 <em>自动挂载和固定挂载</em>，这样免去每次开启虚拟机就设置共享文件夹的麻烦，进入虚拟机以后执行</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo mount -t vboxsf  cloud  /home/hanxinle/cloud/</span><br></pre></td></tr></table></figure>
+<p>即可实现挂载，不要等待，应该马上就就可以挂载好的。</p>
+<p>对 node2 通过 nfs 执行，在 master 上执行</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install nfs-kernel-server</span><br></pre></td></tr></table></figure>
+<p>ssh 到 node2 上，同样执行</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install nfs-kernel-server nfs-common</span><br></pre></td></tr></table></figure>
+<p>然后 在 master 上执行</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /home/hanxinle/cloud</span><br></pre></td></tr></table></figure>
+<p>然后执行 </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo vim /etc/exports</span><br></pre></td></tr></table></figure>
+<p>在最后一行添加：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/home/hanxinle/cloud (此处有空格) *(rw,sync,no_root_squash,no_subtree_check)</span><br></pre></td></tr></table></figure><br>设置了共享文件夹的权限等，接着执行<code>exportfs - a</code>,继续执行：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo service nfs-kernel-server restart  </span><br><span class="line">sudo service portmap restart</span><br></pre></td></tr></table></figure><br>（这两个命令也可以是 sudo /etc/init.d/xxxx restart,xxxx 换成 nfs-kernel-server 、portmap），在node2这里安装好了 nfs-common 后在用户目录下建立一个 cloud 文件夹，然后执行<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">showmount -e 192.168.1.106</span><br></pre></td></tr></table></figure><br>看看有无 可挂载的 路径，有的话就挂载<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo mount -t nfs 192.168.1.106:/home/hanxinle/cloud  /home/haxinle/cloud</span><br></pre></td></tr></table></figure><br>挂载完毕，可以进入到这个cloud目录，看看和 master 的文件是否一样。</p>
+<h1 id="编辑-hosts"><a href="#编辑-hosts" class="headerlink" title="编辑 hosts"></a>编辑 hosts</h1><p>主机的命名和设备名称是一致的，不然有时候会遇到无法解析、找到 host 的问题，为了简便下次重新装机的过程可以将设备名称直接设置为 master 。在 master 编辑  /etc/hosts 文件， master 的 /etc/hosts 内容是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1 localhost</span><br><span class="line"></span><br><span class="line"># MPI SETUP</span><br><span class="line"></span><br><span class="line">192.168.1.106   ThinkPad-T440p</span><br><span class="line"></span><br><span class="line">192.168.1.109   hanxinle-VirtualBox</span><br><span class="line"></span><br><span class="line">192.168.1.102   Erazer-X310-node</span><br></pre></td></tr></table></figure>
+<p>node1 的 /etc/hosts 内容是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1 localhost</span><br><span class="line"></span><br><span class="line"># MPI SETUP</span><br><span class="line"></span><br><span class="line">192.168.1.106   ThinkPad-T440p</span><br><span class="line"></span><br><span class="line">192.168.1.109   hanxinle-VirtualBox</span><br></pre></td></tr></table></figure>
+<p>node2 的 /etc/hosts的内容是：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1 localhost</span><br><span class="line"></span><br><span class="line"># MPI SETUP</span><br><span class="line"></span><br><span class="line">192.168.1.106  ThinkPad-T440p</span><br><span class="line"></span><br><span class="line">192.168.1.102   Erazer-X310-node</span><br></pre></td></tr></table></figure></p>
+<h1 id="其它说明"><a href="#其它说明" class="headerlink" title="其它说明"></a>其它说明</h1><p>1、运行程序的过程中，可能会遇到 node1、node2 无法 ssh 到 master，提示检查防火墙设置，在 master 上执行 sduo ufw disable，关闭防火墙问题解决。</p>
+<p>2、ssh port 22 refused 的解决方法。连接不上的情况发生在 1） ssh 连接上以后 执行exit，重新连接则出现端口 22 拒绝链接；2） ssh 成功后断网，再连接则无反应。</p>
+<p>原因：网络通信断开后在一定时间内端口不能被使用。<br>解决方案参考自<a target="_blank" rel="noopener" href="https://ubuntuforums.org/showthread.php?t=1489846">这里</a>，请执行以下两个命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ssh -v localhost</span><br><span class="line">sudo /etc/init.d/ssh restart</span><br></pre></td></tr></table></figure>
+<p>网络上传播的不成功的解决方法：1） 重新安装openssh-client ， openssh-server ； 2）编辑 /etc/ssh/sshd_config 改编端口号到2222，重启 sudo service ssh restart or sudo service stop and sudo service start （大同小异的步骤）。不要尝试这些方法了。</p>
+<h1 id="编写测试程序"><a href="#编写测试程序" class="headerlink" title="编写测试程序"></a>编写测试程序</h1><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;mpi.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>** argv)</span> </span>&#123;</span><br><span class="line">   <span class="comment">// Initialize the MPI environment. The two arguments to MPI Init are not</span></span><br><span class="line">   <span class="comment">// currently used by MPI implementations, but are there in case future</span></span><br><span class="line">   <span class="comment">// implementations might need the arguments.</span></span><br><span class="line">   <span class="built_in">MPI_Init</span>(<span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br><span class="line"> </span><br><span class="line">   <span class="comment">// Get the number of processes</span></span><br><span class="line">   <span class="type">int</span> world_size;</span><br><span class="line">   <span class="built_in">MPI_Comm_size</span>(MPI_COMM_WORLD, &amp;world_size);</span><br><span class="line"> </span><br><span class="line">  <span class="comment">// Get the rank of the process</span></span><br><span class="line">   <span class="type">int</span> world_rank;</span><br><span class="line">   <span class="built_in">MPI_Comm_rank</span>(MPI_COMM_WORLD, &amp;world_rank);</span><br><span class="line"> </span><br><span class="line">  <span class="comment">// Get the name of the processor</span></span><br><span class="line">   <span class="type">char</span> processor_name[MPI_MAX_PROCESSOR_NAME];</span><br><span class="line">   <span class="type">int</span> name_len;</span><br><span class="line">   <span class="built_in">MPI_Get_processor_name</span>(processor_name, &amp;name_len);</span><br><span class="line"> </span><br><span class="line">   <span class="comment">// Print off a hello world message</span></span><br><span class="line">   <span class="built_in">printf</span>(<span class="string">&quot;Hello world from processor %s, rank %d out of %d processors\n&quot;</span>,</span><br><span class="line">          processor_name, world_rank, world_size);</span><br><span class="line"> </span><br><span class="line">   <span class="comment">// Finalize the MPI environment. No more MPI calls can be made after this</span></span><br><span class="line">   <span class="built_in">MPI_Finalize</span>();</span><br><span class="line"></span><br><span class="line">   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>在 master 的 cloud 目录将上面文件命名为 hellompi.c 并保存，此时 node1、node2 是能在本地 cloud 文件夹看到 hellompi.c ，编译程序:<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mpicc hellompi.c -o a</span><br></pre></td></tr></table></figure><br>单机执行<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mpirun -np 4 ./a</span><br></pre></td></tr></table></figure><br>在master、node1、node2 执行：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mpirun -np 10 --hosts ThinkPad-T440p,Erazer-X310-node,hanxinle-VirtualBox ./a</span><br></pre></td></tr></table></figure></p>
+<p>注意，编译程序在所有环境配置无误后再执行程序，除了用 —hosts 指定 master + 代理的形式运行程序，还可以 新建立一个 mpi_file 文件，首行是 master 的 ip ，第二行是 node1 的ip，第三行是 node2 的 ip ，执行命令：<br><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mpirun -np 10 --hostfile mpi_file ./a</span><br></pre></td></tr></table></figure><br>也就是说 执行程序 依赖 /etc/hosts 或者 本地写明 ip 的 hostfile 文件，且 mpi 程序执行过程中必须有主机 master 参与，可以单 master 主机，但不可缺少 master 主机。</p>
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><p>[1]. <a target="_blank" rel="noopener" href="http://mpitutorial.com/tutorials/running-an-mpi-cluster-within-a-lan/">mpi tutorials - LAN  (with mpich)</a></p>
+<p>[2]. <a target="_blank" rel="noopener" href="https://github.com/wesleykendall/mpitutorial">mpi tutorials 的 GitHub</a>    </p>
+<p>[3]. <a target="_blank" rel="noopener" href="https://blog.csdn.net/zpf336/article/details/50825847">靠谱的 nfs 文件夹设置方法</a></p>
+<h1 id="mxnet运行分布式多机神经网络训练（2018-03-01）"><a href="#mxnet运行分布式多机神经网络训练（2018-03-01）" class="headerlink" title="mxnet运行分布式多机神经网络训练（2018-03-01）"></a>mxnet运行分布式多机神经网络训练（2018-03-01）</h1><p>Ubuntu 16.04 LTS，mxnet distribute training,由源码编译安装时根据文档,添加某个标志使其支持分布式训练,本地新建文件,首行为主机 IP,下一行及以后为 从机 IP.</p>
+<p>分布式训练命令如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">export PS_VERBOSE=1</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">python ../../tools/launch.py -n 2 --launcher mpi -H mpi_file python train_mnist.py --network lenet --kv-store dist_syncINFO:root:Epoch[9] Batch [100] Speed: 155.30 samples/sec</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B7%A5%E5%85%B7/" rel="tag"># 工具</a>
+              <a href="/tags/mpich/" rel="tag"># mpich</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/08/10/windows-programing-note/" rel="prev" title="Windows程序设计总结">
+      <i class="fa fa-chevron-left"></i> Windows程序设计总结
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/09/29/github-note/" rel="next" title="GitHub 使用">
+      GitHub 使用 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-mpich"><span class="nav-number">1.</span> <span class="nav-text">安装 mpich</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-ssh-%E5%85%8D%E7%99%BB%E9%99%86"><span class="nav-number">2.</span> <span class="nav-text">配置 ssh 免登陆</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%85%B1%E4%BA%AB%E6%96%87%E4%BB%B6%E5%A4%B9"><span class="nav-number">3.</span> <span class="nav-text">配置共享文件夹</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%96%E8%BE%91-hosts"><span class="nav-number">4.</span> <span class="nav-text">编辑 hosts</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B6%E5%AE%83%E8%AF%B4%E6%98%8E"><span class="nav-number">5.</span> <span class="nav-text">其它说明</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%96%E5%86%99%E6%B5%8B%E8%AF%95%E7%A8%8B%E5%BA%8F"><span class="nav-number">6.</span> <span class="nav-text">编写测试程序</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="nav-number">7.</span> <span class="nav-text">参考链接</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mxnet%E8%BF%90%E8%A1%8C%E5%88%86%E5%B8%83%E5%BC%8F%E5%A4%9A%E6%9C%BA%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E8%AE%AD%E7%BB%83%EF%BC%882018-03-01%EF%BC%89"><span class="nav-number">8.</span> <span class="nav-text">mxnet运行分布式多机神经网络训练（2018-03-01）</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">川辣孙悟空(Goku)</p>
+  <div class="site-description" itemprop="description">hanxinle199@gmail.com</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">川辣孙悟空(Goku)</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/pangu@4/dist/browser/pangu.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
