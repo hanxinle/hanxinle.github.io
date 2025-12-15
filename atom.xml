@@ -6,7 +6,7 @@
   <link href="https://hanxinle.github.io/atom.xml" rel="self"/>
   
   <link href="https://hanxinle.github.io/"/>
-  <updated>2025-01-28T04:32:19.678Z</updated>
+  <updated>2025-12-15T04:56:47.183Z</updated>
   <id>https://hanxinle.github.io/</id>
   
   <author>
@@ -21,21 +21,20 @@
     <link href="https://hanxinle.github.io/2024/03/29/hexo_slide/"/>
     <id>https://hanxinle.github.io/2024/03/29/hexo_slide/</id>
     <published>2024-03-29T14:59:24.000Z</published>
-    <updated>2025-01-28T04:32:19.678Z</updated>
+    <updated>2025-12-15T04:56:47.183Z</updated>
     
-    <content type="html"><![CDATA[<p>恢复重建</p><p>删除</p><p>更新</p>]]></content>
+    <content type="html"><![CDATA[<h1 id="文件保留与否"><a href="#文件保留与否" class="headerlink" title="文件保留与否"></a>文件保留与否</h1><p>保留_config.yml, themes/, source/, scaffolds/,package.jsona,.gitignore 这些文件夹,其它可以删除。</p><h1 id="环境安装"><a href="#环境安装" class="headerlink" title="环境安装"></a>环境安装</h1><p>提前通过安装包安装好 Git、Node.js，然后执行：</p><p><code>npm install hexo-cli -g</code></p><p><code>npm install</code></p><p><code>npm install hexo-deployer-git --save</code></p><p><code>hexo clean</code></p><p><code>hexo g</code></p><p><code>hexo d</code></p>]]></content>
     
     
       
       
-    <summary type="html">&lt;p&gt;恢复重建&lt;/p&gt;
-&lt;p&gt;删除&lt;/p&gt;
-&lt;p&gt;更新&lt;/p&gt;
-</summary>
+    <summary type="html">&lt;h1 id=&quot;文件保留与否&quot;&gt;&lt;a href=&quot;#文件保留与否&quot; class=&quot;headerlink&quot; title=&quot;文件保留与否&quot;&gt;&lt;/a&gt;文件保留与否&lt;/h1&gt;&lt;p&gt;保留_config.yml, themes/, source/, scaffolds/,package.js</summary>
       
     
     
     
+    
+    <category term="工具" scheme="https://hanxinle.github.io/tags/%E5%B7%A5%E5%85%B7/"/>
     
   </entry>
   
