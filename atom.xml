@@ -119,18 +119,18 @@
     <link href="https://hanxinle.github.io/2023/07/09/cpp-skill/"/>
     <id>https://hanxinle.github.io/2023/07/09/cpp-skill/</id>
     <published>2023-07-09T14:10:37.000Z</published>
-    <updated>2023-07-22T04:14:41.761Z</updated>
+    <updated>2025-12-18T02:30:59.936Z</updated>
     
     <content type="html"><![CDATA[<ol><li><p>单例模式的目的是确保唯一实例，确切的说是为了在应用程序的进程空间中确保唯一实例，刚刚在视频处理器的使用中被这种设计小小震撼一下：</p><span id="more"></span></li></ol><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">class Single &#123;</span><br><span class="line">public:</span><br><span class="line">    static Single *Get() &#123;</span><br><span class="line">        static Single re;</span><br><span class="line">        return &amp;re;</span><br><span class="line">    &#125;</span><br><span class="line">    void Set(int x, int y) &#123;</span><br><span class="line">        a = x;</span><br><span class="line">        b = y;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void Print() &#123; std::cout &lt;&lt; a &lt;&lt; &quot; &quot; &lt;&lt; b &lt;&lt; std::endl; &#125;</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">    int a = 0;</span><br><span class="line">    int b = 0;</span><br><span class="line">    Single() &#123;&#125;</span><br><span class="line">    Single(const Single &amp;) &#123;&#125;</span><br><span class="line">    Single &amp;operator=(const Single &amp;) &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">int main() &#123;</span><br><span class="line">    auto s = Single::Get();</span><br><span class="line">    s-&gt;Set(12, 13);</span><br><span class="line">    s-&gt;Get()-&gt;Print();</span><br><span class="line">    std::thread([]() &#123;</span><br><span class="line">        auto sa = Single::Get();</span><br><span class="line">        sa-&gt;Set(01, 3);</span><br><span class="line">           &#125;).join();</span><br><span class="line">    s-&gt;Get()-&gt;Print();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// output</span><br><span class="line">12 13</span><br><span class="line">1 3</span><br></pre></td></tr></table></figure>]]></content>
     
     
     <summary type="html">&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;单例模式的目的是确保唯一实例，确切的说是为了在应用程序的进程空间中确保唯一实例，刚刚在视频处理器的使用中被这种设计小小震撼一下：&lt;/p&gt;</summary>
+&lt;li&gt;&lt;p&gt;单例模式的目的是确保唯一实例，确切的说是为了在应用程序的进程空间中确保唯一实例，刚刚在视频处理器的使用中被这种设计小小震撼一下：&lt;/p&gt;&lt;/li&gt;&lt;/ol&gt;</summary>
     
     
     
     
-    <category term="C/C++" scheme="https://hanxinle.github.io/tags/C-C/"/>
+    <category term="C++" scheme="https://hanxinle.github.io/tags/C/"/>
     
   </entry>
   
