@@ -640,7 +640,7 @@ return 0;
   <entry>
     <title>程序的内存布局</title>
     <url>/2020/08/16/process-memory/</url>
-    <content><![CDATA[<p>在命令行中运行程序的过程，是命令行会对程序进行复制，然后创建一个进程运行这个程序。因此，程序的内存结构所涉及的操作系统术语应该是 <strong>Linux 内存管理</strong>。<br><span id="more"></span><br><img src="linux_process_mem.jpg" alt="linux 逻辑内存空间布局"><br><img src="linux_process_mem_all.jpg" alt="linux 逻辑内存空间布局-all"></p>
+    <content><![CDATA[<p>在命令行中运行程序的过程，是命令行会对程序进行复制，然后创建一个进程运行这个程序。因此，程序的内存结构所涉及的操作系统术语应该是 <strong>Linux 内存管理</strong>。<br><span id="more"></span><br><img src="/images/linux_process_mem.png" alt="linux 逻辑内存空间布局"><br><img src="/images/linux_process_mem.png" alt="linux 逻辑内存空间布局-all"></p>
 <p>这样，本文套论的内容就把操作系统中进程这个概念与程序内存的概念联系起来。</p>
 <p>可以看到，从低地址到高地址，分别是代码段、全局数据段、未初始化数据段、堆、内存映射段（动态库映射）、栈（向低地址生长）以及内核空间，内核空间这段地址不能被用户代码读取，否则会触发段错误。</p>
 <p>这里新发现的现象是，内核会将自己的代码和数据在每个进程虚拟空间都映射一份，方便进程调用内核功能。所有进程的页目录页表、GDT、LDT 等内核数据结构，也全都被保存在内核区段内。</p>
@@ -1297,5 +1297,10 @@ return 0;
       <tags>
         <tag>工具</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>20251218-cpp-practice1</title>
+    <url>/2025/12/18/20251218-cpp-practice1/</url>
+    <content><![CDATA[]]></content>
   </entry>
 </search>
