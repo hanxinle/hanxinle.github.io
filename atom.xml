@@ -36,14 +36,14 @@
     <link href="https://hanxinle.github.io/2024/03/29/hexo_slide/"/>
     <id>https://hanxinle.github.io/2024/03/29/hexo_slide/</id>
     <published>2024-03-29T14:59:24.000Z</published>
-    <updated>2025-12-18T08:01:41.566Z</updated>
+    <updated>2025-12-18T08:03:50.649Z</updated>
     
-    <content type="html"><![CDATA[<h1 id="文件保留与否"><a href="#文件保留与否" class="headerlink" title="文件保留与否"></a>文件保留与否</h1><h1 id="1-选择要保留的文件"><a href="#1-选择要保留的文件" class="headerlink" title="1 选择要保留的文件"></a>1 选择要保留的文件</h1><p>保留_config.yml, themes/, source/, scaffolds/,package.jsona,.gitignore 这些文件夹,其它可以删除。</p><h1 id="2-环境安装和恢复启用旧博客的命令"><a href="#2-环境安装和恢复启用旧博客的命令" class="headerlink" title="2 环境安装和恢复启用旧博客的命令"></a>2 环境安装和恢复启用旧博客的命令</h1><p>提前通过安装包安装好 Git、Node.js，然后执行：</p><p><code>npm install hexo-cli -g</code></p><p><code>npm install</code></p><p><code>npm install hexo-deployer-git --save</code></p><p><code>hexo clean</code></p><p><code>hexo g</code></p><p><code>hexo d</code></p><h1 id="3-删掉某个弃用标签-tag-的方法"><a href="#3-删掉某个弃用标签-tag-的方法" class="headerlink" title="3 删掉某个弃用标签(tag)的方法"></a>3 删掉某个弃用标签(tag)的方法</h1><p>public\tags，删掉对应文件夹，然后执行：<br><code>hexo g &amp;&amp; hexo d</code></p>]]></content>
+    <content type="html"><![CDATA[<h1 id="1-选择要保留的文件"><a href="#1-选择要保留的文件" class="headerlink" title="1 选择要保留的文件"></a>1 选择要保留的文件</h1><p>保留_config.yml, themes/, source/, scaffolds/,package.jsona,.gitignore 这些文件夹,其它可以删除。</p><h1 id="2-环境安装和恢复启用旧博客的命令"><a href="#2-环境安装和恢复启用旧博客的命令" class="headerlink" title="2 环境安装和恢复启用旧博客的命令"></a>2 环境安装和恢复启用旧博客的命令</h1><p>提前通过安装包安装好 Git、Node.js，然后执行：</p><p><code>npm install hexo-cli -g</code></p><p><code>npm install</code></p><p><code>npm install hexo-deployer-git --save</code></p><p><code>hexo clean</code></p><p><code>hexo g</code></p><p><code>hexo d</code></p><h1 id="3-删掉某个弃用标签-tag-的方法"><a href="#3-删掉某个弃用标签-tag-的方法" class="headerlink" title="3 删掉某个弃用标签(tag)的方法"></a>3 删掉某个弃用标签(tag)的方法</h1><p>public\tags，删掉对应文件夹，然后执行：<br><code>hexo g &amp;&amp; hexo d</code></p>]]></content>
     
     
       
       
-    <summary type="html">&lt;h1 id=&quot;文件保留与否&quot;&gt;&lt;a href=&quot;#文件保留与否&quot; class=&quot;headerlink&quot; title=&quot;文件保留与否&quot;&gt;&lt;/a&gt;文件保留与否&lt;/h1&gt;&lt;h1 id=&quot;1-选择要保留的文件&quot;&gt;&lt;a href=&quot;#1-选择要保留的文件&quot; class=&quot;headerli</summary>
+    <summary type="html">&lt;h1 id=&quot;1-选择要保留的文件&quot;&gt;&lt;a href=&quot;#1-选择要保留的文件&quot; class=&quot;headerlink&quot; title=&quot;1 选择要保留的文件&quot;&gt;&lt;/a&gt;1 选择要保留的文件&lt;/h1&gt;&lt;p&gt;保留_config.yml, themes/, source/, scaff</summary>
       
     
     

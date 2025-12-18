@@ -322,7 +322,7 @@ return 0;
   <entry>
     <title>补充 hexo 博客的使用</title>
     <url>/2024/03/29/hexo_slide/</url>
-    <content><![CDATA[<h1 id="文件保留与否"><a href="#文件保留与否" class="headerlink" title="文件保留与否"></a>文件保留与否</h1><h1 id="1-选择要保留的文件"><a href="#1-选择要保留的文件" class="headerlink" title="1 选择要保留的文件"></a>1 选择要保留的文件</h1><p>保留_config.yml, themes/, source/, scaffolds/,package.jsona,.gitignore 这些文件夹,其它可以删除。</p>
+    <content><![CDATA[<h1 id="1-选择要保留的文件"><a href="#1-选择要保留的文件" class="headerlink" title="1 选择要保留的文件"></a>1 选择要保留的文件</h1><p>保留_config.yml, themes/, source/, scaffolds/,package.jsona,.gitignore 这些文件夹,其它可以删除。</p>
 <h1 id="2-环境安装和恢复启用旧博客的命令"><a href="#2-环境安装和恢复启用旧博客的命令" class="headerlink" title="2 环境安装和恢复启用旧博客的命令"></a>2 环境安装和恢复启用旧博客的命令</h1><p>提前通过安装包安装好 Git、Node.js，然后执行：</p>
 <p><code>npm install hexo-cli -g</code></p>
 <p><code>npm install</code></p>
