@@ -6,7 +6,7 @@
   <link href="https://hanxinle.github.io/atom.xml" rel="self"/>
   
   <link href="https://hanxinle.github.io/"/>
-  <updated>2025-12-18T08:01:48.696Z</updated>
+  <updated>2025-12-18T09:32:10.857Z</updated>
   <id>https://hanxinle.github.io/</id>
   
   <author>
@@ -21,8 +21,21 @@
     <link href="https://hanxinle.github.io/2025/12/18/20251218-cpp-practice1/"/>
     <id>https://hanxinle.github.io/2025/12/18/20251218-cpp-practice1/</id>
     <published>2025-12-18T01:36:27.000Z</published>
-    <updated>2025-12-18T08:01:48.696Z</updated>
+    <updated>2025-12-18T09:32:10.857Z</updated>
     
+    <content type="html"><![CDATA[<div class="table-container"><table><thead><tr><th style="text-align:center">日期</th><th style="text-align:center">版本</th><th style="text-align:center">作者</th><th style="text-align:center">变更</th></tr></thead><tbody><tr><td style="text-align:center">2025-12-18</td><td style="text-align:center">V1.0</td><td style="text-align:center">Lex</td><td style="text-align:center">初稿</td></tr></tbody></table></div><h1 id="文档背景"><a href="#文档背景" class="headerlink" title="文档背景"></a>文档背景</h1><p>一次技术沟通中，发现与我做不同项目的同行，在C++的机制和操作系统 API 上特别有心得，而这是我近两年的工作和学习中用不上，也没有深入学的内容，交流后对我有很大启发，很过瘾。</p><p>这些内容解释了很多原理，填补了我的认知空白，也间接指导了我后续的实践，非常开心有这样的交流，后面我拉了个微信群，只拉取了 C++ 开发在里面，把靠谱的 C++ 都拉进群。</p><h1 id="术语解释"><a href="#术语解释" class="headerlink" title="术语解释"></a>术语解释</h1><h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><hr><h1 id="1-语言机制"><a href="#1-语言机制" class="headerlink" title="1 语言机制"></a>1 语言机制</h1><h1 id="2-Windows-Visual-Studio-相关"><a href="#2-Windows-Visual-Studio-相关" class="headerlink" title="2 Windows/Visual Studio 相关"></a>2 Windows/Visual Studio 相关</h1>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;div class=&quot;table-container&quot;&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th style=&quot;text-align:center&quot;&gt;日期&lt;/th&gt;
+&lt;th style=&quot;text-align:center&quot;&gt;版本&lt;/th&gt;
+&lt;th style=&quot;te</summary>
+      
     
     
     
