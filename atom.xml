@@ -6,7 +6,7 @@
   <link href="https://hanxinle.github.io/atom.xml" rel="self"/>
   
   <link href="https://hanxinle.github.io/"/>
-  <updated>2025-12-18T09:32:10.857Z</updated>
+  <updated>2025-12-18T09:34:54.932Z</updated>
   <id>https://hanxinle.github.io/</id>
   
   <author>
@@ -17,25 +17,37 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>C++研究1</title>
+    <title>C++沉思1</title>
     <link href="https://hanxinle.github.io/2025/12/18/20251218-cpp-practice1/"/>
     <id>https://hanxinle.github.io/2025/12/18/20251218-cpp-practice1/</id>
     <published>2025-12-18T01:36:27.000Z</published>
-    <updated>2025-12-18T09:32:10.857Z</updated>
+    <updated>2025-12-18T09:34:54.932Z</updated>
     
-    <content type="html"><![CDATA[<div class="table-container"><table><thead><tr><th style="text-align:center">日期</th><th style="text-align:center">版本</th><th style="text-align:center">作者</th><th style="text-align:center">变更</th></tr></thead><tbody><tr><td style="text-align:center">2025-12-18</td><td style="text-align:center">V1.0</td><td style="text-align:center">Lex</td><td style="text-align:center">初稿</td></tr></tbody></table></div><h1 id="文档背景"><a href="#文档背景" class="headerlink" title="文档背景"></a>文档背景</h1><p>一次技术沟通中，发现与我做不同项目的同行，在C++的机制和操作系统 API 上特别有心得，而这是我近两年的工作和学习中用不上，也没有深入学的内容，交流后对我有很大启发，很过瘾。</p><p>这些内容解释了很多原理，填补了我的认知空白，也间接指导了我后续的实践，非常开心有这样的交流，后面我拉了个微信群，只拉取了 C++ 开发在里面，把靠谱的 C++ 都拉进群。</p><h1 id="术语解释"><a href="#术语解释" class="headerlink" title="术语解释"></a>术语解释</h1><h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><hr><h1 id="1-语言机制"><a href="#1-语言机制" class="headerlink" title="1 语言机制"></a>1 语言机制</h1><h1 id="2-Windows-Visual-Studio-相关"><a href="#2-Windows-Visual-Studio-相关" class="headerlink" title="2 Windows/Visual Studio 相关"></a>2 Windows/Visual Studio 相关</h1>]]></content>
+    <content type="html"><![CDATA[<div class="table-container"><table><thead><tr><th style="text-align:center">日期</th><th style="text-align:center">版本</th><th style="text-align:center">作者</th><th style="text-align:center">变更</th></tr></thead><tbody><tr><td style="text-align:center">2025-12-18</td><td style="text-align:center">V1.0</td><td style="text-align:center">Lex</td><td style="text-align:center">初稿</td></tr></tbody></table></div><h1 id="文档背景"><a href="#文档背景" class="headerlink" title="文档背景"></a>文档背景</h1><p>一次技术沟通中，发现与我做不同项目的同行，在C++的机制和操作系统 API 上特别有心得，而这是我近两年的工作和学习中用不上，也没有深入学的内容，交流后对我有很大启发，很过瘾。</p><p>这些内容解释了很多原理，填补了我的认知空白，也间接指导了我后续的实践，非常开心有这样的交流，后面我拉了个微信群，只拉取了 C++ 开发在里面，把靠谱的 C++ 都拉进群。</p><span id="more"></span><h1 id="术语解释"><a href="#术语解释" class="headerlink" title="术语解释"></a>术语解释</h1><h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><hr><h1 id="1-语言机制"><a href="#1-语言机制" class="headerlink" title="1 语言机制"></a>1 语言机制</h1><h1 id="2-Windows-Visual-Studio-相关"><a href="#2-Windows-Visual-Studio-相关" class="headerlink" title="2 Windows/Visual Studio 相关"></a>2 Windows/Visual Studio 相关</h1>]]></content>
     
     
-      
-      
     <summary type="html">&lt;div class=&quot;table-container&quot;&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
 &lt;th style=&quot;text-align:center&quot;&gt;日期&lt;/th&gt;
 &lt;th style=&quot;text-align:center&quot;&gt;版本&lt;/th&gt;
-&lt;th style=&quot;te</summary>
-      
+&lt;th style=&quot;text-align:center&quot;&gt;作者&lt;/th&gt;
+&lt;th style=&quot;text-align:center&quot;&gt;变更&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td style=&quot;text-align:center&quot;&gt;2025-12-18&lt;/td&gt;
+&lt;td style=&quot;text-align:center&quot;&gt;V1.0&lt;/td&gt;
+&lt;td style=&quot;text-align:center&quot;&gt;Lex&lt;/td&gt;
+&lt;td style=&quot;text-align:center&quot;&gt;初稿&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;h1 id=&quot;文档背景&quot;&gt;&lt;a href=&quot;#文档背景&quot; class=&quot;headerlink&quot; title=&quot;文档背景&quot;&gt;&lt;/a&gt;文档背景&lt;/h1&gt;&lt;p&gt;一次技术沟通中，发现与我做不同项目的同行，在C++的机制和操作系统 API 上特别有心得，而这是我近两年的工作和学习中用不上，也没有深入学的内容，交流后对我有很大启发，很过瘾。&lt;/p&gt;
+&lt;p&gt;这些内容解释了很多原理，填补了我的认知空白，也间接指导了我后续的实践，非常开心有这样的交流，后面我拉了个微信群，只拉取了 C++ 开发在里面，把靠谱的 C++ 都拉进群。&lt;/p&gt;</summary>
     
     
     
@@ -49,15 +61,12 @@
     <link href="https://hanxinle.github.io/2024/03/29/hexo_slide/"/>
     <id>https://hanxinle.github.io/2024/03/29/hexo_slide/</id>
     <published>2024-03-29T14:59:24.000Z</published>
-    <updated>2025-12-18T08:03:50.649Z</updated>
+    <updated>2025-12-18T09:35:02.723Z</updated>
     
-    <content type="html"><![CDATA[<h1 id="1-选择要保留的文件"><a href="#1-选择要保留的文件" class="headerlink" title="1 选择要保留的文件"></a>1 选择要保留的文件</h1><p>保留_config.yml, themes/, source/, scaffolds/,package.jsona,.gitignore 这些文件夹,其它可以删除。</p><h1 id="2-环境安装和恢复启用旧博客的命令"><a href="#2-环境安装和恢复启用旧博客的命令" class="headerlink" title="2 环境安装和恢复启用旧博客的命令"></a>2 环境安装和恢复启用旧博客的命令</h1><p>提前通过安装包安装好 Git、Node.js，然后执行：</p><p><code>npm install hexo-cli -g</code></p><p><code>npm install</code></p><p><code>npm install hexo-deployer-git --save</code></p><p><code>hexo clean</code></p><p><code>hexo g</code></p><p><code>hexo d</code></p><h1 id="3-删掉某个弃用标签-tag-的方法"><a href="#3-删掉某个弃用标签-tag-的方法" class="headerlink" title="3 删掉某个弃用标签(tag)的方法"></a>3 删掉某个弃用标签(tag)的方法</h1><p>public\tags，删掉对应文件夹，然后执行：<br><code>hexo g &amp;&amp; hexo d</code></p>]]></content>
+    <content type="html"><![CDATA[<h1 id="1-选择要保留的文件"><a href="#1-选择要保留的文件" class="headerlink" title="1 选择要保留的文件"></a>1 选择要保留的文件</h1><p>保留_config.yml, themes/, source/, scaffolds/,package.jsona,.gitignore 这些文件夹,其它可以删除。</p><span id="more"></span><h1 id="2-环境安装和恢复启用旧博客的命令"><a href="#2-环境安装和恢复启用旧博客的命令" class="headerlink" title="2 环境安装和恢复启用旧博客的命令"></a>2 环境安装和恢复启用旧博客的命令</h1><p>提前通过安装包安装好 Git、Node.js，然后执行：</p><p><code>npm install hexo-cli -g</code></p><p><code>npm install</code></p><p><code>npm install hexo-deployer-git --save</code></p><p><code>hexo clean</code></p><p><code>hexo g</code></p><p><code>hexo d</code></p><h1 id="3-删掉某个弃用标签-tag-的方法"><a href="#3-删掉某个弃用标签-tag-的方法" class="headerlink" title="3 删掉某个弃用标签(tag)的方法"></a>3 删掉某个弃用标签(tag)的方法</h1><p>public\tags，删掉对应文件夹，然后执行：<br><code>hexo g &amp;&amp; hexo d</code></p>]]></content>
     
     
-      
-      
-    <summary type="html">&lt;h1 id=&quot;1-选择要保留的文件&quot;&gt;&lt;a href=&quot;#1-选择要保留的文件&quot; class=&quot;headerlink&quot; title=&quot;1 选择要保留的文件&quot;&gt;&lt;/a&gt;1 选择要保留的文件&lt;/h1&gt;&lt;p&gt;保留_config.yml, themes/, source/, scaff</summary>
-      
+    <summary type="html">&lt;h1 id=&quot;1-选择要保留的文件&quot;&gt;&lt;a href=&quot;#1-选择要保留的文件&quot; class=&quot;headerlink&quot; title=&quot;1 选择要保留的文件&quot;&gt;&lt;/a&gt;1 选择要保留的文件&lt;/h1&gt;&lt;p&gt;保留_config.yml, themes/, source/, scaffolds/,package.jsona,.gitignore 这些文件夹,其它可以删除。&lt;/p&gt;</summary>
     
     
     
@@ -134,7 +143,7 @@
     <link href="https://hanxinle.github.io/2023/07/09/cpp-skill/"/>
     <id>https://hanxinle.github.io/2023/07/09/cpp-skill/</id>
     <published>2023-07-09T14:10:37.000Z</published>
-    <updated>2025-12-18T02:30:59.936Z</updated>
+    <updated>2025-12-18T09:35:18.117Z</updated>
     
     <content type="html"><![CDATA[<ol><li><p>单例模式的目的是确保唯一实例，确切的说是为了在应用程序的进程空间中确保唯一实例，刚刚在视频处理器的使用中被这种设计小小震撼一下：</p><span id="more"></span></li></ol><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">class Single &#123;</span><br><span class="line">public:</span><br><span class="line">    static Single *Get() &#123;</span><br><span class="line">        static Single re;</span><br><span class="line">        return &amp;re;</span><br><span class="line">    &#125;</span><br><span class="line">    void Set(int x, int y) &#123;</span><br><span class="line">        a = x;</span><br><span class="line">        b = y;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void Print() &#123; std::cout &lt;&lt; a &lt;&lt; &quot; &quot; &lt;&lt; b &lt;&lt; std::endl; &#125;</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">    int a = 0;</span><br><span class="line">    int b = 0;</span><br><span class="line">    Single() &#123;&#125;</span><br><span class="line">    Single(const Single &amp;) &#123;&#125;</span><br><span class="line">    Single &amp;operator=(const Single &amp;) &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">int main() &#123;</span><br><span class="line">    auto s = Single::Get();</span><br><span class="line">    s-&gt;Set(12, 13);</span><br><span class="line">    s-&gt;Get()-&gt;Print();</span><br><span class="line">    std::thread([]() &#123;</span><br><span class="line">        auto sa = Single::Get();</span><br><span class="line">        sa-&gt;Set(01, 3);</span><br><span class="line">           &#125;).join();</span><br><span class="line">    s-&gt;Get()-&gt;Print();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// output</span><br><span class="line">12 13</span><br><span class="line">1 3</span><br></pre></td></tr></table></figure>]]></content>
     
