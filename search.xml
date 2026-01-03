@@ -332,6 +332,8 @@ return 0;
 <p><code>hexo g</code></p>
 <p><code>hexo d</code></p>
 <h1 id="3-删掉某个弃用标签-tag-的方法"><a href="#3-删掉某个弃用标签-tag-的方法" class="headerlink" title="3 删掉某个弃用标签(tag)的方法"></a>3 删掉某个弃用标签(tag)的方法</h1><p>public\tags，删掉对应文件夹，然后执行：<br><code>hexo g &amp;&amp; hexo d</code></p>
+<h1 id="4-图片显示的方法"><a href="#4-图片显示的方法" class="headerlink" title="4 图片显示的方法"></a>4 图片显示的方法</h1><p>在 public 路径下找到和博客文件同名的文件夹，将图像文件放入其中，在博客中直接引用即可，例如下文</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">![](1.jpg)</span><br></pre></td></tr></table></figure>
 ]]></content>
       <tags>
         <tag>工具</tag>
