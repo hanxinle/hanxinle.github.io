@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(cp -r /tmp/forty-theme-temp/* .)",
-      "Bash(cp -r /tmp/forty-theme-temp/.gitignore .)",
-      "Bash(ruby --version)"
-    ]
-  }
-}
