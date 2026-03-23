@@ -3,8 +3,8 @@ layout: page
 title: 简历
 description: 韩新乐的个人简历
 image: assets/images/pic03.jpg
-show_tile: true
-nav-menu: true
+show_tile: false
+nav-menu: false
 ---
 
 # 简历

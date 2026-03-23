@@ -5,7 +5,7 @@
 {% endif %}
 <section id="one" class="tiles">
   {% assign ordered_tiles = "" | split: "," %}
-  {% assign tile_titles = "我的技术文章,我的摄影,简历,项目,论文,关于" | split: "," %}
+  {% assign tile_titles = "我的技术文章,我的摄影,项目,关于" | split: "," %}
   {% for title in tile_titles %}
     {% for tile in tiles %}
       {% if tile.title == title %}

@@ -3,8 +3,8 @@ layout: page
 title: 论文
 description: 学术论文与研究成果
 image: assets/images/pic05.jpg
-show_tile: true
-nav-menu: true
+show_tile: false
+nav-menu: false
 ---
 
 # 论文
