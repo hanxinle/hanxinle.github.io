@@ -1,7 +1,7 @@
 ---
 layout: home
 title: 首页
-landing-title: '你好，我是韩新乐'
+landing-title: '您好，欢迎访问我的博客'
 description: null
 image: null
 author: null

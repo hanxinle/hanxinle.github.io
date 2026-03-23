@@ -1,7 +1,7 @@
 ---
 layout: page
 title: 关于
-description: 关于韩新乐
+description: 博主信息
 image: assets/images/pic02.jpg
 show_tile: true
 nav-menu: true
@@ -9,7 +9,7 @@ nav-menu: true
 
 # 关于我
 
-韩新乐，Lex，一个程序员，深圳市。
+韩新乐，Lex，程序员，现居深圳市。
 
 ## 技术栈
 
