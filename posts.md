@@ -10,15 +10,27 @@ nav-menu: true
 <div class="inner">
 <header class="major">
 <h1>我的技术文章</h1>
-<p>共 {{ site.posts.size }} 篇文章，记录学习与工作中的技术心得</p>
+<p>共 {{ site.posts | where_exp: "post", "post.categories != 'photography'" | size }} 篇文章，记录学习与工作中的技术心得</p>
 </header>
 
 <!-- 标签筛选 -->
 <h2 id="tags">🏷️ 标签</h2>
 <div class="posts" id="tag-filters">
 <button class="button small active" data-filter="all">全部</button>
-{% assign tags = site.posts | map: "tags" | uniq | compact | sort %}
-{% for tag in tags %}
+{% assign tech_tags = "" | split: "" %}
+{% for post in site.posts %}
+  {% unless post.categories contains "photography" %}
+    {% if post.tags %}
+      {% for tag in post.tags %}
+        {% unless tech_tags contains tag %}
+          {% assign tech_tags = tech_tags | push: tag %}
+        {% endunless %}
+      {% endfor %}
+    {% endif %}
+  {% endunless %}
+{% endfor %}
+{% assign tech_tags = tech_tags | sort %}
+{% for tag in tech_tags %}
 <button class="button small" data-filter="{{ tag | slugify }}">{{ tag }}</button>
 {% endfor %}
 </div>
@@ -29,9 +41,10 @@ nav-menu: true
 <h2 id="all-posts">📝 所有文章</h2>
 <div class="posts" id="posts-list">
 {% for post in site.posts %}
+  {% unless post.categories contains "photography" %}
 <article data-tags="{% for tag in post.tags %}{{ tag | slugify }} {% endfor %}">
 <header>
-<h3><a href="{{ post.url | absolute_url }}">{{ post.title }}</a></h3>
+<h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
 <p class="meta">
 <time>{{ post.date | date: "%Y-%m-%d" }}</time>
 {% if post.tags %} | 标签：
@@ -42,6 +55,7 @@ nav-menu: true
 </p>
 </header>
 </article>
+  {% endunless %}
 {% endfor %}
 </div>
 

@@ -3,6 +3,7 @@ layout: post
 title: Ubuntu/Winodws 开发环境打点备忘
 date: 2023-06-19 16:59:15
 categories:
+- 技术
 - 编程语言
 tags:
 - 工具

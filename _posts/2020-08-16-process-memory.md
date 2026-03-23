@@ -2,6 +2,8 @@
 layout: post
 title: 程序的内存布局
 date: 2020-08-16 23:02:04
+categories:
+- 技术
 tags:
 - gcc/gdb
 - Linux

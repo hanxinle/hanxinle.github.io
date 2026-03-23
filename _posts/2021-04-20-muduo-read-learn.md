@@ -3,6 +3,8 @@ layout: post
 title: 《Linux 多线程服务端编程》阅读与实践（1）
 date: 2021-04-20 15:31:29
 cover: book.jpg
+categories:
+- 技术
 tags:
 - 网络编程
 - 多线程

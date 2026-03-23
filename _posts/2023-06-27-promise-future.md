@@ -3,6 +3,7 @@ layout: post
 title: C++ 特性之 promise/future 示例
 date: 2023-06-27 19:26:49
 categories:
+- 技术
 - 编程语言
 tags:
 - C++

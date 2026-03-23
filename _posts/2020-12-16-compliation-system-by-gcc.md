@@ -2,6 +2,8 @@
 layout: post
 title: 借助 gcc 理解编译系统（compilation system）
 date: 2020-12-16 23:01:48
+categories:
+- 技术
 tags:
 - gcc/gdb
 ---

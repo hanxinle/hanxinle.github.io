@@ -23,14 +23,9 @@
 			<h1>{{ page.title }}</h1>
 			<p class="meta">
 				<time>{{ page.date | date: "%Y-%m-%d" }}</time>
-				{% if page.categories %} | 分类：
-					{% for cat in page.categories %}
-						<a href="{{ "" | absolute_url }}/categories/#{{ cat | slugify }}">{{ cat }}</a>
-					{% endfor %}
-				{% endif %}
 				{% if page.tags %} | 标签：
 					{% for tag in page.tags %}
-						<a href="{{ "" | absolute_url }}/tags/#{{ tag | slugify }}">{{ tag }}</a>
+						<span>{{ tag }}</span>
 					{% endfor %}
 				{% endif %}
 			</p>
@@ -41,16 +36,20 @@
 		<!-- 上一篇/下一篇 -->
 		<nav class="pagination">
 			{% if page.previous %}
-			<a href="{{ page.previous.url | absolute_url }}" class="button small">← {{ page.previous.title }}</a>
+			<a href="{{ page.previous.url | relative_url }}" class="button small">← {{ page.previous.title }}</a>
 			{% endif %}
 			{% if page.next %}
-			<a href="{{ page.next.url | absolute_url }}" class="button small">{{ page.next.title }} →</a>
+			<a href="{{ page.next.url | relative_url }}" class="button small">{{ page.next.title }} →</a>
 			{% endif %}
 		</nav>
 		
 		<!-- 返回列表 -->
 		<div style="margin-top: 20px;">
-			<a href="{{ "" | absolute_url }}/all_posts/" class="button small">← 返回所有文章</a>
+			{% if page.categories contains 'photography' %}
+			<a href="{{ "/photography/" | relative_url }}" class="button small">← 返回摄影作品</a>
+			{% else %}
+			<a href="{{ "/posts/" | relative_url }}" class="button small">← 返回技术文章</a>
+			{% endif %}
 		</div>
 	</div>
 </section>

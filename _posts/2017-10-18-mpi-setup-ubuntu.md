@@ -3,6 +3,7 @@ layout: post
 title: MPI集群配置和mxnet分布式训练
 date: 2017-10-18 20:36:43
 categories:
+- 技术
 - 编程语言
 tags:
 - mpich

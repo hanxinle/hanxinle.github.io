@@ -13,6 +13,8 @@ zip_code:
 country:
 phone:
 
+future: true
+
 # homepage tiles
 tiles-source: pages # accepts "posts" or "pages"
 tiles-count: 6
@@ -41,4 +43,5 @@ exclude:
 - "*.gemspec"
 - LICENSE.md
 - CONTRIBUTING.md
-- README.md 
+- README.md
+- _backup_hexo_20260322_233349/
