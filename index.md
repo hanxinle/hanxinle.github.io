@@ -1,7 +1,7 @@
 ---
 layout: home
 title: 首页
-landing-title: '您好，欢迎访问我的博客'
+landing-title: '您好，欢迎访问'
 description: null
 image: null
 author: null
