@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<!--
+	Forty by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+
+{% include head.html %}
+
+<body>
+
+    {% include header.html %} 
+    
+    
+<!-- Main -->
+<div id="main" class="alt">
+
+<!-- One -->
+<section id="one">
+	<div class="inner">
+		<header class="major">
+			<h1>{{ page.title }}</h1>
+			<p class="meta">
+				<time>{{ page.date | date: "%Y-%m-%d" }}</time>
+				{% if page.categories %} | 分类：
+					{% for cat in page.categories %}
+						<a href="{{ "" | absolute_url }}/categories/#{{ cat | slugify }}">{{ cat }}</a>
+					{% endfor %}
+				{% endif %}
+				{% if page.tags %} | 标签：
+					{% for tag in page.tags %}
+						<a href="{{ "" | absolute_url }}/tags/#{{ tag | slugify }}">{{ tag }}</a>
+					{% endfor %}
+				{% endif %}
+			</p>
+		</header>
+		{% if page.image %}<span class="image main"><img src="{{ site.baseurl }}/{{ page.image }}" alt="" /></span>{% endif %}
+		{{ content }}
+		
+		<!-- 上一篇/下一篇 -->
+		<nav class="pagination">
+			{% if page.previous %}
+			<a href="{{ page.previous.url | absolute_url }}" class="button small">← {{ page.previous.title }}</a>
+			{% endif %}
+			{% if page.next %}
+			<a href="{{ page.next.url | absolute_url }}" class="button small">{{ page.next.title }} →</a>
+			{% endif %}
+		</nav>
+		
+		<!-- 返回列表 -->
+		<div style="margin-top: 20px;">
+			<a href="{{ "" | absolute_url }}/all_posts/" class="button small">← 返回所有文章</a>
+		</div>
+	</div>
+</section>
+
+</div>
+
+    {% include footer.html %}
+
+</body>
+
+</html>

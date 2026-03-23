@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(export PATH=\"/c/Ruby33-x64/bin:$PATH\")",
+      "Bash(gem install:*)",
+      "Bash(bundle install:*)",
+      "Bash(bundle config:*)"
+    ]
+  }
+}

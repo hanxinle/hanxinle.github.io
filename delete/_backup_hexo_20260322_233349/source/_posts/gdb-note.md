@@ -1,0 +1,33 @@
+---
+title: gdb 使用
+date: 2020-10-16 23:01:18
+tags:
+- gcc/gdb
+---
+
+# 参考资料
+
+1. [ A collection of gdb tips]([hanxinle/100-gdb-tips: A collection of gdb tips. 100 maybe just mean many here. (github.com)](https://github.com/hanxinle/100-gdb-tips))
+2. [A collection of gcc tips](https://github.com/hellogcc/100-gcc-tips)
+
+# 常用命令
+
+<!-- more -->
+![](gdb1.png)
+![](gdb2.png)
+![](gdb3.png)
+
+# 补充用法
+
+## 1 设置运行参数.
+
+```bash
+set args <your args>
+```
+
+*c*会运行到程序结束，*finish* 跳出 *step over(快捷键 s)* 进入的函数.  
+
+## 2 vim 编辑代码
+
+终端中输入 ```export EDITOR=vim```  后在 gdb 中输入 *edit* 即可在 vim 中打开文件.
+

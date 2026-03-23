@@ -1,0 +1,27 @@
+{% if 'posts' == site.tiles-source %}
+    {% assign tiles = site.posts %}
+{% elsif 'pages' == site.tiles-source %}
+    {% assign tiles = site.html_pages | where_exp: "item", "item.show_tile != false" %}
+{% endif %}
+<section id="one" class="tiles">
+  {% assign ordered_tiles = "" | split: "," %}
+  {% assign tile_titles = "我的技术文章,我的摄影,简历,项目,论文,关于" | split: "," %}
+  {% for title in tile_titles %}
+    {% for tile in tiles %}
+      {% if tile.title == title %}
+        {% assign ordered_tiles = ordered_tiles | push: tile %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+  {% for tile in ordered_tiles limit:site.tiles-count %}
+  <article>
+    <span class="image">
+      <img src="{{ tile.image }}" alt="{{ tile.title }}" />
+    </span>
+    <header class="major">
+      <h3><a href="{{ tile.url  | relative_url }}" class="link">{{ tile.title }}</a></h3>
+      <p>{{ tile.description }}</p>
+    </header>
+  </article>
+  {% endfor %}
+</section>

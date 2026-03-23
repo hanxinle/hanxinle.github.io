@@ -1,0 +1,57 @@
+---
+title: Qt 开发随笔，不断更新ing
+date: 2023-01-27 20:31:02
+tags:
+- Qt
+---
+# 引言
+## 背景
+文章记录一些开发时候遇到的问题和解决方法。
+
+## 参考资料
+1. Qt Assistant（安装 Qt 时候选择安装，用于文档查询）
+<!-- more -->
+
+# 问题和解决方法
+
+1. Qt Design 设计的控件，编译工程后进行代码设计，代码补全方面不能正确识别控件对象。
+   解：VS2019 菜单栏选择“项目”-“重定目标解决方案”，接着菜单栏选择“项目”-“重新扫描解决方案”，后续只进行第 2 种操作即可在输入 ui 的时候自动列出 ui 持有的控件对象名。
+
+2. 如何添加图片文件，供 QIcon 或者 QImage 加载，像 vs 一样提供代码所在路径 "./1.png" 不成功。
+   解：新建资源文件，先添加 Prefix，填好后再向其中添加文件，文件是 picture 路径下的若干文件，代码中使用的路径值为 ":/imgs/picture/1.jpg" 及其它，代替 "./1.jpg".
+
+3. Clion 创建 Qt 工程无法编译的问题.
+
+   创建 Qt 工程时候可以指明 Qt CMake prefix path，如果这一步自己忘了做，那么在 *CMakeLists.txt* 中可以添加
+
+   ```
+   set(CMAKE_PREFIX_PATH "C:/Qt/Qt5.14.2/5.14.2/msvc2017" )
+   ```
+
+   ，这个时候依旧是编译不过的。在 "File-Setting-build,Execution,Deployment-CMake" 的 CMake options 中添加 
+
+   ```
+   DCMAKE_PREFIX_PATH=C:/Qt/Qt5.14.2/5.14.2/msvc2017
+   ```
+
+   保存设置。项目代码可以编译运行了。
+
+   参考文献点击[这个链接](https://www.cnblogs.com/citrus/p/15926004.html)。
+
+4.  Qt 工程添加 .ui 文件使其生效的方法
+
+   选择了工程，选择添加新项，在 Qt 类目下，最简单的方法是选择添加 *Qt Widgets Class*，这样添加后即包括了 .ui 文件，还包括了 .h 和 .cpp 文件。如果单独添加了 ui 文件，那么在编辑这个 ui 文件后使其生效的方法是使用 uic 命令，比如添加了 login.ui ，可以运行如下命令生成 ui_login 文件。
+
+   ```bash
+   uic login.ui -o ui_login.h
+   ```
+
+   然后在工程中添加类，同时会添加两个文件 logoin.h 和 login.cpp ，基类选择 QWidiget，login.h 头文件记得包含 ui_login.h 和 QWidget 文件，最后在 main 中生成 login 对象，调用 show 即可看到效果。
+
+   但是每次修改 login.ui 文件，都需要调用 uic 命令，为了方便编译，选择**工程- 属性-生成事件-生成前事件** 中命令行添加 *uic login.ui -o ui_login.h*就好。
+
+   
+   
+   刚刚测试了升级窗口部件，原来是设置后点击提升才有效果，接下来就可以在工程中添加刚刚设置的类，记得设置 Q_OBJECT 以及构造函数的编写，如果忘了写父类相关信息，会造成不显示等问题。
+   
+   
