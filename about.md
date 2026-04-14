@@ -2,7 +2,7 @@
 layout: page
 title: 关于
 description: 博主信息
-image: assets/images/pic02.jpg
+image: assets/images/about.jpg
 show_tile: true
 nav-menu: true
 ---

@@ -1,7 +1,7 @@
 ---
 layout: page
 title: 我的技术文章
-image: assets/images/pic11.jpg
+image: assets/images/tech-articles.png
 show_tile: true
 nav-menu: true
 ---

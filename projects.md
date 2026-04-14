@@ -2,7 +2,7 @@
 layout: page
 title: 项目
 description: 代表性项目与开源贡献
-image: assets/images/pic04.jpg
+image: assets/images/projects.png
 show_tile: true
 nav-menu: true
 ---
