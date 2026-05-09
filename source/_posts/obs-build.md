@@ -1,0 +1,46 @@
+---
+title: OBS 编译记录
+date: 2023-06-29 20:39:15
+tags:
+- OBS
+---
+
+OBS 的编译还是有陷阱的，这次编译出来留一个文档。
+
+<!-- more -->
+
+还是用以前下载的源码和依赖尝试编译，昨天晚上在这里搞了很久，今天上午发现了问题并且解决了问题，以下是记录。
+
+# 1 参考资料
+
+https://github.com/obsproject/obs-studio/wiki/Build-Instructions-For-Windows
+
+
+
+# 2 系统说明
+
+| 类目          | 信息                                       |
+| ------------- | ------------------------------------------ |
+| 源码          | 2019版                                     |
+| 编译工具      | vs2019                                     |
+| DepsPath      | I:/obs_2019/dependencies2019/win32/include |
+| QTDIR         | C:/Qt/Qt5.14.2/5.14.2/msvc2017             |
+| ENABLE_UI     | 勾选                                       |
+| BUILD_BROWSER | 不要勾选 （默认勾选的，要取消掉）          |
+
+
+
+# 3 编译过程的坑
+
+1. 如果系统中曾经配置了 prebuild 的 FFmpeg 并且添加到环境变量 Path 中，会导致编译过程中找不到 FFmpeg 相关的库，导致编译出现错误；
+2. 编译过程中记得去系统环境变量中找 Python 相关的环境 Anaconda，将它们全部删掉，我开始采用在其值后面添加 ---- 字符的方式注释掉，发现还是会对编译有干扰。后续我卸载了 Anaconda 并且删除掉这些环境变量。
+3. 编译过 WebRTC 的话会配置 depot_tools ，里面也有 Python 开发环境，记得在 Path 中删除。
+4. 以前安装在 C:/Python27 我没有删除，但在 Path 中删掉了这个值。
+
+# 4 总结
+
+没有这些陷阱，按照网上提供的编译帮助编译就可以了， 使用 cmake，注意 cmake 和  Visual Studio 的版本要求。生成工程后打开，按 F7 生成解决方案。
+
+生成的路径是 **<盘符>:\obs_2019\obs-studio\build_2019\rundir\Debug\bin\32bit**
+
+生成成功不能运行的话，右击 INSTALL - 仅用于项目 - 仅生成 INSTALL ，可在配置的 安装目录中发现软件，可进入 bin 路径启动验证功能。

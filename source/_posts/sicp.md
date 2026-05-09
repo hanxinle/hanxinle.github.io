@@ -1,0 +1,46 @@
+---
+title: SICP 相关
+date: 2023-02-23 10:00:37
+tags:
+- Lisp/Scheme
+---
+
+
+
+
+
+首先进行环境安装，其次记录重要信息提示。
+
+<!-- more -->
+
+# 环境配置
+
+## Ubuntu 下安装 MIT-Scheme
+
+下载链接是：
+
+这个软件当前不再支持 Windows ，需要在类 Linux 环境运行。
+
+## DrRacket+sicp package
+
+ 打开 DrRacket ，依次点击菜单 “File” - “Install Package”，输入 **sicp**，等待几分钟，可能需要网络加速器提高下载速度.
+
+安装结束后，可以在工作区域输入
+
+```scheme
+#lang sicp
+(inc 1)
+```
+
+## Visual Studio Code
+
+安装两个插件，分别是 Magic Racket 和 AyaSEditor，后者是格式化插件，前者是用于编译运行的插件（前提还是 DrRacket 要安装好 sicp package），安装 MR 插件后要在这个插件的设置中，将 Racket.exe 的完整路径添加到 *Racket Path* 中，默认的位置是 *C:\Program Files\Racket\Racket.exe* 。
+
+测试安装效果，新建文件 hello_sicp.rkt，代码如下
+
+```scheme
+#lang sicp
+(+ 12 12)
+```
+
+点击右上角Load File 按钮或者 Run File 按钮，命令行页面会输出 24，表示安装成功。
