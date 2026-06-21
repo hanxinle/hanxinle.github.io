@@ -6,7 +6,7 @@
   <link href="https://hanxinle.github.io/atom.xml" rel="self"/>
   
   <link href="https://hanxinle.github.io/"/>
-  <updated>2026-06-08T09:29:24.917Z</updated>
+  <updated>2026-06-21T12:30:25.298Z</updated>
   <id>https://hanxinle.github.io/</id>
   
   <author>
@@ -15,6 +15,25 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Claude Code 使用备注</title>
+    <link href="https://hanxinle.github.io/2026/06/21/20260621-claude-code-2/"/>
+    <id>https://hanxinle.github.io/2026/06/21/20260621-claude-code-2/</id>
+    <published>2026-06-21T12:30:12.000Z</published>
+    <updated>2026-06-21T12:30:25.298Z</updated>
+    
+    <content type="html"><![CDATA[<p>记录一下 Claude Code 里一个状态栏插件的安装和使用。<br><span id="more"></span></p><h2 id="安装-claude-hud"><a href="#安装-claude-hud" class="headerlink" title="安装 claude-hud"></a>安装 claude-hud</h2><p>在 Claude Code 里依次执行以下命令：</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/plugin marketplace add jarrodwatts/claude-hud</span><br><span class="line">/plugin install claude-hud</span><br><span class="line">/reload-plugins</span><br></pre></td></tr></table></figure><p>安装完成后，运行 <code>/claude-hud:setup</code> 进行初始化配置。</p><h2 id="这个插件的作用"><a href="#这个插件的作用" class="headerlink" title="这个插件的作用"></a>这个插件的作用</h2><p><code>claude-hud</code> 是一个 Claude Code 的状态栏（statusline / HUD）插件，作用是在 Claude Code 界面底部显示当前状态信息，例如上下文占用、模型信息、任务进度等。它能让使用 Agent 时对当前会话的资源消耗和运行状态有更直观的感知，避免在长时间任务里对进度一无所知。</p><p>后续如果想调整显示内容，可以用 <code>/claude-hud:configure</code> 进行配置。</p>]]></content>
+    
+    
+    <summary type="html">&lt;p&gt;记录一下 Claude Code 里一个状态栏插件的安装和使用。&lt;br&gt;&lt;/p&gt;</summary>
+    
+    
+    
+    
+    <category term="AI Agent" scheme="https://hanxinle.github.io/tags/AI-Agent/"/>
+    
+  </entry>
   
   <entry>
     <title>Vibe Coding 接触下来的一点体会</title>
@@ -393,25 +412,6 @@
     
     
     <category term="SRS" scheme="https://hanxinle.github.io/tags/SRS/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>技术的简单性、累积性和组合性</title>
-    <link href="https://hanxinle.github.io/2021/04/21/tech-talk/"/>
-    <id>https://hanxinle.github.io/2021/04/21/tech-talk/</id>
-    <published>2021-04-21T13:09:16.000Z</published>
-    <updated>2026-05-09T07:29:36.931Z</updated>
-    
-    <content type="html"><![CDATA[<p>刚刚在公众号“道哥的黑板报”，看了道哥最新的文章《如何看待一项技术：技术的本质》，文中的观点与我最近的感悟不谋而合。<span id="more"></span>但道哥思考得更深刻，得出的结论更加广博。</p><p>技术是简单的，不是复杂的。技术可以是新的生产力，也可以是新的体验。新的生产力的表现在于提升了生产效率，解决了问题，这是实践主义和实用主义者应当关心的内容。新的体验是理论研究的范畴，新的理论可以和生产力和解决问题没有关系，一种可能的情况是，提供了新的解决问题的思路，但暂时还没有体现出生产力。</p><p>技术很简单，道哥把技术的要素定义为：效率、成本、通用性、安全。其中效率是技术的主要价值目标，是一项新技术的出发点和根本。技术提升了效率，获得了新的能力。效率提升后，技术还需要进一步解决成本问题、通用性问题、安全问题，才能够扩大影响力和普及程度，形成生生不息的良性循环，进而改变世界。</p><p>道哥以工业革命为例，简述了技术诞生-改进-改变世界的全过程。纵观每一次影响世界的技术革命，我们几乎都能看到类似的生命周期，一项新技术诞生之初，先解决效率问题，再依次解决成本、通用性和安全问题，最后新技术走向普及。</p><p>并且道哥给出了技术人员可以怎么做：“通过「结构与组合」的方式。如果玩过一款叫「文明」的游戏，就会理解「科技树」这个概念。科技树非常形象的表达了，一项新的科技的诞生，是以其他已有科技为基础的。那么技术的创造方式就在于，通过不同现有技术之间的组合，搭建出一种新的结构，去解决一个特定的问题。因此从某种意义上来说，技术即解决方案。</p><p>这里面的玄妙之处，在于如何搭建出一种的结构。不同的人会选用不同的原子技术，来搭建出不同的结构。而结构搭建的方式，则体现了各种各样的奇思妙想，或者背后有着某种理论指导。这是充满了知识和创意的地方。也是通过这样的结构搭建，才有效解决了效率、成本、通用性和安全的问题。因此原子技术很重要，结构也很重要。技术的创造方式，就是结构与组合。瓦特在改进纽科门蒸汽机时，做的两项设计改进：分离式的冷凝器，以及曲柄传动，就是典型的结构与组合的再设计，进而解决了纽科门蒸汽机的成本和通用性的问题。</p><p>所有的技术扒开来看，都不神秘，都可以用很简单的原理和语言来描绘。”</p><p>我的经验是，在结构和组合前，一定要先建立一个整体的大局观，然后从最有正反馈的地方着手，即先跑起来，然后边积累边改进，改进的具体方法就是结构和组合的方式，即注意整体中短板部分的改进。</p><p>这样一点点积累，一个点只有组合为一个部件才是有生命力的，而改进的对象就是一个个部件。其次才是部件的组合，道哥讲述了结构性和组合性，我则发现最适合自己的是整体性-累积性，累积到部件再和道哥的理论研究结合起来，最大效率吸收旧技术的精华，同时催生新技术，迸发新技术的能量。</p>]]></content>
-    
-    
-    <summary type="html">&lt;p&gt;刚刚在公众号“道哥的黑板报”，看了道哥最新的文章《如何看待一项技术：技术的本质》，文中的观点与我最近的感悟不谋而合。&lt;/p&gt;</summary>
-    
-    
-    
-    
-    <category term="技术思考" scheme="https://hanxinle.github.io/tags/%E6%8A%80%E6%9C%AF%E6%80%9D%E8%80%83/"/>
     
   </entry>
   

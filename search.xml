@@ -1745,4 +1745,18 @@ return 0;
         <tag>AI Agent</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Claude Code 使用备注</title>
+    <url>/2026/06/21/20260621-claude-code-2/</url>
+    <content><![CDATA[<p>记录一下 Claude Code 里一个状态栏插件的安装和使用。<br><span id="more"></span></p>
+<h2 id="安装-claude-hud"><a href="#安装-claude-hud" class="headerlink" title="安装 claude-hud"></a>安装 claude-hud</h2><p>在 Claude Code 里依次执行以下命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/plugin marketplace add jarrodwatts/claude-hud</span><br><span class="line">/plugin install claude-hud</span><br><span class="line">/reload-plugins</span><br></pre></td></tr></table></figure>
+<p>安装完成后，运行 <code>/claude-hud:setup</code> 进行初始化配置。</p>
+<h2 id="这个插件的作用"><a href="#这个插件的作用" class="headerlink" title="这个插件的作用"></a>这个插件的作用</h2><p><code>claude-hud</code> 是一个 Claude Code 的状态栏（statusline / HUD）插件，作用是在 Claude Code 界面底部显示当前状态信息，例如上下文占用、模型信息、任务进度等。它能让使用 Agent 时对当前会话的资源消耗和运行状态有更直观的感知，避免在长时间任务里对进度一无所知。</p>
+<p>后续如果想调整显示内容，可以用 <code>/claude-hud:configure</code> 进行配置。</p>
+]]></content>
+      <tags>
+        <tag>AI Agent</tag>
+      </tags>
+  </entry>
 </search>
