@@ -1845,7 +1845,6 @@ return 0;
 <li><strong>定位 bug 比写代码更重要</strong>。音频静音的问题，如果没有日志确认 <code>send_packet</code> 返回 <code>AVERROR_EOF</code>，很容易在 <code>QAudioSink</code> 的状态切换上绕圈子。</li>
 <li><strong>对称性检查</strong>。音视频解码器在很多处理上是镜像的，一处写了 <code>flush_buffers</code>，另一处也要检查。</li>
 <li><strong>资源生命周期要加锁</strong>。跨线程的 <code>QIODevice</code> 指针，reset 时很容易变成悬空指针。</li>
-<li><strong>Git 历史要干净</strong>。因为之前提交里带了 <code>Co-Authored-By: Claude</code>，仓库改为 public 后 contributors 里会显示 Claude，所以用 <code>git filter-branch</code> 把历史里的这些标记都清掉了。</li>
 </ul>
 <h2 id="后续可做的事"><a href="#后续可做的事" class="headerlink" title="后续可做的事"></a>后续可做的事</h2><p>这个 demo 目前只是简单播放器，还有很多可以扩展的方向：</p>
 <ul>
