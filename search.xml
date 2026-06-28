@@ -318,7 +318,7 @@
 </div>
 <h3 id="变化的根本原因"><a href="#变化的根本原因" class="headerlink" title="变化的根本原因"></a>变化的根本原因</h3><ol>
 <li><strong>指针变为 8 字节</strong>：为了支持 64 位地址空间（2^64 = 16EB 寻址能力）</li>
-<li><strong>long 变为 8 字节</strong>（仅 Linux/macOS）：Windows 采用 LLP64 模型，long 保持 4 字节；Linux/macOS 采用 LP64 模型，long 变为 8 字节</li>
+<li><strong>long 变为 8 字节</strong>（仅 Windows）：Windows 采用 LLP64 模型，long 保持 4 字节；Linux/macOS 采用 LP64 模型，long 变为 8 字节</li>
 </ol>
 <h3 id="LP64-vs-LLP64-模型"><a href="#LP64-vs-LLP64-模型" class="headerlink" title="LP64 vs LLP64 模型"></a>LP64 vs LLP64 模型</h3><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">LP64 (Linux, macOS, BSD):</span><br><span class="line">- long (Long) = 64-bit</span><br><span class="line">- pointer = 64-bit</span><br><span class="line"></span><br><span class="line">LLP64 (Windows):</span><br><span class="line">- long long = 64-bit  </span><br><span class="line">- long = 32-bit (保持兼容)</span><br><span class="line">- pointer = 64-bit</span><br></pre></td></tr></table></figure>
 <h3 id="代码示例-1"><a href="#代码示例-1" class="headerlink" title="代码示例"></a>代码示例</h3><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdint&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;sizeof(int): &quot;</span> &lt;&lt; <span class="built_in">sizeof</span>(<span class="type">int</span>) &lt;&lt; std::endl;           <span class="comment">// 4</span></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;sizeof(long): &quot;</span> &lt;&lt; <span class="built_in">sizeof</span>(<span class="type">long</span>) &lt;&lt; std::endl;        <span class="comment">// 4(Win) / 8(Linux)</span></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;sizeof(long long): &quot;</span> &lt;&lt; <span class="built_in">sizeof</span>(<span class="type">long</span> <span class="type">long</span>) &lt;&lt; std::endl; <span class="comment">// 8</span></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;sizeof(void*): &quot;</span> &lt;&lt; <span class="built_in">sizeof</span>(<span class="type">void</span>*) &lt;&lt; std::endl;       <span class="comment">// 4 / 8</span></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;sizeof(size_t): &quot;</span> &lt;&lt; <span class="built_in">sizeof</span>(<span class="type">size_t</span>) &lt;&lt; std::endl;     <span class="comment">// 4 / 8</span></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;sizeof(ptrdiff_t): &quot;</span> &lt;&lt; <span class="built_in">sizeof</span>(<span class="type">ptrdiff_t</span>) &lt;&lt; std::endl;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 使用固定宽度整数避免移植问题</span></span><br><span class="line">    <span class="type">int64_t</span> i64 = <span class="number">123</span>;     <span class="comment">// 始终 8 字节</span></span><br><span class="line">    <span class="type">int32_t</span> i32 = <span class="number">123</span>;     <span class="comment">// 始终 4 字节</span></span><br><span class="line">    <span class="type">uint64_t</span> u64 = <span class="number">456</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// size_t 是最安全的数组索引类型</span></span><br><span class="line">    <span class="function">std::vector&lt;<span class="type">int</span>&gt; <span class="title">vec</span><span class="params">(<span class="number">10</span>)</span></span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">size_t</span> i = <span class="number">0</span>; i &lt; vec.<span class="built_in">size</span>(); ++i) &#123;&#125;  <span class="comment">// 避免警告</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -425,57 +425,6 @@
 ]]></content>
       <tags>
         <tag>C++</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>给 Xinle_Player 加上播放进度条，以及一次音频 seek 静音的排查</title>
-    <url>/2026/06/28/2026-06-28-xinle-player-progress/</url>
-    <content><![CDATA[<p>最近继续在 <code>demos/PLAYER/Xinle_Player</code> 这个 Qt6 + FFmpeg + OpenGL 的本地播放器 demo 上练手。目标是加一个播放进度条，支持拖动跳转。功能听起来简单，实际做下来却踩了几个值得一记的坑，尤其是拖动后音频消失的问题。</p>
-<span id="more"></span>
-<h2 id="1-进度条功能"><a href="#1-进度条功能" class="headerlink" title="1. 进度条功能"></a>1. 进度条功能</h2><p>需求很直接：</p>
-<ul>
-<li>播放时进度条跟随当前时间走动。</li>
-<li>显示 <code>当前时间 / 总时长</code>。</li>
-<li>用户可以拖动进度条跳转。</li>
-</ul>
-<p>实现上分三块：</p>
-<p><strong>UI 层</strong>：在控制栏加入一个 <code>QSlider</code> 和一个 <code>QLabel</code>，放在播放按钮右侧。拖动时通过 <code>sliderPressed</code> / <code>sliderReleased</code> / <code>sliderMoved</code> 三个信号控制交互，避免拖动过程中进度条被解码线程反向刷新导致抖动。</p>
-<p><strong>位置跟踪</strong>：<code>VideoDecoder</code> 在解码每一帧视频时，根据 <code>AVFrame-&gt;pts</code> 和视频流 <code>time_base</code> 计算当前播放位置 <code>currentPosition()</code>，主线程按帧率定时读取并更新进度条。</p>
-<p><strong>跳转</strong>：用户释放滑块时，调用 <code>VideoDecoder::seek(seconds)</code>，解码线程在 <code>run()</code> 里执行 <code>avformat_seek_file</code>、清空视频帧队列、flush 音视频解码器，然后从目标位置继续解码。</p>
-<h2 id="2-拖动后没有声音的-bug"><a href="#2-拖动后没有声音的-bug" class="headerlink" title="2. 拖动后没有声音的 bug"></a>2. 拖动后没有声音的 bug</h2><p>进度条加上后，画面能跳转，但<strong>拖动后音频没了</strong>。一开始怀疑是 <code>QAudioSink</code> 的 reset 时机不对，尝试把音频 reset 移到主线程、加互斥锁保护，但始终没有声音。</p>
-<p>加日志后发现，seek 之后音频包还在被读取，但 <code>avcodec_send_packet</code> 一直返回 <code>-541478725</code>，也就是 <code>AVERROR_EOF</code>。原因是 <code>flushAudioDecoder()</code> 里只做了 drain 解码器（发 <code>nullptr</code> 包把剩余帧取出来），但<strong>没有调用 <code>avcodec_flush_buffers()</code></strong>。解码器被 drain 后处于 EOF 状态，不重置就没法再接收新包。</p>
-<p>修复也很简单：</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">VideoDecoder::flushAudioDecoder</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!m_audioCodecCtx) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">avcodec_send_packet</span>(m_audioCodecCtx, <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="keyword">while</span> (<span class="built_in">avcodec_receive_frame</span>(m_audioCodecCtx, m_audioFrame) == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">av_frame_unref</span>(m_audioFrame);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 关键：清空解码器内部状态，否则 seek 后 send_packet 返回 AVERROR_EOF。</span></span><br><span class="line">    <span class="built_in">avcodec_flush_buffers</span>(m_audioCodecCtx);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (m_swrCtx) &#123;</span><br><span class="line">        <span class="built_in">swr_init</span>(m_swrCtx);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><code>flushVideoDecoder()</code> 之前已经写了 <code>avcodec_flush_buffers()</code>，音频这边漏掉了。这个教训就是：<strong>FFmpeg 的音视频解码器 API 是对称的，处理视频时想到的步骤，音频也要同步做。</strong></p>
-<h2 id="3-音频设备的互斥访问"><a href="#3-音频设备的互斥访问" class="headerlink" title="3. 音频设备的互斥访问"></a>3. 音频设备的互斥访问</h2><p>在尝试 reset 音频的过程中，还遇到过一次崩溃：<code>m_audioIODevice-&gt;write()</code> 时访问冲突。原因是主线程调用 <code>QAudioSink::reset()</code> 会重建/释放 <code>QIODevice</code>，而解码子线程可能正拿着旧指针写数据。</p>
-<p>解决办法是给所有 <code>QAudioSink</code> / <code>QIODevice</code> 操作加一把锁 <code>m_audioMutex</code>：</p>
-<ul>
-<li><code>initAudioOutput()</code></li>
-<li><code>stopAudioOutput()</code></li>
-<li><code>play()</code> / <code>pause()</code> 里的 <code>resume()</code> / <code>suspend()</code></li>
-<li><code>decodeAudioPacket()</code> 里的 <code>write()</code></li>
-</ul>
-<p>保证 reset/resume/write 不会并发执行，子线程写音频时设备不会被突然释放。</p>
-<h2 id="4-启动封面与窗口标题"><a href="#4-启动封面与窗口标题" class="headerlink" title="4. 启动封面与窗口标题"></a>4. 启动封面与窗口标题</h2><p>顺手把启动体验也调整了一下：</p>
-<ul>
-<li>窗口标题从 <code>OpenGL + FFmpeg Player</code> 改成 <code>Xinle Player</code>。</li>
-<li><code>GLWidget</code> 在没有视频帧时不再清屏成蓝色，而是加载 <code>cover.jpg</code> 作为启动背景。图片通过 Qt 资源文件 <code>player.qrc</code> 打包进可执行文件，运行时不需要依赖外部文件。</li>
-</ul>
-<p>同时把测试时加的”我的特效”从 <code>effects.json</code> 和对应的 <code>my_effect.frag</code> 中清理掉了。</p>
-<h2 id="5-一点工程反思"><a href="#5-一点工程反思" class="headerlink" title="5. 一点工程反思"></a>5. 一点工程反思</h2><p>这次小功能用 AI Agent（Claude Code）配合完成，有几个体会：</p>
-<ul>
-<li><strong>定位 bug 比写代码更重要</strong>。音频静音的问题，如果没有日志确认 <code>send_packet</code> 返回 <code>AVERROR_EOF</code>，很容易在 <code>QAudioSink</code> 的状态切换上绕圈子。</li>
-<li><strong>对称性检查</strong>。音视频解码器在很多处理上是镜像的，一处写了 <code>flush_buffers</code>，另一处也要检查。</li>
-<li><strong>资源生命周期要加锁</strong>。跨线程的 <code>QIODevice</code> 指针，reset 时很容易变成悬空指针。</li>
-<li><strong>Git 历史要干净</strong>。之前提交里带了 <code>Co-Authored-By: Claude</code>，仓库改成 public 后 contributors 里会显示 Claude，所以用 <code>filter-branch</code> 把历史里的这些标记都清掉了。</li>
-</ul>
-<p>进度条功能现在已经能稳定工作，拖动跳转后音视频都能继续播放。</p>
-]]></content>
-      <tags>
-        <tag>C++</tag>
-        <tag>Qt</tag>
-        <tag>FFmpeg</tag>
-        <tag>AI Agent</tag>
       </tags>
   </entry>
   <entry>
