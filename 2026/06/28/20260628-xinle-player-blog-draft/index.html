@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"hanxinle.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="项目背景Xinle_Player 是一个独立的本地视频播放器演示工程，参考 Olive 0.1 音视频处理与 GLSL 特效管线的思路，针对 Qt 6.9.1 + MSVC 2022 + OpenGL 3.3 Core Profile 环境重新实现。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Xinle_Player：一个 Qt6 + FFmpeg + OpenGL 播放器与特效系统的演进">
+<meta property="og:url" content="https://hanxinle.github.io/2026/06/28/20260628-xinle-player-blog-draft/index.html">
+<meta property="og:site_name" content="科学学习与工程笔记">
+<meta property="og:description" content="项目背景Xinle_Player 是一个独立的本地视频播放器演示工程，参考 Olive 0.1 音视频处理与 GLSL 特效管线的思路，针对 Qt 6.9.1 + MSVC 2022 + OpenGL 3.3 Core Profile 环境重新实现。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-06-28T03:52:14.000Z">
+<meta property="article:modified_time" content="2026-06-28T03:57:08.862Z">
+<meta property="article:author" content="Lex">
+<meta property="article:tag" content="Qt">
+<meta property="article:tag" content="FFmpeg">
+<meta property="article:tag" content="OpenGL">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://hanxinle.github.io/2026/06/28/20260628-xinle-player-blog-draft/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Xinle_Player：一个 Qt6 + FFmpeg + OpenGL 播放器与特效系统的演进 | 科学学习与工程笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="科学学习与工程笔记" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">科学学习与工程笔记</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">动脑动手</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/hanxinle" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/06/28/20260628-xinle-player-blog-draft/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Lex">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Xinle_Player：一个 Qt6 + FFmpeg + OpenGL 播放器与特效系统的演进
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-06-28 11:52:14 / 修改时间：11:57:08" itemprop="dateCreated datePublished" datetime="2026-06-28T11:52:14+08:00">2026-06-28</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="项目背景"><a href="#项目背景" class="headerlink" title="项目背景"></a>项目背景</h2><p><a target="_blank" rel="noopener" href="https://github.com/hanxinle/Xinle_Player">Xinle_Player</a> 是一个独立的本地视频播放器演示工程，参考 Olive 0.1 音视频处理与 GLSL 特效管线的思路，针对 <strong>Qt 6.9.1 + MSVC 2022 + OpenGL 3.3 Core Profile</strong> 环境重新实现。</p>
+<span id="more"></span>
+<p>与参考项目的主要差异：</p>
+<ul>
+<li>参考项目使用 Qt 5.12.1 + MSVC 2015 + 传统 OpenGL（<code>glBegin/glEnd</code>、固定管线、内置 shader 变量）。</li>
+<li>Xinle_Player 使用 Qt 6.9.1 + MSVC 2022 + 现代 OpenGL Core Profile（VAO/VBO、<code>QOpenGLShaderProgram</code>、显式 vertex attribute）。</li>
+<li>音频输出从 <code>QAudioOutput</code>（Qt 5）改为 <code>QAudioSink</code>（Qt 6）。</li>
+<li>GLSL shader 语法从 <code>#version 120</code> 风格迁移到 <code>#version 330 core</code>。</li>
+</ul>
+<p>这个 demo 的定位是学习和沉淀：把 Olive 0.1 工程里关于音视频解码、OpenGL 渲染、特效管线的思想，用现代 Qt 和 OpenGL 重新实现一遍，方便理解和扩展。</p>
+<h2 id="技术栈与项目结构"><a href="#技术栈与项目结构" class="headerlink" title="技术栈与项目结构"></a>技术栈与项目结构</h2><p>技术栈：</p>
+<ul>
+<li>Qt 6.9.1 + MSVC 2022</li>
+<li>FFmpeg 7.x</li>
+<li>OpenGL 3.3 Core Profile</li>
+<li>GLSL 330 core</li>
+</ul>
+<p>项目结构：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Xinle_Player/</span><br><span class="line">├── Xinle_Player.vcxproj    # Visual Studio 工程文件</span><br><span class="line">├── bin/                    # 编译输出（.exe、.dll、.pdb）</span><br><span class="line">├── include/                # 第三方头文件</span><br><span class="line">├── lib/                    # 第三方导入库</span><br><span class="line">├── src/                    # 源码</span><br><span class="line">│   ├── main.cpp</span><br><span class="line">│   ├── player.h/.cpp/.ui   # 主窗口：UI 布局、播放控制、特效选择</span><br><span class="line">│   ├── glwidget.h/.cpp     # OpenGL 视频显示控件</span><br><span class="line">│   ├── videodecoder.h/.cpp # FFmpeg 音视频解码器</span><br><span class="line">│   ├── effect.h/.cpp       # 通用 GLSL 特效封装</span><br><span class="line">│   └── effectregistry.h/.cpp</span><br><span class="line">└── res/                    # Qt 资源</span><br><span class="line">    ├── player.qrc</span><br><span class="line">    ├── effects/effects.json</span><br><span class="line">    └── shaders/*.frag</span><br></pre></td></tr></table></figure>
+<p>核心模块职责：</p>
+<ul>
+<li><code>VideoDecoder</code>：继承 <code>QThread</code>，在独立线程中循环读取 FFmpeg 数据包，解码视频帧压入队列，音频直接写入 <code>QAudioSink</code>。</li>
+<li><code>GLWidget</code>：继承 <code>QOpenGLWidget</code>，负责上传 RGBA 视频帧到纹理、渲染到全屏四边形、加载并执行 GLSL 特效。</li>
+<li><code>Player</code>：主窗口，组合 <code>GLWidget</code> 和控制按钮、进度条、特效下拉框。</li>
+</ul>
+<h2 id="添加播放进度条"><a href="#添加播放进度条" class="headerlink" title="添加播放进度条"></a>添加播放进度条</h2><p>播放器最初只有”打开文件”和”播放/暂停”两个按钮。为了让体验更像一个真正的播放器，加上了进度条和时间标签。</p>
+<p>实现要点：</p>
+<ol>
+<li><p><strong>UI 层</strong>：在控制栏加入 <code>QSlider</code> 和 <code>QLabel</code>。</p>
+<ul>
+<li><code>QSlider</code> 的范围按视频总时长设置为毫秒精度。</li>
+<li>拖动时通过 <code>sliderPressed</code> / <code>sliderReleased</code> / <code>sliderMoved</code> 控制交互：按下时暂停自动刷新，释放时调用 <code>seek()</code> 跳转。</li>
+</ul>
+</li>
+<li><p><strong>位置跟踪</strong>：<code>VideoDecoder</code> 在解码每一帧视频时，根据 <code>AVFrame-&gt;pts</code> 和视频流 <code>time_base</code> 计算当前播放位置：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">m_currentPosition = <span class="built_in">av_q2d</span>(m_videoTimeBase) * m_videoFrame-&gt;pts;</span><br></pre></td></tr></table></figure>
+<p>主线程按帧率定时读取 <code>currentPosition()</code>，更新进度条和时间标签。</p>
+</li>
+<li><p><strong>跳转</strong>：用户释放滑块时，调用 <code>VideoDecoder::seek(seconds)</code>。解码线程在 <code>run()</code> 里执行：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">avformat_seek_file</span>(m_fmtCtx, <span class="number">-1</span>, INT64_MIN, ts, INT64_MAX, <span class="number">0</span>);</span><br><span class="line"><span class="comment">// 清空视频帧队列</span></span><br><span class="line"><span class="comment">// flush 音视频解码器</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="修复拖动进度条后音频静音"><a href="#修复拖动进度条后音频静音" class="headerlink" title="修复拖动进度条后音频静音"></a>修复拖动进度条后音频静音</h2><p>进度条加上后，画面能跳转，但拖动后音频没了。这是这次改动里最有价值的一个 bug。</p>
+<h3 id="排查过程"><a href="#排查过程" class="headerlink" title="排查过程"></a>排查过程</h3><p>最初怀疑是 <code>QAudioSink</code> 的 reset 时机不对。因为 seek 时需要清空音频缓冲里的旧数据，之前尝试过几种方案：</p>
+<ul>
+<li>在解码子线程里直接调用 <code>m_audioSink-&gt;reset()</code>，结果触发 <code>IAudioClient3::Start failed &quot;AUDCLNT_E_NOT_STOPPED&quot;</code> 和 <code>QWinEventNotifier</code> 跨线程警告，导致 seek 后静音。</li>
+<li>把 reset 移到主线程，并给音频设备加互斥锁，解决了崩溃，但音频仍然不响。</li>
+</ul>
+<p>加日志后发现，seek 之后音频包还在被读取，但 <code>avcodec_send_packet</code> 一直返回 <code>-541478725</code>，也就是 <code>AVERROR_EOF</code>。</p>
+<h3 id="根因"><a href="#根因" class="headerlink" title="根因"></a>根因</h3><p><code>flushAudioDecoder()</code> 里只做了 drain 解码器（发送 <code>nullptr</code> 包把剩余帧取出来），但<strong>没有调用 <code>avcodec_flush_buffers()</code></strong>。解码器被 drain 后处于 EOF 状态，不重置就没法再接收新包。</p>
+<p>视频解码器当时已经写了 <code>avcodec_flush_buffers()</code>，音频这边漏掉了。</p>
+<h3 id="修复"><a href="#修复" class="headerlink" title="修复"></a>修复</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">VideoDecoder::flushAudioDecoder</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!m_audioCodecCtx) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">avcodec_send_packet</span>(m_audioCodecCtx, <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="keyword">while</span> (<span class="built_in">avcodec_receive_frame</span>(m_audioCodecCtx, m_audioFrame) == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">av_frame_unref</span>(m_audioFrame);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 关键：清空解码器内部状态，避免 seek 后 send_packet 返回 AVERROR_EOF。</span></span><br><span class="line">    <span class="built_in">avcodec_flush_buffers</span>(m_audioCodecCtx);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (m_swrCtx) &#123;</span><br><span class="line">        <span class="built_in">swr_init</span>(m_swrCtx);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个教训很直接：<strong>FFmpeg 的音视频解码器 API 是对称的，处理视频时想到的步骤，音频也要同步做。</strong></p>
+<h3 id="音频设备的互斥访问"><a href="#音频设备的互斥访问" class="headerlink" title="音频设备的互斥访问"></a>音频设备的互斥访问</h3><p>在尝试 reset 音频的过程中，还遇到过一次崩溃：<code>m_audioIODevice-&gt;write()</code> 时访问冲突。原因是主线程调用 <code>QAudioSink::reset()</code> 会重建/释放 <code>QIODevice</code>，而解码子线程可能正拿着旧指针写数据。</p>
+<p>解决办法是给所有 <code>QAudioSink</code> / <code>QIODevice</code> 操作加一把锁 <code>m_audioMutex</code>：</p>
+<ul>
+<li><code>initAudioOutput()</code></li>
+<li><code>stopAudioOutput()</code></li>
+<li><code>play()</code> / <code>pause()</code> 里的 <code>resume()</code> / <code>suspend()</code></li>
+<li><code>decodeAudioPacket()</code> 里的 <code>write()</code></li>
+</ul>
+<p>保证 reset/resume/write 不会并发执行，子线程写音频时设备不会被突然释放。</p>
+<h2 id="启动封面与窗口标题"><a href="#启动封面与窗口标题" class="headerlink" title="启动封面与窗口标题"></a>启动封面与窗口标题</h2><p>顺手把启动体验也调整了一下：</p>
+<ul>
+<li>窗口标题从 <code>OpenGL + FFmpeg Player</code> 改成 <code>Xinle Player</code>。</li>
+<li><code>GLWidget</code> 在没有视频帧时不再清屏成蓝色，而是加载 <code>cover.jpg</code> 作为启动背景。图片通过 Qt 资源文件 <code>player.qrc</code> 打包进可执行文件，运行时不需要依赖外部文件。</li>
+</ul>
+<p>封面使用 <code>QPainter</code> 绘制在 <code>paintGL()</code> 里，保持等比铺满窗口：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!m_coverPixmap.<span class="built_in">isNull</span>()) &#123;</span><br><span class="line">    <span class="function">QPainter <span class="title">painter</span><span class="params">(<span class="keyword">this</span>)</span></span>;</span><br><span class="line">    painter.<span class="built_in">drawPixmap</span>(</span><br><span class="line">        <span class="built_in">rect</span>(),</span><br><span class="line">        m_coverPixmap.<span class="built_in">scaled</span>(<span class="built_in">rect</span>().<span class="built_in">size</span>(),</span><br><span class="line">                             Qt::KeepAspectRatioByExpanding,</span><br><span class="line">                             Qt::SmoothTransformation));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="清理测试特效"><a href="#清理测试特效" class="headerlink" title="清理测试特效"></a>清理测试特效</h2><p>开发过程中临时加了一个”我的特效”用于测试 shader。完成主要功能后，把它从 <code>effects.json</code> 和对应的 <code>res/shaders/my_effect.frag</code> 中清理掉，避免 demo 里留下半成品。</p>
+<p>现在特效下拉框里只剩四个选项：无、反色、高斯模糊、遮罩。</p>
+<h2 id="架构流程"><a href="#架构流程" class="headerlink" title="架构流程"></a>架构流程</h2><p>整个播放器的音视频流程如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────┐     文件路径      ┌──────────────────┐</span><br><span class="line">│   Player 窗口   │ ────────────────▶ │  VideoDecoder    │</span><br><span class="line">│                 │                   │  (QThread)       │</span><br><span class="line">└─────────────────┘                   └────────┬─────────┘</span><br><span class="line">       │                                        │</span><br><span class="line">       │  按帧率取帧                            │ 解码视频包</span><br><span class="line">       │                                        ▼</span><br><span class="line">       │                               ┌──────────────────┐</span><br><span class="line">       │                               │   RGBA 视频帧队列 │</span><br><span class="line">       │                               └────────┬─────────┘</span><br><span class="line">       │                                        │</span><br><span class="line">       ▼                                        ▼</span><br><span class="line">┌─────────────────┐     RGBA 帧       ┌──────────────────┐</span><br><span class="line">│    GLWidget     │ ◀──────────────── │  解码音频包       │</span><br><span class="line">│  (QOpenGLWidget)│                   │  S16 立体声 PCM   │</span><br><span class="line">└────────┬────────┘                   └────────┬─────────┘</span><br><span class="line">         │                                      │</span><br><span class="line">         │ 纹理上传                              │ 写入</span><br><span class="line">         ▼                                      ▼</span><br><span class="line">┌─────────────────┐                   ┌──────────────────┐</span><br><span class="line">│   OpenGL 纹理   │                   │    QAudioSink    │</span><br><span class="line">└────────┬────────┘                   │   （声卡输出）   │</span><br><span class="line">         │                            └──────────────────┘</span><br><span class="line">         ▼</span><br><span class="line">┌─────────────────┐</span><br><span class="line">│  FBO ping-pong  │</span><br><span class="line">│  + GLSL 特效    │</span><br><span class="line">└────────┬────────┘</span><br><span class="line">         │</span><br><span class="line">         ▼</span><br><span class="line">┌─────────────────┐</span><br><span class="line">│     屏幕显示     │</span><br><span class="line">└─────────────────┘</span><br></pre></td></tr></table></figure>
+<h2 id="渲染管线"><a href="#渲染管线" class="headerlink" title="渲染管线"></a>渲染管线</h2><p>无特效时：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">视频纹理 ──▶ pass-through shader ──▶ 屏幕</span><br></pre></td></tr></table></figure>
+<p>有特效时：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">视频纹理 ──▶ pass-through ──▶ FBO[0]</span><br><span class="line">FBO[0]   ──▶ effect shader ──▶ FBO[1]</span><br><span class="line">FBO[1]   ──▶ effect shader ──▶ FBO[0]   (多 pass 时继续交换)</span><br><span class="line">...</span><br><span class="line">FBO[n]   ──▶ pass-through ──▶ 屏幕</span><br></pre></td></tr></table></figure>
+<p><code>QOpenGLFramebufferObject</code> 纹理作为来源渲染时存在固有的上下翻转，统一通过顶点 shader 中的 <code>flipY</code> uniform 处理。</p>
+<h2 id="一点工程反思"><a href="#一点工程反思" class="headerlink" title="一点工程反思"></a>一点工程反思</h2><p>这次小功能用 AI Agent（Claude Code）配合完成，有几个体会：</p>
+<ul>
+<li><strong>定位 bug 比写代码更重要</strong>。音频静音的问题，如果没有日志确认 <code>send_packet</code> 返回 <code>AVERROR_EOF</code>，很容易在 <code>QAudioSink</code> 的状态切换上绕圈子。</li>
+<li><strong>对称性检查</strong>。音视频解码器在很多处理上是镜像的，一处写了 <code>flush_buffers</code>，另一处也要检查。</li>
+<li><strong>资源生命周期要加锁</strong>。跨线程的 <code>QIODevice</code> 指针，reset 时很容易变成悬空指针。</li>
+<li><strong>Git 历史要干净</strong>。因为之前提交里带了 <code>Co-Authored-By: Claude</code>，仓库改为 public 后 contributors 里会显示 Claude，所以用 <code>git filter-branch</code> 把历史里的这些标记都清掉了。</li>
+</ul>
+<h2 id="后续可做的事"><a href="#后续可做的事" class="headerlink" title="后续可做的事"></a>后续可做的事</h2><p>这个 demo 目前只是简单播放器，还有很多可以扩展的方向：</p>
+<ul>
+<li>精确音视频同步（目前视频按固定帧率显示，与音频不完全同步）。</li>
+<li>更多内置特效，以及特效参数的 UI 绑定。</li>
+<li>播放列表、倍速播放、截图等常见播放器功能。</li>
+<li>把播放逻辑进一步抽象，方便迁移到其他 Qt/FFmpeg 项目中。</li>
+</ul>
+<p>代码在 <a target="_blank" rel="noopener" href="https://github.com/hanxinle/Xinle_Player">hanxinle/Xinle_Player</a>，欢迎参考。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Qt/" rel="tag"># Qt</a>
+              <a href="/tags/FFmpeg/" rel="tag"># FFmpeg</a>
+              <a href="/tags/OpenGL/" rel="tag"># OpenGL</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/06/21/20260621-claude-code-2/" rel="prev" title="Claude Code 使用备注">
+      <i class="fa fa-chevron-left"></i> Claude Code 使用备注
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">项目背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8A%80%E6%9C%AF%E6%A0%88%E4%B8%8E%E9%A1%B9%E7%9B%AE%E7%BB%93%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">技术栈与项目结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E6%92%AD%E6%94%BE%E8%BF%9B%E5%BA%A6%E6%9D%A1"><span class="nav-number">3.</span> <span class="nav-text">添加播放进度条</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D%E6%8B%96%E5%8A%A8%E8%BF%9B%E5%BA%A6%E6%9D%A1%E5%90%8E%E9%9F%B3%E9%A2%91%E9%9D%99%E9%9F%B3"><span class="nav-number">4.</span> <span class="nav-text">修复拖动进度条后音频静音</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%92%E6%9F%A5%E8%BF%87%E7%A8%8B"><span class="nav-number">4.1.</span> <span class="nav-text">排查过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B9%E5%9B%A0"><span class="nav-number">4.2.</span> <span class="nav-text">根因</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%AE%E5%A4%8D"><span class="nav-number">4.3.</span> <span class="nav-text">修复</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9F%B3%E9%A2%91%E8%AE%BE%E5%A4%87%E7%9A%84%E4%BA%92%E6%96%A5%E8%AE%BF%E9%97%AE"><span class="nav-number">4.4.</span> <span class="nav-text">音频设备的互斥访问</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E5%B0%81%E9%9D%A2%E4%B8%8E%E7%AA%97%E5%8F%A3%E6%A0%87%E9%A2%98"><span class="nav-number">5.</span> <span class="nav-text">启动封面与窗口标题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B8%85%E7%90%86%E6%B5%8B%E8%AF%95%E7%89%B9%E6%95%88"><span class="nav-number">6.</span> <span class="nav-text">清理测试特效</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%B6%E6%9E%84%E6%B5%81%E7%A8%8B"><span class="nav-number">7.</span> <span class="nav-text">架构流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B8%B2%E6%9F%93%E7%AE%A1%E7%BA%BF"><span class="nav-number">8.</span> <span class="nav-text">渲染管线</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E7%82%B9%E5%B7%A5%E7%A8%8B%E5%8F%8D%E6%80%9D"><span class="nav-number">9.</span> <span class="nav-text">一点工程反思</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8E%E7%BB%AD%E5%8F%AF%E5%81%9A%E7%9A%84%E4%BA%8B"><span class="nav-number">10.</span> <span class="nav-text">后续可做的事</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Lex</p>
+  <div class="site-description" itemprop="description">hanxinle199@gmail.com</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">32</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lex</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/pangu@4/dist/browser/pangu.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
