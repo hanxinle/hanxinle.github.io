@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"hanxinle.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="异常处理不是只有一个入口很多 Windows C++ 开发者对异常处理的印象停留在 try&#x2F;catch 和 “程序崩溃弹错误框”。但实际上，Windows 提供了一整套分层异常处理机制，从最先被调用的 VEH，到最后兜底的 UEF，每层职责不同、适用场景也不同。 理解这条链路，是做好崩溃捕获和 dump 分析的前提。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Windows C++ 异常处理机制：VEH、SEH、UEF 与 MiniDump 实战">
+<meta property="og:url" content="https://hanxinle.github.io/2026/07/25/20260725-windows-cpp-exception-handling/index.html">
+<meta property="og:site_name" content="科学学习与工程笔记">
+<meta property="og:description" content="异常处理不是只有一个入口很多 Windows C++ 开发者对异常处理的印象停留在 try&#x2F;catch 和 “程序崩溃弹错误框”。但实际上，Windows 提供了一整套分层异常处理机制，从最先被调用的 VEH，到最后兜底的 UEF，每层职责不同、适用场景也不同。 理解这条链路，是做好崩溃捕获和 dump 分析的前提。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-07-25T09:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-25T09:12:58.312Z">
+<meta property="article:author" content="Xinle">
+<meta property="article:tag" content="C++">
+<meta property="article:tag" content="Windows">
+<meta property="article:tag" content="调试">
+<meta property="article:tag" content="SEH">
+<meta property="article:tag" content="MiniDump">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://hanxinle.github.io/2026/07/25/20260725-windows-cpp-exception-handling/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Windows C++ 异常处理机制：VEH、SEH、UEF 与 MiniDump 实战 | 科学学习与工程笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="科学学习与工程笔记" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">科学学习与工程笔记</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">动脑动手</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/hanxinle" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/07/25/20260725-windows-cpp-exception-handling/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xinle">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="科学学习与工程笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Windows C++ 异常处理机制：VEH、SEH、UEF 与 MiniDump 实战
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-07-25 17:00:00 / 修改时间：17:12:58" itemprop="dateCreated datePublished" datetime="2026-07-25T17:00:00+08:00">2026-07-25</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="异常处理不是只有一个入口"><a href="#异常处理不是只有一个入口" class="headerlink" title="异常处理不是只有一个入口"></a>异常处理不是只有一个入口</h2><p>很多 Windows C++ 开发者对异常处理的印象停留在 <code>try/catch</code> 和 “程序崩溃弹错误框”。但实际上，Windows 提供了一整套分层异常处理机制，从最先被调用的 VEH，到最后兜底的 UEF，每层职责不同、适用场景也不同。</p>
+<p>理解这条链路，是做好崩溃捕获和 dump 分析的前提。</p>
+<span id="more"></span>
+<h2 id="异常处理链路总览"><a href="#异常处理链路总览" class="headerlink" title="异常处理链路总览"></a>异常处理链路总览</h2><p>当异常发生时，Windows 会按以下顺序寻找处理者：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">异常发生</span><br><span class="line">  → VEH（Vectored Exception Handling，向量异常处理）</span><br><span class="line">  → SEH（Structured Exception Handling，结构化异常处理）</span><br><span class="line">  → C++ EH（try/catch，仅处理 C++ throw 的异常）</span><br><span class="line">  → VEC（Vectored Continue Execution）</span><br><span class="line">  → UEF（Unhandled Exception Filter，未处理异常过滤器）</span><br><span class="line">  → WER（Windows Error Reporting）</span><br></pre></td></tr></table></figure>
+<p>任何一层决定处理异常（返回 <code>EXCEPTION_EXECUTE_HANDLER</code> 或 <code>EXCEPTION_CONTINUE_EXECUTION</code>），就不会再往后传递。</p>
+<h2 id="VEH：最早拿到异常通知"><a href="#VEH：最早拿到异常通知" class="headerlink" title="VEH：最早拿到异常通知"></a>VEH：最早拿到异常通知</h2><p>VEH 是全局注册的异常处理程序，不需要修改栈帧，调用顺序比 SEH 更早。它的典型用途是：在崩溃瞬间记录日志、生成 dump、做崩溃上报。</p>
+<h3 id="VEH-代码示例"><a href="#VEH-代码示例" class="headerlink" title="VEH 代码示例"></a>VEH 代码示例</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function">LONG WINAPI <span class="title">VectoredHandler</span><span class="params">(PEXCEPTION_POINTERS pExceptionInfo)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[VEH] Exception caught!\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[VEH] Exception code: 0x%08X\n&quot;</span>,</span><br><span class="line">           pExceptionInfo-&gt;ExceptionRecord-&gt;ExceptionCode);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[VEH] Exception address: 0x%p\n&quot;</span>,</span><br><span class="line">           pExceptionInfo-&gt;ExceptionRecord-&gt;ExceptionAddress);</span><br><span class="line"></span><br><span class="line">    PCONTEXT ctx = pExceptionInfo-&gt;ContextRecord;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[VEH] RIP/EIP = 0x%llX\n&quot;</span>, ctx-&gt;Rip);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 返回 EXCEPTION_CONTINUE_SEARCH，表示不处理，继续向后传递</span></span><br><span class="line">    <span class="keyword">return</span> EXCEPTION_CONTINUE_SEARCH;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    PVOID vehHandle = <span class="built_in">AddVectoredExceptionHandler</span>(<span class="number">1</span>, VectoredHandler);</span><br><span class="line">    <span class="keyword">if</span> (!vehHandle) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Failed to register VEH!\n&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;VEH registered.\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span>* p = <span class="literal">nullptr</span>;</span><br><span class="line">    *p = <span class="number">42</span>;  <span class="comment">// 触发 Access Violation (0xC0000005)</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">RemoveVectoredExceptionHandler</span>(vehHandle);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译时需要链接 <code>DbgHelp.lib</code> 如果要做符号解析，但上面的示例只需要标准 Windows API。</p>
+<h3 id="重要细节：VEH-不能阻止崩溃"><a href="#重要细节：VEH-不能阻止崩溃" class="headerlink" title="重要细节：VEH 不能阻止崩溃"></a>重要细节：VEH 不能阻止崩溃</h3><p>VEH 本身没有阻止崩溃的能力。它只是获得一次”抢先通知”的机会。如果你返回 <code>EXCEPTION_CONTINUE_SEARCH</code>，异常会继续往后传；如果你返回 <code>EXCEPTION_CONTINUE_EXECUTION</code>，则需要真正修复异常现场（例如修改 PC 指针），否则程序会原地再次触发同一个异常。</p>
+<h3 id="调试器会抢在-VEH-前面"><a href="#调试器会抢在-VEH-前面" class="headerlink" title="调试器会抢在 VEH 前面"></a>调试器会抢在 VEH 前面</h3><p>这是最容易踩坑的地方。在 Visual Studio 里按 <strong>F5 调试运行</strong>时，调试器已经附加到进程，异常会先被调试器拦截，导致你自己的 VEH 回调<strong>不会执行</strong>。</p>
+<p>验证 VEH 行为的方法：</p>
+<ol>
+<li>按 <strong>Ctrl + F5</strong> 不调试运行。</li>
+<li>或直接双击运行编译好的 <code>.exe</code>。</li>
+<li>或者在 VS 的”异常设置”中取消勾选 Win32 异常的”引发时中断”。</li>
+</ol>
+<p>这个细节直接影响你如何在线下测试崩溃捕获逻辑。</p>
+<h2 id="SEH：基于栈帧的局部保护"><a href="#SEH：基于栈帧的局部保护" class="headerlink" title="SEH：基于栈帧的局部保护"></a>SEH：基于栈帧的局部保护</h2><p>SEH 是 Windows 原生的结构化异常处理机制，语法是 <code>__try / __except</code>。它能捕获系统级硬件异常（如空指针访问、除零、栈溢出），这是 C++ 的 <code>try/catch</code> 做不到的。</p>
+<h3 id="SEH-代码示例"><a href="#SEH-代码示例" class="headerlink" title="SEH 代码示例"></a>SEH 代码示例</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">const</span> <span class="type">char</span>* <span class="title">ExceptionCodeToString</span><span class="params">(DWORD code)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">switch</span> (code) &#123;</span><br><span class="line">        <span class="keyword">case</span> EXCEPTION_ACCESS_VIOLATION:      <span class="keyword">return</span> <span class="string">&quot;ACCESS_VIOLATION&quot;</span>;</span><br><span class="line">        <span class="keyword">case</span> EXCEPTION_ARRAY_BOUNDS_EXCEEDED: <span class="keyword">return</span> <span class="string">&quot;ARRAY_BOUNDS_EXCEEDED&quot;</span>;</span><br><span class="line">        <span class="keyword">case</span> EXCEPTION_FLT_DIVIDE_BY_ZERO:    <span class="keyword">return</span> <span class="string">&quot;FLT_DIVIDE_BY_ZERO&quot;</span>;</span><br><span class="line">        <span class="keyword">case</span> EXCEPTION_INT_DIVIDE_BY_ZERO:    <span class="keyword">return</span> <span class="string">&quot;INT_DIVIDE_BY_ZERO&quot;</span>;</span><br><span class="line">        <span class="keyword">case</span> EXCEPTION_STACK_OVERFLOW:        <span class="keyword">return</span> <span class="string">&quot;STACK_OVERFLOW&quot;</span>;</span><br><span class="line">        <span class="keyword">case</span> EXCEPTION_ILLEGAL_INSTRUCTION:   <span class="keyword">return</span> <span class="string">&quot;ILLEGAL_INSTRUCTION&quot;</span>;</span><br><span class="line">        <span class="keyword">default</span>:                              <span class="keyword">return</span> <span class="string">&quot;UNKNOWN&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">TestNullPointer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    __try &#123;</span><br><span class="line">        <span class="type">int</span>* p = <span class="literal">nullptr</span>;</span><br><span class="line">        *p = <span class="number">42</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    __except (EXCEPTION_EXECUTE_HANDLER) &#123;</span><br><span class="line">        DWORD code = <span class="built_in">GetExceptionCode</span>();</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;[SEH] Caught: %s (0x%08X)\n&quot;</span>, <span class="built_in">ExceptionCodeToString</span>(code), code);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[SEH] Program continues.\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">TestDivideByZero</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    __try &#123;</span><br><span class="line">        <span class="type">int</span> a = <span class="number">10</span>;</span><br><span class="line">        <span class="type">int</span> b = <span class="number">0</span>;</span><br><span class="line">        <span class="type">int</span> c = a / b;</span><br><span class="line">        (<span class="type">void</span>)c;</span><br><span class="line">    &#125;</span><br><span class="line">    __except (EXCEPTION_EXECUTE_HANDLER) &#123;</span><br><span class="line">        DWORD code = <span class="built_in">GetExceptionCode</span>();</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;[SEH] Caught: %s (0x%08X)\n&quot;</span>, <span class="built_in">ExceptionCodeToString</span>(code), code);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[SEH] Program continues.\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">TestNullPointer</span>();</span><br><span class="line">    <span class="built_in">TestDivideByZero</span>();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="SEH-过滤函数"><a href="#SEH-过滤函数" class="headerlink" title="SEH 过滤函数"></a>SEH 过滤函数</h3><p><code>__except</code> 后面可以跟一个过滤表达式或过滤函数，用来根据异常类型决定是处理还是继续搜索：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">LONG WINAPI <span class="title">ExceptionFilter</span><span class="params">(PEXCEPTION_POINTERS pExceptionInfo)</span> </span>&#123;</span><br><span class="line">    DWORD code = pExceptionInfo-&gt;ExceptionRecord-&gt;ExceptionCode;</span><br><span class="line">    <span class="keyword">if</span> (code == EXCEPTION_ACCESS_VIOLATION) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;[Filter] Access violation, handle it.\n&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> EXCEPTION_EXECUTE_HANDLER;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[Filter] Not access violation, continue searching.\n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> EXCEPTION_CONTINUE_SEARCH;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">TestFilter</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    __try &#123;</span><br><span class="line">        <span class="type">int</span>* p = <span class="literal">nullptr</span>;</span><br><span class="line">        *p = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    __except (<span class="built_in">ExceptionFilter</span>(<span class="built_in">GetExceptionInformation</span>())) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;[SEH] Handled by filter.\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="SEH-的局限"><a href="#SEH-的局限" class="headerlink" title="SEH 的局限"></a>SEH 的局限</h3><p>SEH 是基于栈帧的，只能保护 <code>__try</code> 块内的代码。它适合局部容错（例如保护某个可能崩溃的第三方调用），不适合做全局崩溃上报。</p>
+<h2 id="UEF-MiniDump：全局崩溃捕获的最后机会"><a href="#UEF-MiniDump：全局崩溃捕获的最后机会" class="headerlink" title="UEF + MiniDump：全局崩溃捕获的最后机会"></a>UEF + MiniDump：全局崩溃捕获的最后机会</h2><p>UEF（Unhandled Exception Filter）是进程级的最后机会异常处理机制。当异常没有被任何 <code>try/catch</code>、<code>__except</code>、线程级处理捕获时，Windows 会调用你注册的 UEF 回调。生产环境最常见的做法，就是在 UEF 中生成 MiniDump。</p>
+<h3 id="UEF-MiniDump-代码示例"><a href="#UEF-MiniDump-代码示例" class="headerlink" title="UEF + MiniDump 代码示例"></a>UEF + MiniDump 代码示例</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;dbghelp.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstring&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> comment(lib, <span class="string">&quot;DbgHelp.lib&quot;</span>)</span></span><br><span class="line"></span><br><span class="line">LPTOP_LEVEL_EXCEPTION_FILTER g_oldFilter = <span class="literal">nullptr</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">GenerateMiniDump</span><span class="params">(EXCEPTION_POINTERS* pExceptionPointers,</span></span></span><br><span class="line"><span class="params"><span class="function">                      <span class="type">const</span> <span class="type">wchar_t</span>* path)</span> </span>&#123;</span><br><span class="line">    HANDLE hFile = <span class="built_in">CreateFileW</span>(</span><br><span class="line">        path,</span><br><span class="line">        GENERIC_WRITE,</span><br><span class="line">        <span class="number">0</span>,</span><br><span class="line">        <span class="literal">nullptr</span>,</span><br><span class="line">        CREATE_ALWAYS,</span><br><span class="line">        FILE_ATTRIBUTE_NORMAL,</span><br><span class="line">        <span class="literal">nullptr</span></span><br><span class="line">    );</span><br><span class="line">    <span class="keyword">if</span> (hFile == INVALID_HANDLE_VALUE) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Failed to create dump file, error: %lu\n&quot;</span>, <span class="built_in">GetLastError</span>());</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    MINIDUMP_EXCEPTION_INFORMATION mei;</span><br><span class="line">    mei.ThreadId = <span class="built_in">GetCurrentThreadId</span>();</span><br><span class="line">    mei.ExceptionPointers = pExceptionPointers;</span><br><span class="line">    mei.ClientPointers = FALSE;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// MiniDumpNormal 体积小，适合线上；MiniDumpWithFullMemory 信息更全</span></span><br><span class="line">    MINIDUMP_TYPE dumpType = MiniDumpNormal;</span><br><span class="line"></span><br><span class="line">    BOOL result = <span class="built_in">MiniDumpWriteDump</span>(</span><br><span class="line">        <span class="built_in">GetCurrentProcess</span>(),</span><br><span class="line">        <span class="built_in">GetCurrentProcessId</span>(),</span><br><span class="line">        hFile,</span><br><span class="line">        dumpType,</span><br><span class="line">        &amp;mei,</span><br><span class="line">        <span class="literal">nullptr</span>,</span><br><span class="line">        <span class="literal">nullptr</span></span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">    <span class="built_in">CloseHandle</span>(hFile);</span><br><span class="line">    <span class="keyword">return</span> result == TRUE;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">LONG WINAPI <span class="title">MyUnhandledExceptionFilter</span><span class="params">(PEXCEPTION_POINTERS pExceptionInfo)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;\n[UEF] Unhandled exception occurred\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[UEF] Exception code: 0x%08X\n&quot;</span>,</span><br><span class="line">           pExceptionInfo-&gt;ExceptionRecord-&gt;ExceptionCode);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[UEF] Exception address: 0x%p\n&quot;</span>,</span><br><span class="line">           pExceptionInfo-&gt;ExceptionRecord-&gt;ExceptionAddress);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// dump 路径与 exe 同名，扩展名改为 .dmp</span></span><br><span class="line">    <span class="type">wchar_t</span> dumpPath[MAX_PATH];</span><br><span class="line">    <span class="built_in">GetModuleFileNameW</span>(<span class="literal">nullptr</span>, dumpPath, MAX_PATH);</span><br><span class="line"></span><br><span class="line">    <span class="type">wchar_t</span>* ext = <span class="built_in">wcsrchr</span>(dumpPath, <span class="string">L&#x27;.&#x27;</span>);</span><br><span class="line">    <span class="keyword">if</span> (ext) &#123;</span><br><span class="line">        <span class="built_in">wcscpy_s</span>(ext, MAX_PATH - (ext - dumpPath), <span class="string">L&quot;.dmp&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">wcscat_s</span>(dumpPath, MAX_PATH, <span class="string">L&quot;.dmp&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[UEF] Generating MiniDump...\n&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">GenerateMiniDump</span>(pExceptionInfo, dumpPath)) &#123;</span><br><span class="line">        <span class="built_in">wprintf</span>(<span class="string">L&quot;[UEF] MiniDump saved to: %s\n&quot;</span>, dumpPath);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;[UEF] Failed to generate MiniDump.\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调用旧的 UEF，保持链式行为</span></span><br><span class="line">    <span class="keyword">if</span> (g_oldFilter != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">g_oldFilter</span>(pExceptionInfo);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> EXCEPTION_EXECUTE_HANDLER;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    g_oldFilter = <span class="built_in">SetUnhandledExceptionFilter</span>(MyUnhandledExceptionFilter);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Unhandled exception filter registered.\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span>* p = <span class="literal">nullptr</span>;</span><br><span class="line">    *p = <span class="number">0xDEADBEEF</span>;  <span class="comment">// 触发 Access Violation</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cl /EHsc /W4 /Zi /Fe:crash_dump.exe main.cpp DbgHelp.lib</span><br></pre></td></tr></table></figure>
+<h3 id="为什么用-UEF-而不是-VEH-做崩溃上报"><a href="#为什么用-UEF-而不是-VEH-做崩溃上报" class="headerlink" title="为什么用 UEF 而不是 VEH 做崩溃上报"></a>为什么用 UEF 而不是 VEH 做崩溃上报</h3><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>VEH</th>
+<th>UEF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>调用时机</td>
+<td>每次异常都调用</td>
+<td>仅未处理异常才调用</td>
+</tr>
+<tr>
+<td>噪音</td>
+<td>大，会收到已捕获的异常</td>
+<td>小，只处理真正崩溃</td>
+</tr>
+<tr>
+<td>典型用途</td>
+<td>抢先日志、调试注入</td>
+<td>生成 dump、崩溃上报</td>
+</tr>
+<tr>
+<td>全局性</td>
+<td>是</td>
+<td>是</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>所以如果只是想在”真正崩溃”时做处理，UEF 是更合适的入口。</p>
+<h3 id="MiniDump-类型的选择"><a href="#MiniDump-类型的选择" class="headerlink" title="MiniDump 类型的选择"></a>MiniDump 类型的选择</h3><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MiniDumpNormal</code></td>
+<td>只包含基本信息，体积小</td>
+<td>线上上报</td>
+</tr>
+<tr>
+<td><code>MiniDumpWithFullMemory</code></td>
+<td>包含完整内存，体积大</td>
+<td>本地深度分析</td>
+</tr>
+<tr>
+<td><code>MiniDumpWithIndirectlyReferencedMemory</code></td>
+<td>包含间接引用内存</td>
+<td>折中方案</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>线上通常用 <code>MiniDumpNormal</code>，必要时在回调里追加自定义信息（如日志片段、用户操作路径）来补充上下文。</p>
+<h2 id="常见异常代码速查"><a href="#常见异常代码速查" class="headerlink" title="常见异常代码速查"></a>常见异常代码速查</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>代码</th>
+<th>含义</th>
+<th>典型原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0xC0000005</code></td>
+<td>Access Violation</td>
+<td>空指针、野指针、数组越界、use-after-free</td>
+</tr>
+<tr>
+<td><code>0xC0000094</code></td>
+<td>Integer Divide by Zero</td>
+<td>整数除零</td>
+</tr>
+<tr>
+<td><code>0xC00000FD</code></td>
+<td>Stack Overflow</td>
+<td>无限递归、栈上分配过大内存</td>
+</tr>
+<tr>
+<td><code>0xC000001D</code></td>
+<td>Illegal Instruction</td>
+<td>执行了 CPU 不认识的指令</td>
+</tr>
+<tr>
+<td><code>0x80000003</code></td>
+<td>Breakpoint</td>
+<td>调试断点</td>
+</tr>
+<tr>
+<td><code>0xC0000409</code></td>
+<td>Stack Buffer Overrun</td>
+<td>栈缓冲区溢出</td>
+</tr>
+<tr>
+<td><code>0xC0000374</code></td>
+<td>Heap Corruption</td>
+<td>堆损坏（如 double free）</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="各机制对比与工程选择"><a href="#各机制对比与工程选择" class="headerlink" title="各机制对比与工程选择"></a>各机制对比与工程选择</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>机制</th>
+<th>调用顺序</th>
+<th>作用</th>
+<th>典型用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VEH</td>
+<td>1</td>
+<td>抢先处理异常</td>
+<td>全局日志、调试注入</td>
+</tr>
+<tr>
+<td>SEH</td>
+<td>2</td>
+<td>栈帧级异常处理</td>
+<td>局部容错、资源清理</td>
+</tr>
+<tr>
+<td>C++ EH</td>
+<td>3</td>
+<td>处理 C++ throw</td>
+<td>业务逻辑异常</td>
+</tr>
+<tr>
+<td>VEC</td>
+<td>4</td>
+<td>SEH 后继续</td>
+<td>很少单独使用</td>
+</tr>
+<tr>
+<td>UEF</td>
+<td>5</td>
+<td>最后机会处理</td>
+<td><strong>生成 dump、崩溃上报</strong></td>
+</tr>
+<tr>
+<td>WER</td>
+<td>6</td>
+<td>系统级上报</td>
+<td>系统备份 dump</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>工程建议：</strong></p>
+<ul>
+<li>大多数客户端程序只需要注册 <code>SetUnhandledExceptionFilter</code> 生成 MiniDump。</li>
+<li>需要更灵活的抢先处理时，再加 VEH。</li>
+<li>WER 保持默认开启，作为双重保险。</li>
+<li>复杂项目可以考虑 Google Crashpad 等成熟崩溃捕获库。</li>
+</ul>
+<h2 id="一个完整的崩溃捕获闭环"><a href="#一个完整的崩溃捕获闭环" class="headerlink" title="一个完整的崩溃捕获闭环"></a>一个完整的崩溃捕获闭环</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">程序运行</span><br><span class="line">    ↓</span><br><span class="line">异常发生</span><br><span class="line">    ↓</span><br><span class="line">VEH 记录日志（可选）</span><br><span class="line">    ↓</span><br><span class="line">SEH / C++ EH 尝试局部处理</span><br><span class="line">    ↓</span><br><span class="line">UEF 生成 MiniDump</span><br><span class="line">    ↓</span><br><span class="line">离线分析（WinDbg + PDB）</span><br><span class="line">    ↓</span><br><span class="line">定位代码行，修复 bug</span><br></pre></td></tr></table></figure>
+<p>下一篇会进入具体崩溃类型的分析：空指针、堆破坏、栈溢出、未初始化、内存耗尽、纯虚调用，以及它们在 Debug / Release 下的行为差异。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C++</a>
+              <a href="/tags/Windows/" rel="tag"># Windows</a>
+              <a href="/tags/%E8%B0%83%E8%AF%95/" rel="tag"># 调试</a>
+              <a href="/tags/SEH/" rel="tag"># SEH</a>
+              <a href="/tags/MiniDump/" rel="tag"># MiniDump</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/07/25/20260725-windows-cpp-crash-governance-overview/" rel="prev" title="Windows C++ Crash 治理全景：异常机制、崩溃类型与工具链实践">
+      <i class="fa fa-chevron-left"></i> Windows C++ Crash 治理全景：异常机制、崩溃类型与工具链实践
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E4%B8%8D%E6%98%AF%E5%8F%AA%E6%9C%89%E4%B8%80%E4%B8%AA%E5%85%A5%E5%8F%A3"><span class="nav-number">1.</span> <span class="nav-text">异常处理不是只有一个入口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E9%93%BE%E8%B7%AF%E6%80%BB%E8%A7%88"><span class="nav-number">2.</span> <span class="nav-text">异常处理链路总览</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VEH%EF%BC%9A%E6%9C%80%E6%97%A9%E6%8B%BF%E5%88%B0%E5%BC%82%E5%B8%B8%E9%80%9A%E7%9F%A5"><span class="nav-number">3.</span> <span class="nav-text">VEH：最早拿到异常通知</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#VEH-%E4%BB%A3%E7%A0%81%E7%A4%BA%E4%BE%8B"><span class="nav-number">3.1.</span> <span class="nav-text">VEH 代码示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%8D%E8%A6%81%E7%BB%86%E8%8A%82%EF%BC%9AVEH-%E4%B8%8D%E8%83%BD%E9%98%BB%E6%AD%A2%E5%B4%A9%E6%BA%83"><span class="nav-number">3.2.</span> <span class="nav-text">重要细节：VEH 不能阻止崩溃</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B0%83%E8%AF%95%E5%99%A8%E4%BC%9A%E6%8A%A2%E5%9C%A8-VEH-%E5%89%8D%E9%9D%A2"><span class="nav-number">3.3.</span> <span class="nav-text">调试器会抢在 VEH 前面</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SEH%EF%BC%9A%E5%9F%BA%E4%BA%8E%E6%A0%88%E5%B8%A7%E7%9A%84%E5%B1%80%E9%83%A8%E4%BF%9D%E6%8A%A4"><span class="nav-number">4.</span> <span class="nav-text">SEH：基于栈帧的局部保护</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SEH-%E4%BB%A3%E7%A0%81%E7%A4%BA%E4%BE%8B"><span class="nav-number">4.1.</span> <span class="nav-text">SEH 代码示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SEH-%E8%BF%87%E6%BB%A4%E5%87%BD%E6%95%B0"><span class="nav-number">4.2.</span> <span class="nav-text">SEH 过滤函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SEH-%E7%9A%84%E5%B1%80%E9%99%90"><span class="nav-number">4.3.</span> <span class="nav-text">SEH 的局限</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#UEF-MiniDump%EF%BC%9A%E5%85%A8%E5%B1%80%E5%B4%A9%E6%BA%83%E6%8D%95%E8%8E%B7%E7%9A%84%E6%9C%80%E5%90%8E%E6%9C%BA%E4%BC%9A"><span class="nav-number">5.</span> <span class="nav-text">UEF + MiniDump：全局崩溃捕获的最后机会</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#UEF-MiniDump-%E4%BB%A3%E7%A0%81%E7%A4%BA%E4%BE%8B"><span class="nav-number">5.1.</span> <span class="nav-text">UEF + MiniDump 代码示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E7%94%A8-UEF-%E8%80%8C%E4%B8%8D%E6%98%AF-VEH-%E5%81%9A%E5%B4%A9%E6%BA%83%E4%B8%8A%E6%8A%A5"><span class="nav-number">5.2.</span> <span class="nav-text">为什么用 UEF 而不是 VEH 做崩溃上报</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MiniDump-%E7%B1%BB%E5%9E%8B%E7%9A%84%E9%80%89%E6%8B%A9"><span class="nav-number">5.3.</span> <span class="nav-text">MiniDump 类型的选择</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E5%BC%82%E5%B8%B8%E4%BB%A3%E7%A0%81%E9%80%9F%E6%9F%A5"><span class="nav-number">6.</span> <span class="nav-text">常见异常代码速查</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%84%E6%9C%BA%E5%88%B6%E5%AF%B9%E6%AF%94%E4%B8%8E%E5%B7%A5%E7%A8%8B%E9%80%89%E6%8B%A9"><span class="nav-number">7.</span> <span class="nav-text">各机制对比与工程选择</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%B8%AA%E5%AE%8C%E6%95%B4%E7%9A%84%E5%B4%A9%E6%BA%83%E6%8D%95%E8%8E%B7%E9%97%AD%E7%8E%AF"><span class="nav-number">8.</span> <span class="nav-text">一个完整的崩溃捕获闭环</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xinle</p>
+  <div class="site-description" itemprop="description">hanxinle199@gmail.com</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Xinle</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/pangu@4/dist/browser/pangu.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

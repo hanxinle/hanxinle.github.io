@@ -2065,4 +2065,213 @@ return 0;
         <tag>调试</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Windows C++ 异常处理机制：VEH、SEH、UEF 与 MiniDump 实战</title>
+    <url>/2026/07/25/20260725-windows-cpp-exception-handling/</url>
+    <content><![CDATA[<h2 id="异常处理不是只有一个入口"><a href="#异常处理不是只有一个入口" class="headerlink" title="异常处理不是只有一个入口"></a>异常处理不是只有一个入口</h2><p>很多 Windows C++ 开发者对异常处理的印象停留在 <code>try/catch</code> 和 “程序崩溃弹错误框”。但实际上，Windows 提供了一整套分层异常处理机制，从最先被调用的 VEH，到最后兜底的 UEF，每层职责不同、适用场景也不同。</p>
+<p>理解这条链路，是做好崩溃捕获和 dump 分析的前提。</p>
+<span id="more"></span>
+<h2 id="异常处理链路总览"><a href="#异常处理链路总览" class="headerlink" title="异常处理链路总览"></a>异常处理链路总览</h2><p>当异常发生时，Windows 会按以下顺序寻找处理者：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">异常发生</span><br><span class="line">  → VEH（Vectored Exception Handling，向量异常处理）</span><br><span class="line">  → SEH（Structured Exception Handling，结构化异常处理）</span><br><span class="line">  → C++ EH（try/catch，仅处理 C++ throw 的异常）</span><br><span class="line">  → VEC（Vectored Continue Execution）</span><br><span class="line">  → UEF（Unhandled Exception Filter，未处理异常过滤器）</span><br><span class="line">  → WER（Windows Error Reporting）</span><br></pre></td></tr></table></figure>
+<p>任何一层决定处理异常（返回 <code>EXCEPTION_EXECUTE_HANDLER</code> 或 <code>EXCEPTION_CONTINUE_EXECUTION</code>），就不会再往后传递。</p>
+<h2 id="VEH：最早拿到异常通知"><a href="#VEH：最早拿到异常通知" class="headerlink" title="VEH：最早拿到异常通知"></a>VEH：最早拿到异常通知</h2><p>VEH 是全局注册的异常处理程序，不需要修改栈帧，调用顺序比 SEH 更早。它的典型用途是：在崩溃瞬间记录日志、生成 dump、做崩溃上报。</p>
+<h3 id="VEH-代码示例"><a href="#VEH-代码示例" class="headerlink" title="VEH 代码示例"></a>VEH 代码示例</h3><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function">LONG WINAPI <span class="title">VectoredHandler</span><span class="params">(PEXCEPTION_POINTERS pExceptionInfo)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[VEH] Exception caught!\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[VEH] Exception code: 0x%08X\n&quot;</span>,</span><br><span class="line">           pExceptionInfo-&gt;ExceptionRecord-&gt;ExceptionCode);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[VEH] Exception address: 0x%p\n&quot;</span>,</span><br><span class="line">           pExceptionInfo-&gt;ExceptionRecord-&gt;ExceptionAddress);</span><br><span class="line"></span><br><span class="line">    PCONTEXT ctx = pExceptionInfo-&gt;ContextRecord;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[VEH] RIP/EIP = 0x%llX\n&quot;</span>, ctx-&gt;Rip);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 返回 EXCEPTION_CONTINUE_SEARCH，表示不处理，继续向后传递</span></span><br><span class="line">    <span class="keyword">return</span> EXCEPTION_CONTINUE_SEARCH;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    PVOID vehHandle = <span class="built_in">AddVectoredExceptionHandler</span>(<span class="number">1</span>, VectoredHandler);</span><br><span class="line">    <span class="keyword">if</span> (!vehHandle) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Failed to register VEH!\n&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;VEH registered.\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span>* p = <span class="literal">nullptr</span>;</span><br><span class="line">    *p = <span class="number">42</span>;  <span class="comment">// 触发 Access Violation (0xC0000005)</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">RemoveVectoredExceptionHandler</span>(vehHandle);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译时需要链接 <code>DbgHelp.lib</code> 如果要做符号解析，但上面的示例只需要标准 Windows API。</p>
+<h3 id="重要细节：VEH-不能阻止崩溃"><a href="#重要细节：VEH-不能阻止崩溃" class="headerlink" title="重要细节：VEH 不能阻止崩溃"></a>重要细节：VEH 不能阻止崩溃</h3><p>VEH 本身没有阻止崩溃的能力。它只是获得一次”抢先通知”的机会。如果你返回 <code>EXCEPTION_CONTINUE_SEARCH</code>，异常会继续往后传；如果你返回 <code>EXCEPTION_CONTINUE_EXECUTION</code>，则需要真正修复异常现场（例如修改 PC 指针），否则程序会原地再次触发同一个异常。</p>
+<h3 id="调试器会抢在-VEH-前面"><a href="#调试器会抢在-VEH-前面" class="headerlink" title="调试器会抢在 VEH 前面"></a>调试器会抢在 VEH 前面</h3><p>这是最容易踩坑的地方。在 Visual Studio 里按 <strong>F5 调试运行</strong>时，调试器已经附加到进程，异常会先被调试器拦截，导致你自己的 VEH 回调<strong>不会执行</strong>。</p>
+<p>验证 VEH 行为的方法：</p>
+<ol>
+<li>按 <strong>Ctrl + F5</strong> 不调试运行。</li>
+<li>或直接双击运行编译好的 <code>.exe</code>。</li>
+<li>或者在 VS 的”异常设置”中取消勾选 Win32 异常的”引发时中断”。</li>
+</ol>
+<p>这个细节直接影响你如何在线下测试崩溃捕获逻辑。</p>
+<h2 id="SEH：基于栈帧的局部保护"><a href="#SEH：基于栈帧的局部保护" class="headerlink" title="SEH：基于栈帧的局部保护"></a>SEH：基于栈帧的局部保护</h2><p>SEH 是 Windows 原生的结构化异常处理机制，语法是 <code>__try / __except</code>。它能捕获系统级硬件异常（如空指针访问、除零、栈溢出），这是 C++ 的 <code>try/catch</code> 做不到的。</p>
+<h3 id="SEH-代码示例"><a href="#SEH-代码示例" class="headerlink" title="SEH 代码示例"></a>SEH 代码示例</h3><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">const</span> <span class="type">char</span>* <span class="title">ExceptionCodeToString</span><span class="params">(DWORD code)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">switch</span> (code) &#123;</span><br><span class="line">        <span class="keyword">case</span> EXCEPTION_ACCESS_VIOLATION:      <span class="keyword">return</span> <span class="string">&quot;ACCESS_VIOLATION&quot;</span>;</span><br><span class="line">        <span class="keyword">case</span> EXCEPTION_ARRAY_BOUNDS_EXCEEDED: <span class="keyword">return</span> <span class="string">&quot;ARRAY_BOUNDS_EXCEEDED&quot;</span>;</span><br><span class="line">        <span class="keyword">case</span> EXCEPTION_FLT_DIVIDE_BY_ZERO:    <span class="keyword">return</span> <span class="string">&quot;FLT_DIVIDE_BY_ZERO&quot;</span>;</span><br><span class="line">        <span class="keyword">case</span> EXCEPTION_INT_DIVIDE_BY_ZERO:    <span class="keyword">return</span> <span class="string">&quot;INT_DIVIDE_BY_ZERO&quot;</span>;</span><br><span class="line">        <span class="keyword">case</span> EXCEPTION_STACK_OVERFLOW:        <span class="keyword">return</span> <span class="string">&quot;STACK_OVERFLOW&quot;</span>;</span><br><span class="line">        <span class="keyword">case</span> EXCEPTION_ILLEGAL_INSTRUCTION:   <span class="keyword">return</span> <span class="string">&quot;ILLEGAL_INSTRUCTION&quot;</span>;</span><br><span class="line">        <span class="keyword">default</span>:                              <span class="keyword">return</span> <span class="string">&quot;UNKNOWN&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">TestNullPointer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    __try &#123;</span><br><span class="line">        <span class="type">int</span>* p = <span class="literal">nullptr</span>;</span><br><span class="line">        *p = <span class="number">42</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    __except (EXCEPTION_EXECUTE_HANDLER) &#123;</span><br><span class="line">        DWORD code = <span class="built_in">GetExceptionCode</span>();</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;[SEH] Caught: %s (0x%08X)\n&quot;</span>, <span class="built_in">ExceptionCodeToString</span>(code), code);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[SEH] Program continues.\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">TestDivideByZero</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    __try &#123;</span><br><span class="line">        <span class="type">int</span> a = <span class="number">10</span>;</span><br><span class="line">        <span class="type">int</span> b = <span class="number">0</span>;</span><br><span class="line">        <span class="type">int</span> c = a / b;</span><br><span class="line">        (<span class="type">void</span>)c;</span><br><span class="line">    &#125;</span><br><span class="line">    __except (EXCEPTION_EXECUTE_HANDLER) &#123;</span><br><span class="line">        DWORD code = <span class="built_in">GetExceptionCode</span>();</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;[SEH] Caught: %s (0x%08X)\n&quot;</span>, <span class="built_in">ExceptionCodeToString</span>(code), code);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[SEH] Program continues.\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">TestNullPointer</span>();</span><br><span class="line">    <span class="built_in">TestDivideByZero</span>();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="SEH-过滤函数"><a href="#SEH-过滤函数" class="headerlink" title="SEH 过滤函数"></a>SEH 过滤函数</h3><p><code>__except</code> 后面可以跟一个过滤表达式或过滤函数，用来根据异常类型决定是处理还是继续搜索：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">LONG WINAPI <span class="title">ExceptionFilter</span><span class="params">(PEXCEPTION_POINTERS pExceptionInfo)</span> </span>&#123;</span><br><span class="line">    DWORD code = pExceptionInfo-&gt;ExceptionRecord-&gt;ExceptionCode;</span><br><span class="line">    <span class="keyword">if</span> (code == EXCEPTION_ACCESS_VIOLATION) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;[Filter] Access violation, handle it.\n&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> EXCEPTION_EXECUTE_HANDLER;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[Filter] Not access violation, continue searching.\n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> EXCEPTION_CONTINUE_SEARCH;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">TestFilter</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    __try &#123;</span><br><span class="line">        <span class="type">int</span>* p = <span class="literal">nullptr</span>;</span><br><span class="line">        *p = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    __except (<span class="built_in">ExceptionFilter</span>(<span class="built_in">GetExceptionInformation</span>())) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;[SEH] Handled by filter.\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="SEH-的局限"><a href="#SEH-的局限" class="headerlink" title="SEH 的局限"></a>SEH 的局限</h3><p>SEH 是基于栈帧的，只能保护 <code>__try</code> 块内的代码。它适合局部容错（例如保护某个可能崩溃的第三方调用），不适合做全局崩溃上报。</p>
+<h2 id="UEF-MiniDump：全局崩溃捕获的最后机会"><a href="#UEF-MiniDump：全局崩溃捕获的最后机会" class="headerlink" title="UEF + MiniDump：全局崩溃捕获的最后机会"></a>UEF + MiniDump：全局崩溃捕获的最后机会</h2><p>UEF（Unhandled Exception Filter）是进程级的最后机会异常处理机制。当异常没有被任何 <code>try/catch</code>、<code>__except</code>、线程级处理捕获时，Windows 会调用你注册的 UEF 回调。生产环境最常见的做法，就是在 UEF 中生成 MiniDump。</p>
+<h3 id="UEF-MiniDump-代码示例"><a href="#UEF-MiniDump-代码示例" class="headerlink" title="UEF + MiniDump 代码示例"></a>UEF + MiniDump 代码示例</h3><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;dbghelp.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstring&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> comment(lib, <span class="string">&quot;DbgHelp.lib&quot;</span>)</span></span><br><span class="line"></span><br><span class="line">LPTOP_LEVEL_EXCEPTION_FILTER g_oldFilter = <span class="literal">nullptr</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">GenerateMiniDump</span><span class="params">(EXCEPTION_POINTERS* pExceptionPointers,</span></span></span><br><span class="line"><span class="params"><span class="function">                      <span class="type">const</span> <span class="type">wchar_t</span>* path)</span> </span>&#123;</span><br><span class="line">    HANDLE hFile = <span class="built_in">CreateFileW</span>(</span><br><span class="line">        path,</span><br><span class="line">        GENERIC_WRITE,</span><br><span class="line">        <span class="number">0</span>,</span><br><span class="line">        <span class="literal">nullptr</span>,</span><br><span class="line">        CREATE_ALWAYS,</span><br><span class="line">        FILE_ATTRIBUTE_NORMAL,</span><br><span class="line">        <span class="literal">nullptr</span></span><br><span class="line">    );</span><br><span class="line">    <span class="keyword">if</span> (hFile == INVALID_HANDLE_VALUE) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Failed to create dump file, error: %lu\n&quot;</span>, <span class="built_in">GetLastError</span>());</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    MINIDUMP_EXCEPTION_INFORMATION mei;</span><br><span class="line">    mei.ThreadId = <span class="built_in">GetCurrentThreadId</span>();</span><br><span class="line">    mei.ExceptionPointers = pExceptionPointers;</span><br><span class="line">    mei.ClientPointers = FALSE;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// MiniDumpNormal 体积小，适合线上；MiniDumpWithFullMemory 信息更全</span></span><br><span class="line">    MINIDUMP_TYPE dumpType = MiniDumpNormal;</span><br><span class="line"></span><br><span class="line">    BOOL result = <span class="built_in">MiniDumpWriteDump</span>(</span><br><span class="line">        <span class="built_in">GetCurrentProcess</span>(),</span><br><span class="line">        <span class="built_in">GetCurrentProcessId</span>(),</span><br><span class="line">        hFile,</span><br><span class="line">        dumpType,</span><br><span class="line">        &amp;mei,</span><br><span class="line">        <span class="literal">nullptr</span>,</span><br><span class="line">        <span class="literal">nullptr</span></span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">    <span class="built_in">CloseHandle</span>(hFile);</span><br><span class="line">    <span class="keyword">return</span> result == TRUE;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">LONG WINAPI <span class="title">MyUnhandledExceptionFilter</span><span class="params">(PEXCEPTION_POINTERS pExceptionInfo)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;\n[UEF] Unhandled exception occurred\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[UEF] Exception code: 0x%08X\n&quot;</span>,</span><br><span class="line">           pExceptionInfo-&gt;ExceptionRecord-&gt;ExceptionCode);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[UEF] Exception address: 0x%p\n&quot;</span>,</span><br><span class="line">           pExceptionInfo-&gt;ExceptionRecord-&gt;ExceptionAddress);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// dump 路径与 exe 同名，扩展名改为 .dmp</span></span><br><span class="line">    <span class="type">wchar_t</span> dumpPath[MAX_PATH];</span><br><span class="line">    <span class="built_in">GetModuleFileNameW</span>(<span class="literal">nullptr</span>, dumpPath, MAX_PATH);</span><br><span class="line"></span><br><span class="line">    <span class="type">wchar_t</span>* ext = <span class="built_in">wcsrchr</span>(dumpPath, <span class="string">L&#x27;.&#x27;</span>);</span><br><span class="line">    <span class="keyword">if</span> (ext) &#123;</span><br><span class="line">        <span class="built_in">wcscpy_s</span>(ext, MAX_PATH - (ext - dumpPath), <span class="string">L&quot;.dmp&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">wcscat_s</span>(dumpPath, MAX_PATH, <span class="string">L&quot;.dmp&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;[UEF] Generating MiniDump...\n&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">GenerateMiniDump</span>(pExceptionInfo, dumpPath)) &#123;</span><br><span class="line">        <span class="built_in">wprintf</span>(<span class="string">L&quot;[UEF] MiniDump saved to: %s\n&quot;</span>, dumpPath);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;[UEF] Failed to generate MiniDump.\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调用旧的 UEF，保持链式行为</span></span><br><span class="line">    <span class="keyword">if</span> (g_oldFilter != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">g_oldFilter</span>(pExceptionInfo);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> EXCEPTION_EXECUTE_HANDLER;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    g_oldFilter = <span class="built_in">SetUnhandledExceptionFilter</span>(MyUnhandledExceptionFilter);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Unhandled exception filter registered.\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="type">int</span>* p = <span class="literal">nullptr</span>;</span><br><span class="line">    *p = <span class="number">0xDEADBEEF</span>;  <span class="comment">// 触发 Access Violation</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译命令：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">cl /EHsc /W4 /Zi /Fe:crash_dump.exe main.cpp DbgHelp.lib</span><br></pre></td></tr></table></figure>
+<h3 id="为什么用-UEF-而不是-VEH-做崩溃上报"><a href="#为什么用-UEF-而不是-VEH-做崩溃上报" class="headerlink" title="为什么用 UEF 而不是 VEH 做崩溃上报"></a>为什么用 UEF 而不是 VEH 做崩溃上报</h3><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>VEH</th>
+<th>UEF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>调用时机</td>
+<td>每次异常都调用</td>
+<td>仅未处理异常才调用</td>
+</tr>
+<tr>
+<td>噪音</td>
+<td>大，会收到已捕获的异常</td>
+<td>小，只处理真正崩溃</td>
+</tr>
+<tr>
+<td>典型用途</td>
+<td>抢先日志、调试注入</td>
+<td>生成 dump、崩溃上报</td>
+</tr>
+<tr>
+<td>全局性</td>
+<td>是</td>
+<td>是</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>所以如果只是想在”真正崩溃”时做处理，UEF 是更合适的入口。</p>
+<h3 id="MiniDump-类型的选择"><a href="#MiniDump-类型的选择" class="headerlink" title="MiniDump 类型的选择"></a>MiniDump 类型的选择</h3><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MiniDumpNormal</code></td>
+<td>只包含基本信息，体积小</td>
+<td>线上上报</td>
+</tr>
+<tr>
+<td><code>MiniDumpWithFullMemory</code></td>
+<td>包含完整内存，体积大</td>
+<td>本地深度分析</td>
+</tr>
+<tr>
+<td><code>MiniDumpWithIndirectlyReferencedMemory</code></td>
+<td>包含间接引用内存</td>
+<td>折中方案</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>线上通常用 <code>MiniDumpNormal</code>，必要时在回调里追加自定义信息（如日志片段、用户操作路径）来补充上下文。</p>
+<h2 id="常见异常代码速查"><a href="#常见异常代码速查" class="headerlink" title="常见异常代码速查"></a>常见异常代码速查</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>代码</th>
+<th>含义</th>
+<th>典型原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0xC0000005</code></td>
+<td>Access Violation</td>
+<td>空指针、野指针、数组越界、use-after-free</td>
+</tr>
+<tr>
+<td><code>0xC0000094</code></td>
+<td>Integer Divide by Zero</td>
+<td>整数除零</td>
+</tr>
+<tr>
+<td><code>0xC00000FD</code></td>
+<td>Stack Overflow</td>
+<td>无限递归、栈上分配过大内存</td>
+</tr>
+<tr>
+<td><code>0xC000001D</code></td>
+<td>Illegal Instruction</td>
+<td>执行了 CPU 不认识的指令</td>
+</tr>
+<tr>
+<td><code>0x80000003</code></td>
+<td>Breakpoint</td>
+<td>调试断点</td>
+</tr>
+<tr>
+<td><code>0xC0000409</code></td>
+<td>Stack Buffer Overrun</td>
+<td>栈缓冲区溢出</td>
+</tr>
+<tr>
+<td><code>0xC0000374</code></td>
+<td>Heap Corruption</td>
+<td>堆损坏（如 double free）</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="各机制对比与工程选择"><a href="#各机制对比与工程选择" class="headerlink" title="各机制对比与工程选择"></a>各机制对比与工程选择</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>机制</th>
+<th>调用顺序</th>
+<th>作用</th>
+<th>典型用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VEH</td>
+<td>1</td>
+<td>抢先处理异常</td>
+<td>全局日志、调试注入</td>
+</tr>
+<tr>
+<td>SEH</td>
+<td>2</td>
+<td>栈帧级异常处理</td>
+<td>局部容错、资源清理</td>
+</tr>
+<tr>
+<td>C++ EH</td>
+<td>3</td>
+<td>处理 C++ throw</td>
+<td>业务逻辑异常</td>
+</tr>
+<tr>
+<td>VEC</td>
+<td>4</td>
+<td>SEH 后继续</td>
+<td>很少单独使用</td>
+</tr>
+<tr>
+<td>UEF</td>
+<td>5</td>
+<td>最后机会处理</td>
+<td><strong>生成 dump、崩溃上报</strong></td>
+</tr>
+<tr>
+<td>WER</td>
+<td>6</td>
+<td>系统级上报</td>
+<td>系统备份 dump</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>工程建议：</strong></p>
+<ul>
+<li>大多数客户端程序只需要注册 <code>SetUnhandledExceptionFilter</code> 生成 MiniDump。</li>
+<li>需要更灵活的抢先处理时，再加 VEH。</li>
+<li>WER 保持默认开启，作为双重保险。</li>
+<li>复杂项目可以考虑 Google Crashpad 等成熟崩溃捕获库。</li>
+</ul>
+<h2 id="一个完整的崩溃捕获闭环"><a href="#一个完整的崩溃捕获闭环" class="headerlink" title="一个完整的崩溃捕获闭环"></a>一个完整的崩溃捕获闭环</h2><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">程序运行</span><br><span class="line">    ↓</span><br><span class="line">异常发生</span><br><span class="line">    ↓</span><br><span class="line">VEH 记录日志（可选）</span><br><span class="line">    ↓</span><br><span class="line">SEH / C++ EH 尝试局部处理</span><br><span class="line">    ↓</span><br><span class="line">UEF 生成 MiniDump</span><br><span class="line">    ↓</span><br><span class="line">离线分析（WinDbg + PDB）</span><br><span class="line">    ↓</span><br><span class="line">定位代码行，修复 bug</span><br></pre></td></tr></table></figure>
+<p>下一篇会进入具体崩溃类型的分析：空指针、堆破坏、栈溢出、未初始化、内存耗尽、纯虚调用，以及它们在 Debug / Release 下的行为差异。</p>
+]]></content>
+      <tags>
+        <tag>C++</tag>
+        <tag>Windows</tag>
+        <tag>调试</tag>
+        <tag>SEH</tag>
+        <tag>MiniDump</tag>
+      </tags>
+  </entry>
 </search>
