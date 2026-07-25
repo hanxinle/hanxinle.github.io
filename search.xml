@@ -1916,4 +1916,153 @@ return 0;
         <tag>OpenGL</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Windows C++ Crash 治理全景：异常机制、崩溃类型与工具链实践</title>
+    <url>/2026/07/25/20260725-windows-cpp-crash-governance-overview/</url>
+    <content><![CDATA[<h2 id="为什么写这个系列"><a href="#为什么写这个系列" class="headerlink" title="为什么写这个系列"></a>为什么写这个系列</h2><p>Windows C++ 程序的崩溃治理，是客户端开发和系统编程里绕不开的话题。一个线上 crash 通常不会乖乖在开发环境复现，它更常见的形态是：用户机器上偶发、dump 文件发回来、调用栈看起来 unrelated、本地怎么跑都没事。</p>
+<p>这个系列源于我对 Windows C++ 崩溃治理的系统性梳理。核心目标是把零散的知识点串成一条可执行的链路：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">异常如何被捕获 → 崩溃如何分类 → 如何预防 → 如何用工具定位 → 如何工程化上报</span><br></pre></td></tr></table></figure>
+<span id="more"></span>
+<p>文中出现的代码都是可独立编译运行的小例子，关键结论会配合运行现象说明，方便读者复现和理解。</p>
+<h2 id="知识地图"><a href="#知识地图" class="headerlink" title="知识地图"></a>知识地图</h2><p>Windows C++ Crash 治理可以分成四条主线：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Windows C++ Crash 治理</span><br><span class="line">├── 一、异常处理机制</span><br><span class="line">│   ├── VEH：向量异常处理</span><br><span class="line">│   ├── SEH：结构化异常处理</span><br><span class="line">│   └── UEF + MiniDump：全局崩溃捕获与 dump 生成</span><br><span class="line">├── 二、常见崩溃类型</span><br><span class="line">│   ├── 空指针 / 野指针</span><br><span class="line">│   ├── 堆破坏（越界、double free、use-after-free）</span><br><span class="line">│   ├── 栈溢出</span><br><span class="line">│   ├── 未初始化变量</span><br><span class="line">│   ├── 内存耗尽</span><br><span class="line">│   └── 纯虚函数调用</span><br><span class="line">├── 三、并发问题</span><br><span class="line">│   └── 多线程竞争</span><br><span class="line">└── 四、大型工程问题</span><br><span class="line">    ├── DLL 加载失败</span><br><span class="line">    ├── 断言</span><br><span class="line">    ├── 静态初始化顺序（SIOF）</span><br><span class="line">    └── 跨模块内存分配</span><br></pre></td></tr></table></figure>
+<h2 id="异常处理机制：一条有优先级的链条"><a href="#异常处理机制：一条有优先级的链条" class="headerlink" title="异常处理机制：一条有优先级的链条"></a>异常处理机制：一条有优先级的链条</h2><p>Windows 的异常处理不是单一机制，而是多层链条：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">异常发生</span><br><span class="line">  → VEH（向量异常处理，最先，可注册多个）</span><br><span class="line">  → SEH（结构化异常处理，__try/__except，栈帧级）</span><br><span class="line">  → C++ EH（try/catch，仅处理 C++ throw 的异常）</span><br><span class="line">  → UEF（未处理异常过滤器，最后兜底，用于生成 dump）</span><br><span class="line">  → WER（Windows 错误报告，系统级）</span><br></pre></td></tr></table></figure>
+<p><strong>关键理解：</strong></p>
+<ul>
+<li><strong>VEH</strong> 优先级最高，可用于 hook 和抢先处理，但每次异常都会被调用，包括已被捕获的异常。</li>
+<li><strong>SEH</strong> 能捕获系统级硬件异常（如访问违例 0xC0000005），C++ 的 <code>catch(...)</code> 默认不能。</li>
+<li><strong>UEF</strong> 是崩溃兜底的最后一道防线，生产环境生成 MiniDump 通常在这里做。</li>
+</ul>
+<p>一个容易踩坑的细节：<strong>调试器会抢在 VEH 之前拦截异常</strong>。在 Visual Studio 里按 F5 运行时，自己注册的 VEH 回调可能根本不会被调用；必须按 <code>Ctrl + F5</code> 不调试运行，或者关闭调试器对 Win32 异常的中断，才能验证 VEH 逻辑。这个细节直接影响到你如何在线下正确测试崩溃捕获代码。</p>
+<h2 id="常见崩溃类型：不是只会空指针"><a href="#常见崩溃类型：不是只会空指针" class="headerlink" title="常见崩溃类型：不是只会空指针"></a>常见崩溃类型：不是只会空指针</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>崩溃类型</th>
+<th>根因</th>
+<th>治理方向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>空指针 / 野指针</td>
+<td>解引用无效地址</td>
+<td>使用前判空、智能指针</td>
+</tr>
+<tr>
+<td>堆破坏</td>
+<td>越界写、重复释放、释放后使用</td>
+<td>ASan、page heap、RAII</td>
+</tr>
+<tr>
+<td>栈溢出</td>
+<td>无限递归、大局部数组</td>
+<td>递归深度限制、堆分配大对象</td>
+</tr>
+<tr>
+<td>未初始化</td>
+<td>变量 / 成员未赋初值</td>
+<td>声明即初始化、<code>&#123;&#125;</code> 初始化</td>
+</tr>
+<tr>
+<td>内存耗尽</td>
+<td>分配失败未处理</td>
+<td>检查返回值、优雅降级</td>
+</tr>
+<tr>
+<td>纯虚调用</td>
+<td>构造 / 析构期调用虚函数</td>
+<td>避免在构造析构中调虚函数</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>堆破坏是最隐蔽的一类。</strong> 越界写入后，Release 模式的 CRT 堆检查宽松，程序可能”正常”跑完；但堆的内部结构已经损坏，后续某个完全无关的 <code>new</code>/<code>delete</code> 才会暴露问题。Debug 模式下反而会在释放时立即触发断言，把问题暴露在发生现场。所以 Debug 下崩溃其实是好事，Release 下”没崩”才更值得警惕。</p>
+<p><strong>栈溢出也有一个反直觉点：</strong> 把两个大数组放在同一个函数里，即使分别包在 <code>__try/__except</code> 中，也<strong>无法在函数入口阶段捕获栈溢出</strong>。因为 MSVC 会在函数 prologue 阶段一次性分配整个栈帧，此时 SEH 作用域还没生效。大块内存应该优先用堆分配，或把每个大栈分配隔离到独立函数中。</p>
+<h2 id="并发问题：本地不复现，线上偶发"><a href="#并发问题：本地不复现，线上偶发" class="headerlink" title="并发问题：本地不复现，线上偶发"></a>并发问题：本地不复现，线上偶发</h2><p>多线程竞争通常不会立即崩溃，但它是很多奇怪崩溃的幕后推手：</p>
+<ul>
+<li>竞争会破坏内存结构（如链表节点丢失）。</li>
+<li>竞争会诱发野指针、双重释放、use-after-free。</li>
+<li>结果依赖线程调度，Debug 模式可能掩盖问题，Release 才偶发。</li>
+<li>dump 中的崩溃点往往不是根因，真正的破坏发生在之前某次无保护写操作。</li>
+</ul>
+<p>一个经典例子：10 个线程无保护地自增同一个计数器，每次自增在汇编层面是”读 - 改 - 写”三步，线程切换会让多个线程基于同一个旧值加 1，最终计数远小于预期。</p>
+<p>治理三件套：<strong>互斥锁（<code>std::mutex</code>）、原子变量（<code>std::atomic</code>）、无共享设计</strong>。</p>
+<h2 id="大型工程问题：平时用不上，一出事就抓瞎"><a href="#大型工程问题：平时用不上，一出事就抓瞎" class="headerlink" title="大型工程问题：平时用不上，一出事就抓瞎"></a>大型工程问题：平时用不上，一出事就抓瞎</h2><p>有两个问题在小型项目里几乎不会出现，但在大型 C++ 工程里却是经典噩梦。</p>
+<h3 id="静态初始化顺序（SIOF）"><a href="#静态初始化顺序（SIOF）" class="headerlink" title="静态初始化顺序（SIOF）"></a>静态初始化顺序（SIOF）</h3><p>C++ 只保证同一编译单元内全局对象的初始化顺序，跨编译单元由链接器决定，顺序不确定。如果全局对象 A 的构造函数依赖全局对象 B，而链接器先初始化 A，A 访问到的就是未初始化的 B，崩溃发生在 <code>main()</code> 之前的 <code>_initterm()</code> 里，调用栈不在业务代码中，极难排查。</p>
+<p>核心解法：<strong>Meyers’ Singleton</strong>，把”程序启动时初始化”改成”第一次用到时初始化”。</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 不推荐：裸全局对象，初始化顺序不可控</span></span><br><span class="line">B g_b;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 推荐：函数内 static，首次访问时才构造</span></span><br><span class="line"><span class="function">B&amp; <span class="title">GetB</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="type">static</span> B instance;  <span class="comment">// C++11 起线程安全</span></span><br><span class="line">    <span class="keyword">return</span> instance;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="跨模块内存分配"><a href="#跨模块内存分配" class="headerlink" title="跨模块内存分配"></a>跨模块内存分配</h3><p>使用 <code>/MT</code> 静态链接 CRT 时，每个 DLL/EXE 都有独立的 CRT 堆。DLL 中 <code>new</code> 的内存，在主程序中 <code>delete</code> 会崩溃，因为两个堆管理器不是同一个。</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// DLL 中</span></span><br><span class="line"><span class="type">char</span>* buffer = <span class="keyword">new</span> <span class="type">char</span>[<span class="number">100</span>];</span><br><span class="line"></span><br><span class="line"><span class="comment">// 主程序中</span></span><br><span class="line"><span class="keyword">delete</span>[] buffer;  <span class="comment">// 危险：跨 CRT 堆释放</span></span><br></pre></td></tr></table></figure>
+<p>两条黄金原则：</p>
+<ol>
+<li>不要让全局对象互相依赖（用 Meyers’ Singleton）。</li>
+<li>不要跨模块分配 / 释放内存（谁分配谁释放，或统一 <code>/MD</code>）。</li>
+</ol>
+<h2 id="工具链：把”看懂崩溃”变成”定位线上崩溃”"><a href="#工具链：把”看懂崩溃”变成”定位线上崩溃”" class="headerlink" title="工具链：把”看懂崩溃”变成”定位线上崩溃”"></a>工具链：把”看懂崩溃”变成”定位线上崩溃”</h2><p>代码层面的理解只是第一步。真正的分水岭是工具链实战：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>用途</th>
+<th>入门方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>WinDbg</strong></td>
+<td>分析 MiniDump，还原调用栈</td>
+<td><code>.ecxr</code> → <code>k</code></td>
+</tr>
+<tr>
+<td><strong>gflags + Page Heap</strong></td>
+<td>精确定位堆破坏</td>
+<td><code>gflags /p /enable yourapp.exe /full</code></td>
+</tr>
+<tr>
+<td><strong>AddressSanitizer</strong></td>
+<td>编译期插桩，抓越界 / UAF</td>
+<td>VS 项目属性开启 ASan</td>
+</tr>
+<tr>
+<td><strong>Application Verifier</strong></td>
+<td>系统级验证堆、句柄、锁</td>
+<td>配合 WinDbg 使用</td>
+</tr>
+<tr>
+<td><strong>Crashpad / Breakpad</strong></td>
+<td>生产级 dump 采集与上报</td>
+<td>替换自研 UEF 方案</td>
+</tr>
+<tr>
+<td><strong>PDB 符号服务器</strong></td>
+<td>线上 dump 还原符号</td>
+<td>symsrv + <code>_NT_SYMBOL_PATH</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>一个完整的崩溃治理闭环应该是：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">事前预防（代码规范 + 静态检查 + ASan）</span><br><span class="line">    ↓</span><br><span class="line">事中捕获（UEF / Crashpad 生成 dump）</span><br><span class="line">    ↓</span><br><span class="line">事后分析（WinDbg + PDB 还原调用栈）</span><br><span class="line">    ↓</span><br><span class="line">持续优化（统计崩溃率、修复率、新崩溃占比）</span><br></pre></td></tr></table></figure>
+<h2 id="本系列文章安排"><a href="#本系列文章安排" class="headerlink" title="本系列文章安排"></a>本系列文章安排</h2><p>这个主题会按以下顺序展开，每篇聚焦一个技术层面：</p>
+<ol>
+<li><strong>总览篇</strong>（本文）：全景地图与治理链路。</li>
+<li><strong>异常处理机制篇</strong>：VEH / SEH / UEF 的调用顺序、MiniDump 生成、调试器对异常处理的影响。</li>
+<li><strong>常见崩溃类型篇</strong>：空指针、堆破坏、栈溢出、未初始化、内存耗尽、纯虚调用的现象与治理。</li>
+<li><strong>并发与工程问题篇</strong>：多线程竞争、DLL 加载、断言、SIOF、跨模块内存分配。</li>
+<li><strong>工具链实战篇</strong>：WinDbg 分析 dump、ASan、gflags、Crashpad 集成、PDB 符号服务器。</li>
+</ol>
+<p>每篇都会保留可运行的代码片段、运行现象和工程结论，力求让读者既能看懂原理，也能落地实践。</p>
+<h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>Windows C++ 崩溃治理不是背几个 API 就能解决的事情。它需要一个完整的认知框架：异常是怎么被一层层处理的、不同类型崩溃在 Debug / Release 下为什么表现不同、为什么有些 bug 本地不复现客户环境才崩、大型工程中有哪些”防御性知识”平时用不上但一出事就致命。</p>
+<p>当这些知识点连成网络之后，再拿到一个 dump 文件，你就不会只盯着调用栈发呆，而是能判断：这大概是哪一类问题、应该用什么工具验证、修复后如何回归。到那时候，这些知识才真正变成生产力。</p>
+]]></content>
+      <tags>
+        <tag>C++</tag>
+        <tag>Windows</tag>
+        <tag>Crash 治理</tag>
+        <tag>调试</tag>
+      </tags>
+  </entry>
 </search>
