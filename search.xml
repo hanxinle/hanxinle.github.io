@@ -2269,9 +2269,8 @@ return 0;
       <tags>
         <tag>C++</tag>
         <tag>Windows</tag>
+        <tag>Crash 治理</tag>
         <tag>调试</tag>
-        <tag>SEH</tag>
-        <tag>MiniDump</tag>
       </tags>
   </entry>
   <entry>
@@ -2458,7 +2457,7 @@ return 0;
         <tag>C++</tag>
         <tag>Windows</tag>
         <tag>Crash 治理</tag>
-        <tag>内存安全</tag>
+        <tag>调试</tag>
       </tags>
   </entry>
 </search>
