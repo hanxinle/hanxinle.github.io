@@ -2276,7 +2276,7 @@ return 0;
   </entry>
   <entry>
     <title>Windows C++ 常见崩溃类型：从空指针到纯虚调用的现象与治理</title>
-    <url>/2026/07/25/20260726-windows-cpp-common-crash-types/</url>
+    <url>/2026/07/26/20260726-windows-cpp-common-crash-types/</url>
     <content><![CDATA[<h2 id="崩溃类型比想象中更多"><a href="#崩溃类型比想象中更多" class="headerlink" title="崩溃类型比想象中更多"></a>崩溃类型比想象中更多</h2><p>上一篇讲了 Windows 的异常处理链路。这一篇进入实战层面，看看客户端程序中最常见的几类崩溃：空指针、堆破坏、栈溢出、未初始化、内存耗尽、纯虚调用。</p>
 <p>这些崩溃的共同点是什么？<strong>它们大多在 Release 模式下更隐蔽，dump 中的崩溃点往往不是真正的破坏现场。</strong> 理解每类崩溃的根因和 Debug/Release 差异，是快速定位问题的关键。</p>
 <span id="more"></span>

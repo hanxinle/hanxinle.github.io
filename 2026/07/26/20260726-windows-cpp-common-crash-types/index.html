@@ -23,12 +23,12 @@
   <meta name="description" content="崩溃类型比想象中更多上一篇讲了 Windows 的异常处理链路。这一篇进入实战层面，看看客户端程序中最常见的几类崩溃：空指针、堆破坏、栈溢出、未初始化、内存耗尽、纯虚调用。 这些崩溃的共同点是什么？它们大多在 Release 模式下更隐蔽，dump 中的崩溃点往往不是真正的破坏现场。 理解每类崩溃的根因和 Debug&#x2F;Release 差异，是快速定位问题的关键。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Windows C++ 常见崩溃类型：从空指针到纯虚调用的现象与治理">
-<meta property="og:url" content="https://hanxinle.github.io/2026/07/25/20260726-windows-cpp-common-crash-types/index.html">
+<meta property="og:url" content="https://hanxinle.github.io/2026/07/26/20260726-windows-cpp-common-crash-types/index.html">
 <meta property="og:site_name" content="科学学习与工程笔记">
 <meta property="og:description" content="崩溃类型比想象中更多上一篇讲了 Windows 的异常处理链路。这一篇进入实战层面，看看客户端程序中最常见的几类崩溃：空指针、堆破坏、栈溢出、未初始化、内存耗尽、纯虚调用。 这些崩溃的共同点是什么？它们大多在 Release 模式下更隐蔽，dump 中的崩溃点往往不是真正的破坏现场。 理解每类崩溃的根因和 Debug&#x2F;Release 差异，是快速定位问题的关键。">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2026-07-25T09:30:00.000Z">
-<meta property="article:modified_time" content="2026-07-25T09:14:36.648Z">
+<meta property="article:published_time" content="2026-07-26T09:30:00.000Z">
+<meta property="article:modified_time" content="2026-07-26T02:48:26.303Z">
 <meta property="article:author" content="Xinle">
 <meta property="article:tag" content="C++">
 <meta property="article:tag" content="Windows">
@@ -36,7 +36,7 @@
 <meta property="article:tag" content="内存安全">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="https://hanxinle.github.io/2026/07/25/20260726-windows-cpp-common-crash-types/">
+<link rel="canonical" href="https://hanxinle.github.io/2026/07/26/20260726-windows-cpp-common-crash-types/">
 
 
 <script id="page-configurations">
@@ -168,7 +168,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/07/25/20260726-windows-cpp-common-crash-types/">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/07/26/20260726-windows-cpp-common-crash-types/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -192,7 +192,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2026-07-25 17:30:00 / 修改时间：17:14:36" itemprop="dateCreated datePublished" datetime="2026-07-25T17:30:00+08:00">2026-07-25</time>
+              <time title="创建时间：2026-07-26 17:30:00 / 修改时间：10:48:26" itemprop="dateCreated datePublished" datetime="2026-07-26T17:30:00+08:00">2026-07-26</time>
             </span>
 
           
