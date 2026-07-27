@@ -2793,9 +2793,8 @@ return 0;
       <tags>
         <tag>C++</tag>
         <tag>Windows</tag>
+        <tag>Crash 治理</tag>
         <tag>WinDbg</tag>
-        <tag>AddressSanitizer</tag>
-        <tag>Crashpad</tag>
       </tags>
   </entry>
 </search>
