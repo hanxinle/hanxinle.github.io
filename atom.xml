@@ -6,7 +6,7 @@
   <link href="https://hanxinle.github.io/atom.xml" rel="self"/>
   
   <link href="https://hanxinle.github.io/"/>
-  <updated>2026-07-27T07:33:18.213Z</updated>
+  <updated>2026-09-28T11:53:54.278Z</updated>
   <id>https://hanxinle.github.io/</id>
   
   <author>
@@ -15,6 +15,30 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Claude Code 学习笔记：常用命令与 CLI 深度使用</title>
+    <link href="https://hanxinle.github.io/2026/09/28/20260928-claude-code-commands-and-cli-usage/"/>
+    <id>https://hanxinle.github.io/2026/09/28/20260928-claude-code-commands-and-cli-usage/</id>
+    <published>2026-09-28T10:00:00.000Z</published>
+    <updated>2026-09-28T11:53:54.278Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="为什么学-Claude-Code"><a href="#为什么学-Claude-Code" class="headerlink" title="为什么学 Claude Code"></a>为什么学 Claude Code</h2><p>把 Claude Code 作为最重要的 AI Agent 工具来学习，原因有二：一是它是不同于 ChatGPT 的 Agent 模式的集大成者，二是它拥有最好的模型。</p><p>这篇笔记整理了 Claude Code 的两块核心内容：会话内的斜杠命令，以及命令行下的深度用法（参数与管道）。</p><span id="more"></span><h2 id="会话内命令"><a href="#会话内命令" class="headerlink" title="会话内命令"></a>会话内命令</h2><p>会话内命令以 <code>/</code> 开头，覆盖会话管理、配置、诊断、扩展等场景：</p><div class="table-container"><table><thead><tr><th>命令</th><th>说明</th></tr></thead><tbody><tr><td>/init</td><td>创建 CLAUDE.md</td></tr><tr><td>/compact</td><td>压缩上下文，可指定参数，例如”保留关于设计的讨论”</td></tr><tr><td>/clear</td><td>清空上下文，开始新任务时使用</td></tr><tr><td>/export xxx.md</td><td>将会话内容导出为文档</td></tr><tr><td>/cost</td><td>看 token 消耗</td></tr><tr><td>/status</td><td>以下三个都是一样的</td></tr><tr><td>/usage</td><td></td></tr><tr><td>/config</td><td></td></tr><tr><td>/model</td><td>会话中切换模型</td></tr><tr><td>/help</td><td>查看所有命令</td></tr><tr><td>/doctor</td><td>检查安装健康状况，排查问题用</td></tr><tr><td>/permissions</td><td>查看/修改工具权限</td></tr><tr><td>/terminal-setup</td><td>配置终端快捷键（如 Shift+Enter 换行）</td></tr><tr><td>/vim</td><td>开启 vim 编辑模式</td></tr><tr><td>/theme</td><td>配色主题</td></tr><tr><td>/login、/logout</td><td>登录、登出</td></tr><tr><td>/release-notes</td><td>看看更新日志</td></tr><tr><td>/resume</td><td>恢复对话，会给出会话历史，自己选</td></tr><tr><td>/add-dir</td><td>把路径加入进来一起分析</td></tr><tr><td>/memory</td><td>编辑 claude.md 文件，会让用户选编辑全局的还是项目的</td></tr><tr><td>/mcp</td><td>查看和管理 MCP 服务器</td></tr><tr><td>/agents</td><td>管理子代理（subagent）</td></tr><tr><td>/tasks</td><td>查看命令</td></tr><tr><td>/exit</td><td>退出 cc，退出时会提示如何恢复这次对话的命令</td></tr><tr><td>/rewind</td><td>回退代码修改。按两次 esc，会打开更改列表，上下键选择回退的版本</td></tr></tbody></table></div><p>日常使用频率最高的是 <code>/clear</code> 和 <code>/compact</code> 这一对：前者清空上下文开始新任务，后者在上下文将满时压缩并保留关键信息。</p><p>另外还支持自定义命令：在 <code>.claude/commands</code> 中定义一个 <code>deploy.md</code>，写明要做的操作，就可以在终端中直接使用这个命令，且支持参数定义。</p><p><code>!</code> 开头则可以执行 shell 指令。</p><h2 id="CLI-深度使用"><a href="#CLI-深度使用" class="headerlink" title="CLI 深度使用"></a>CLI 深度使用</h2><h3 id="常用参数"><a href="#常用参数" class="headerlink" title="常用参数"></a>常用参数</h3><div class="table-container"><table><thead><tr><th>参数</th><th>说明</th></tr></thead><tbody><tr><td>-p</td><td>完成后中断对话</td></tr><tr><td>—verbose</td><td>命令行尾部添加，会显示必要步骤（实测没有显示）</td></tr><tr><td>-c</td><td>继续上次退出 claude 前的 session（对话）</td></tr><tr><td>—output-format txt/json/stream-json</td><td>输出格式的定义，后两者查看起来很乱，主要是给 LLM 看的</td></tr><tr><td>—max-turns</td><td>限制对话轮数</td></tr><tr><td>—model</td><td>模型选择</td></tr><tr><td>—append-system-prompt “你是系统工程师”</td><td>附加说明</td></tr><tr><td>— cmd</td><td>指定工作目录</td></tr><tr><td>—resume \<session-id\></session-id\></td><td>恢复指定会话，是 -c 的精确版（对应 /resume 命令）</td></tr><tr><td>—add-dir \&lt;路径></td><td>启动时额外添加可访问目录，对应会话中的 /add-dir 命令</td></tr></tbody></table></div><p>其中 <code>-p</code>（print 模式）是自动化的关键：非交互执行，完成后直接输出结果并退出，适合脚本和管道场景。</p><p><code>--add-dir</code> 也很实用。默认 claude 只能读写启动时所在的目录，如果项目要引用别处的文件（比如另一个仓库的代码），就用它把其他路径加进来。</p><h3 id="单个指令调用"><a href="#单个指令调用" class="headerlink" title="单个指令调用"></a>单个指令调用</h3><p>不用进入交互模式，直接在命令行里一句话完成任务，好处是速度快：</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">claude &quot;这个仓库是做什么的&quot;</span><br><span class="line">claude &quot;修改 main.cpp 文件，提交文件&quot;</span><br><span class="line">claude commit</span><br></pre></td></tr></table></figure><h3 id="串流处理（管道）"><a href="#串流处理（管道）" class="headerlink" title="串流处理（管道）"></a>串流处理（管道）</h3><p>听起来就像 Linux 中的管道，可以把任何命令的输出喂给 claude 分析：</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cat qurey.txt | claude -p</span><br><span class="line">git log --oneline -10 | claude -p &quot;分析这些提交的模式&quot;</span><br></pre></td></tr></table></figure><p>与其它工具整合，有如下用法：</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git diff | claude -p &quot;解析这些变更的影响&quot;</span><br><span class="line">npm test 2&amp;1 | claude -p &quot;分析测试失败的原因&quot;</span><br><span class="line">tail -f app.log | claude -p &quot;监控异常模式&quot;</span><br></pre></td></tr></table></figure><p>这个模式把 claude 变成了管道中的一环：上游产生数据，claude 负责理解和总结，非常适合接在 CI、日志监控等自动化流程里。</p><h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ul><li>会话内用 <code>/</code> 命令管理会话和配置，记住 <code>/clear</code>、<code>/compact</code>、<code>/resume</code> 就够日常使用了。</li><li>命令行用 <code>-p</code> 加管道，可以把 claude 嵌入任何现有工作流，这是它区别于聊天框式 AI 的核心能力。</li></ul>]]></content>
+    
+    
+    <summary type="html">&lt;h2 id=&quot;为什么学-Claude-Code&quot;&gt;&lt;a href=&quot;#为什么学-Claude-Code&quot; class=&quot;headerlink&quot; title=&quot;为什么学 Claude Code&quot;&gt;&lt;/a&gt;为什么学 Claude Code&lt;/h2&gt;&lt;p&gt;把 Claude Code 作为最重要的 AI Agent 工具来学习，原因有二：一是它是不同于 ChatGPT 的 Agent 模式的集大成者，二是它拥有最好的模型。&lt;/p&gt;
+&lt;p&gt;这篇笔记整理了 Claude Code 的两块核心内容：会话内的斜杠命令，以及命令行下的深度用法（参数与管道）。&lt;/p&gt;</summary>
+    
+    
+    
+    
+    <category term="AI Agent" scheme="https://hanxinle.github.io/tags/AI-Agent/"/>
+    
+    <category term="工具" scheme="https://hanxinle.github.io/tags/%E5%B7%A5%E5%85%B7/"/>
+    
+    <category term="Claude Code" scheme="https://hanxinle.github.io/tags/Claude-Code/"/>
+    
+  </entry>
   
   <entry>
     <title>Windows C++ 崩溃治理工具链：WinDbg、ASan、Crashpad 与符号服务器</title>
@@ -434,25 +458,6 @@
     
     
     <category term="工具" scheme="https://hanxinle.github.io/tags/%E5%B7%A5%E5%85%B7/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>SICP 相关</title>
-    <link href="https://hanxinle.github.io/2023/02/23/sicp/"/>
-    <id>https://hanxinle.github.io/2023/02/23/sicp/</id>
-    <published>2023-02-23T02:00:37.000Z</published>
-    <updated>2026-05-09T12:18:35.525Z</updated>
-    
-    <content type="html"><![CDATA[<p>首先进行环境安装，其次记录重要信息提示。</p><span id="more"></span><h1 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h1><h2 id="Ubuntu-下安装-MIT-Scheme"><a href="#Ubuntu-下安装-MIT-Scheme" class="headerlink" title="Ubuntu 下安装 MIT-Scheme"></a>Ubuntu 下安装 MIT-Scheme</h2><p>下载链接是：</p><p>这个软件当前不再支持 Windows ，需要在类 Linux 环境运行。</p><h2 id="DrRacket-sicp-package"><a href="#DrRacket-sicp-package" class="headerlink" title="DrRacket+sicp package"></a>DrRacket+sicp package</h2><p> 打开 DrRacket ，依次点击菜单 “File” - “Install Package”，输入 <strong>sicp</strong>，等待几分钟，可能需要网络加速器提高下载速度.</p><p>安装结束后，可以在工作区域输入</p><figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#lang sicp</span><br><span class="line">(<span class="name">inc</span> <span class="number">1</span>)</span><br></pre></td></tr></table></figure><h2 id="Visual-Studio-Code"><a href="#Visual-Studio-Code" class="headerlink" title="Visual Studio Code"></a>Visual Studio Code</h2><p>安装两个插件，分别是 Magic Racket 和 AyaSEditor，后者是格式化插件，前者是用于编译运行的插件（前提还是 DrRacket 要安装好 sicp package），安装 MR 插件后要在这个插件的设置中，将 Racket.exe 的完整路径添加到 <em>Racket Path</em> 中，默认的位置是 <em>C:\Program Files\Racket\Racket.exe</em> 。</p><p>测试安装效果，新建文件 hello_sicp.rkt，代码如下</p><figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#lang sicp</span><br><span class="line">(<span class="name"><span class="built_in">+</span></span> <span class="number">12</span> <span class="number">12</span>)</span><br></pre></td></tr></table></figure><p>点击右上角Load File 按钮或者 Run File 按钮，命令行页面会输出 24，表示安装成功。</p>]]></content>
-    
-    
-    <summary type="html">&lt;p&gt;首先进行环境安装，其次记录重要信息提示。&lt;/p&gt;</summary>
-    
-    
-    
-    
-    <category term="Lisp/Scheme" scheme="https://hanxinle.github.io/tags/Lisp-Scheme/"/>
     
   </entry>
   
