@@ -27,17 +27,11 @@
 <meta property="og:site_name" content="工程师笔记">
 <meta property="og:description" content="这个笔记比较乱，记录下 OBS 源码分析和使用 OBS 开发的一些做法。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://hanxinle.github.io/.io//image-20230701181056276.png">
-<meta property="og:image" content="https://hanxinle.github.io/.io//image-20230701181903678.png">
-<meta property="og:image" content="https://hanxinle.github.io/.io//image-20230701224233845.png">
-<meta property="og:image" content="https://hanxinle.github.io/.io//image-20230701224142137.png">
-<meta property="og:image" content="https://hanxinle.github.io/.io//image-20230701225306546.png">
 <meta property="article:published_time" content="2023-07-04T01:52:56.000Z">
-<meta property="article:modified_time" content="2026-05-09T12:18:35.521Z">
+<meta property="article:modified_time" content="2026-09-28T12:29:52.921Z">
 <meta property="article:author" content="Xinle">
 <meta property="article:tag" content="OBS">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://hanxinle.github.io/.io//image-20230701181056276.png">
 
 <link rel="canonical" href="https://hanxinle.github.io/2023/07/04/obs-src-dev/">
 
@@ -201,7 +195,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2026-05-09 20:18:35" itemprop="dateModified" datetime="2026-05-09T20:18:35+08:00">2026-05-09</time>
+                <time title="修改时间：2026-09-28 20:29:52" itemprop="dateModified" datetime="2026-09-28T20:29:52+08:00">2026-09-28</time>
               </span>
 
           
@@ -225,9 +219,8 @@
 <li>I:\007_webrtc_ffmpeg_opencv_obs\obs_2019\obs-studio\libobs\obs-windows.c</li>
 </ol>
 <p>将三处 data、plugin 的加载路径由上层改为本地。</p>
-<h1 id="分析源码"><a href="#分析源码" class="headerlink" title="分析源码"></a>分析源码</h1><p><img src="/.io//image-20230701181056276.png" alt="image-20230701181056276"></p>
-<p>代码的四大块，其中 frontend 是页面。</p>
-<p><img src="/.io//image-20230701181903678.png" alt="image-20230701181903678"></p>
+<h1 id="分析源码"><a href="#分析源码" class="headerlink" title="分析源码"></a>分析源码</h1><p>代码的四大块，其中 frontend 是页面：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">┌────────────────────────────────────────────┐</span><br><span class="line">│ UI (frontend)   界面层,Qt 页面,主界面       │</span><br><span class="line">│                 OBSBasic.ui                │</span><br><span class="line">├────────────────────────────────────────────┤</span><br><span class="line">│ libobs          核心库,导出 obs_* 系列函数, │</span><br><span class="line">│                 obs_startup、obs_reset_audio│</span><br><span class="line">│                 等都在这里                  │</span><br><span class="line">├────────────────────────────────────────────┤</span><br><span class="line">│ plugins         插件,如 win-capture(采集)、 │</span><br><span class="line">│                 obs-ffmpeg(编码复用)        │</span><br><span class="line">├────────────────────────────────────────────┤</span><br><span class="line">│ deps            第三方依赖                  │</span><br><span class="line">└────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
 <p>主界面：OBSBasic.ui，</p>
 <p>F10，调试模式进入到 main 函数，解决方案里面搜 main( 不管用。</p>
 <p>I:\007_webrtc_ffmpeg_opencv_obs\obs_2019\obs-studio\UI\obs-app.cpp</p>
@@ -239,9 +232,6 @@
 <p>obs_load_modules() ;</p>
 <p>音频设置 </p>
 <p>ResetAudio</p>
-<p><img src="/.io//image-20230701224233845.png" alt="image-20230701224233845"></p>
-<p><img src="/.io//image-20230701224142137.png" alt="image-20230701224142137"></p>
-<p><img src="/.io//image-20230701225306546.png" alt="image-20230701225306546"></p>
 <p>obs_reset_audio () 后续会用到这个库，是 libobs 导出的.</p>
 <p>obs_init_audio () </p>
 <p>视频设置</p>

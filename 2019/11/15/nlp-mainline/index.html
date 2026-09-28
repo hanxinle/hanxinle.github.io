@@ -27,13 +27,11 @@
 <meta property="og:site_name" content="工程师笔记">
 <meta property="og:description" content="本文是对前段时间学习自然语言处理（NLP）的总结。本文先介绍自然语言处理的内容，及其基于统计学的处理方式，在这个过程，逐渐矩阵化数据，看到矩阵化即可以想到机器学习方法的引入，预见到深度学习技术广泛应用的必然性。本文结尾我提供两个自己学习过程中建立的仓库，一个是对学习内容的总结，另一个是个对话机器人。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://hanxinle.github.io/.io//yinmaerkefu.png">
 <meta property="article:published_time" content="2019-11-15T02:30:47.000Z">
-<meta property="article:modified_time" content="2026-05-09T12:18:35.519Z">
+<meta property="article:modified_time" content="2026-09-28T12:29:37.729Z">
 <meta property="article:author" content="Xinle">
 <meta property="article:tag" content="自然语言处理">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://hanxinle.github.io/.io//yinmaerkefu.png">
 
 <link rel="canonical" href="https://hanxinle.github.io/2019/11/15/nlp-mainline/">
 
@@ -197,7 +195,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2026-05-09 20:18:35" itemprop="dateModified" datetime="2026-05-09T20:18:35+08:00">2026-05-09</time>
+                <time title="修改时间：2026-09-28 20:29:37" itemprop="dateModified" datetime="2026-09-28T20:29:37+08:00">2026-09-28</time>
               </span>
 
           
@@ -263,7 +261,7 @@
 <p>有了每个字符的 label 值，分词的结果方式就是 将 string [ B:最近的 $E$ ] 作为单词．通过得到的单词，为每个单词加入新的 $label_E ∈ 实体 {人名 ， 地名， 物品 ，… }$ 则可进行实体识别，加入 $label_p ∈ { N,V,…}$ 等词性，则可以将序列标注用于词性标注。</p>
 <p>这一部分，引入了隐马尔科夫模型，隐马尔科夫模型有两部分，一部分可见 $y$ ，如 $label$，一部分不可见，记做 $x$。该模型能够 由 $y$ 映射到 $x$， 在 NLP 中即根据语料 $label$ 反推语料特征。(PS:隐马尔科夫模型有其它用处，这里是生成隐藏部分 )。</p>
 <p>马尔科夫模型的特点是，当前元素状态 $yt$ 仅由上个相邻元素状态 $yt-1$ 决定，与其它元素的状态无关。 而当前隐状态 $x$ 仅有当前时刻的显状态 $y$ 来决定。二者数学上都是条件概率。隐马尔科夫记做 $(π，A，B)$</p>
-<p><img src="/.io//yinmaerkefu.png" alt></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">      π         A         A         A</span><br><span class="line">──→  (x₁) ──→  (x₂) ──→  (x₃) ──→  (x₄) ──→ ...    x: 隐状态,不可见</span><br><span class="line">       │         │         │         │</span><br><span class="line">       B         B         B         B              B: 发射概率</span><br><span class="line">       ↓         ↓         ↓         ↓</span><br><span class="line">      [y₁]      [y₂]      [y₃]      [y₄]            y: 显状态,可见(如 label)</span><br><span class="line"></span><br><span class="line">(π, A, B) = 初始状态概率, 状态转移概率, 发射概率</span><br><span class="line">马尔科夫性: x(t) 仅由 x(t-1) 决定; NLP 中由语料 y 反推语料特征 x</span><br></pre></td></tr></table></figure>
 <p>在这部分，感知机(神经网)，CRF 算法登场，用于序列标注。</p>
 <h1 id="命名实体识别"><a href="#命名实体识别" class="headerlink" title="命名实体识别"></a>命名实体识别</h1><p>多个单词构成的复合词，称作命名实体。命名实体识别包括实体边界识别和实体性质 $(人，物，地?)$ 识别两部分。不同的任务中，对实体是有不同的定义的，这类任务有两类方法，一类基于规则，一类基于统计学习，这部分应用前面提到的方法，作者直接调用开发包完成的。</p>
 <h1 id="信息抽取"><a href="#信息抽取" class="headerlink" title="信息抽取"></a>信息抽取</h1><p>信息抽取是指在文本中找到文本中新单词的过程，这是个新词发下的过程。它的步骤是:第一，提取文本中的词语，不论新旧。第二，用词典过滤掉已有的词，得到新词，第三，对新词进行删选，留下的词则是文本的信息描述。</p>
