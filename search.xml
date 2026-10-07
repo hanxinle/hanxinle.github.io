@@ -3252,4 +3252,212 @@ return 0;
         <tag>虚函数</tag>
       </tags>
   </entry>
+  <entry>
+    <title>C++ 对象模型实战（五）：虚函数机制（下）——构造中的 vptr 切换、虚析构与纯虚</title>
+    <url>/2026/10/07/20261007-05-cpp-object-model-virtual-in-ctor-dtor/</url>
+    <content><![CDATA[<h2 id="这一篇解决什么问题"><a href="#这一篇解决什么问题" class="headerlink" title="这一篇解决什么问题"></a>这一篇解决什么问题</h2><p>上一篇弄清了虚表机制。这一篇看三个和虚表机制直接相关的”坑点”：</p>
+<ol>
+<li>在构造函数里调虚函数，为什么不多态？</li>
+<li>通过基类指针 delete 派生对象，为什么基类析构必须是 virtual？</li>
+<li>纯虚函数和 <code>__purecall</code> 报错是怎么回事。</li>
+</ol>
+<span id="more"></span>
+<h2 id="原理：vptr-是在构造过程中被逐层换掉的"><a href="#原理：vptr-是在构造过程中被逐层换掉的" class="headerlink" title="原理：vptr 是在构造过程中被逐层换掉的"></a>原理：vptr 是在构造过程中被逐层换掉的</h2><p>上一篇说”对象的 vptr 指向本类的虚表”，但构造一个 Derived 对象时，vptr 不是一开始就是 Derived 的表。编译器在<strong>每一层构造函数的入口处</strong>把 vptr 设置成当前这一层的表：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">new Derived 的过程:</span><br><span class="line">1. 分配内存(此时 vptr 未初始化, 是垃圾)</span><br><span class="line">2. 进入 Base::Base()  → vptr = Base 的虚表   → 这里调 f() 落在 Base::f</span><br><span class="line">3. 进入 Derived::Derived() → vptr = Derived 的虚表 → 这里调 f() 落在 Derived::f</span><br><span class="line">4. 构造完成, vptr 停留在 Derived 的表</span><br></pre></td></tr></table></figure>
+<p>析构对称：进入 <code>~Derived</code> 时 vptr 还是 Derived 的表，跑完后被设回 Base 的表，再执行 <code>~Base</code>。</p>
+<p><strong>“构造中虚函数不多态”不是语言的特殊规定，而是 vptr 逐层切换的直接后果</strong>：在 Base 构造函数执行期间，这个对象的 vptr 指向的就是 Base 的表，f() 当然落在 Base::f。语言标准只是把这个实现事实规定成了行为。</p>
+<h2 id="虚析构：delete-基类指针的正确性"><a href="#虚析构：delete-基类指针的正确性" class="headerlink" title="虚析构：delete 基类指针的正确性"></a>虚析构：delete 基类指针的正确性</h2><p><code>delete p</code>（p 是 <code>Base*</code> 指向 Derived 对象）要做两件事：调析构、释放内存。调谁的析构？</p>
+<ul>
+<li>基类析构是 <strong>virtual</strong>：查 vptr 的虚表 → 找到 <code>Derived::~Derived</code> → 先跑派生析构，再链条式跑基类析构。正确。</li>
+<li>基类析构<strong>不是 virtual</strong>：编译器按 p 的静态类型直接 call <code>Base::~Base</code>，Derived 的析构被跳过——派生部分泄漏，行为未定义。</li>
+</ul>
+<p>经验法则：<strong>一个类只要打算被基类指针 delete，析构就必须是 virtual</strong>。有虚函数的类基本都在此列。</p>
+<h2 id="纯虚函数与-purecall"><a href="#纯虚函数与-purecall" class="headerlink" title="纯虚函数与 __purecall"></a>纯虚函数与 __purecall</h2><p><code>virtual void f() = 0;</code> 让类成为抽象类，不能实例化。但有一种路径仍能调到纯虚函数：在 Base 的构造/析构里调 f()（此时 vptr 是 Base 的表，表项里没有实现）。MSVC 给这种表项填的是 <code>__purecall</code> 处理函数的地址，一旦调到就报运行时错误 “pure virtual function call” 并终止程序。遇到这个报错，第一嫌疑就是构造/析构链条里有人调了虚函数。</p>
+<h2 id="验证工程"><a href="#验证工程" class="headerlink" title="验证工程"></a>验证工程</h2><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 虚函数机制(下): 构造/析构中 vptr 切换, 虚析构, 纯虚函数.</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstring&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Base</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">Base</span>() &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Base ctor calls f() -&gt; &quot;</span>);  <span class="comment">// Base 构造里调 f().</span></span><br><span class="line">        <span class="built_in">f</span>();                    <span class="comment">// 此时对象还是 Base, 不多态.</span></span><br><span class="line">        <span class="built_in">show_vptr</span>(<span class="string">&quot;Base ctor&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">virtual</span> ~<span class="built_in">Base</span>() &#123; <span class="built_in">printf</span>(<span class="string">&quot;Base dtor\n&quot;</span>); &#125;   <span class="comment">// 实验: 去掉 virtual 再跑一次.</span></span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f</span><span class="params">()</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">&quot;Base::f\n&quot;</span>); &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">show_vptr</span><span class="params">(<span class="type">const</span> <span class="type">char</span>* where)</span> </span>&#123;</span><br><span class="line">        <span class="type">void</span>* p;</span><br><span class="line">        <span class="built_in">memcpy</span>(&amp;p, <span class="keyword">this</span>, <span class="keyword">sizeof</span> p);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;  vptr(%s) = %p\n&quot;</span>, where, p);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Derived</span> : <span class="keyword">public</span> Base &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">Derived</span>() &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Derived ctor calls f() -&gt; &quot;</span>);  <span class="comment">// Derived 构造里调 f().</span></span><br><span class="line">        <span class="built_in">f</span>();                    <span class="comment">// 此时 vptr 已换成 Derived 的表.</span></span><br><span class="line">        <span class="built_in">show_vptr</span>(<span class="string">&quot;Derived ctor&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    ~<span class="built_in">Derived</span>() &#123; <span class="built_in">printf</span>(<span class="string">&quot;Derived dtor\n&quot;</span>); &#125;</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">f</span><span class="params">()</span> <span class="keyword">override</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">&quot;Derived::f\n&quot;</span>); &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;--- new Derived ---\n&quot;</span>);</span><br><span class="line">    Base* p = <span class="keyword">new</span> Derived;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;--- delete via base pointer ---\n&quot;</span>);</span><br><span class="line">    <span class="keyword">delete</span> p;   <span class="comment">// 基类析构是 virtual, 先跑 Derived dtor 再跑 Base dtor.</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 附: 若 Base::f 是纯虚(= 0), Base ctor 里调 f 会触发 __purecall 运行时报错.</span></span><br></pre></td></tr></table></figure>
+<h2 id="预测输出"><a href="#预测输出" class="headerlink" title="预测输出"></a>预测输出</h2><p>动手跑之前先推一遍：</p>
+<ul>
+<li>Base 构造函数里 f() 输出 <code>Base::f</code>：此刻 vptr 是 Base 的表，尽管这个对象”将来”是 Derived。</li>
+<li>两行 vptr 打印地址不同：构造过程中 vptr 被换了一次，肉眼可见。</li>
+<li>delete 后先 <code>Derived dtor</code> 再 <code>Base dtor</code>：虚析构让 delete 找到了正确的入口。</li>
+<li>追加实验：把 <code>~Base()</code> 的 <code>virtual</code> 去掉再跑一次，预测输出只剩 <code>Base dtor</code>，<code>Derived dtor</code> 消失——派生析构被静默跳过。</li>
+</ul>
+<h2 id="实测输出"><a href="#实测输出" class="headerlink" title="实测输出"></a>实测输出</h2><p>基类析构<strong>是</strong>虚函数（工程原样）：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">--- new Derived ---</span><br><span class="line">Base ctor calls f() -&gt; Base::f</span><br><span class="line">  vptr(Base ctor) = 00007FF610E7ACB0</span><br><span class="line">Derived ctor calls f() -&gt; Derived::f</span><br><span class="line">  vptr(Derived ctor) = 00007FF610E7AD38</span><br><span class="line">--- delete via base pointer ---</span><br><span class="line">Derived dtor</span><br><span class="line">Base dtor</span><br></pre></td></tr></table></figure>
+<p>基类析构<strong>不是</strong>虚函数（去掉 <code>virtual</code> 再跑）：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">--- new Derived ---</span><br><span class="line">Base ctor calls f() -&gt; Base::f</span><br><span class="line">  vptr(Base ctor) = 00007FF7EE72ACB0</span><br><span class="line">Derived ctor calls f() -&gt; Derived::f</span><br><span class="line">  vptr(Derived ctor) = 00007FF7EE72AD38</span><br><span class="line">--- delete via base pointer ---</span><br><span class="line">Base dtor</span><br></pre></td></tr></table></figure>
+<h2 id="逐行比对"><a href="#逐行比对" class="headerlink" title="逐行比对"></a>逐行比对</h2><ul>
+<li><code>Base ctor calls f() -&gt; Base::f</code>：命中。此刻 vptr 指向 Base 的表，对象”将来”是 Derived 也没用。</li>
+<li>两行 vptr 不同（<code>...ACB0</code> → <code>...AD38</code>）：命中，构造过程中 vptr 被逐层换掉，从打印直接看到。</li>
+<li>虚析构版本先 <code>Derived dtor</code> 再 <code>Base dtor</code>：命中。</li>
+<li>非虚析构版本只剩 <code>Base dtor</code>：命中，<code>Derived dtor</code> 被静默跳过——编译器按指针的静态类型 <code>Base*</code> 直接 call <code>Base::~Base</code>，根本没查表。</li>
+</ul>
+<p>有意思的是对比两次运行：上半部分（vptr 切换）一字不差，唯一的差别就在 delete 那两行。”基类析构必须是 virtual”这条经验法则，背后是删不删得干净的问题。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">vptr 逐层切换: 每层 ctor 入口把 vptr 设为本层的表</span><br><span class="line">推论: 构造/析构中调虚函数 = 调当前层的版本, 不多态</span><br><span class="line">delete 基类指针: 基类析构必须 virtual, 否则派生析构被跳过</span><br><span class="line">构造/析构中调到纯虚 → __purecall 运行时终止</span><br></pre></td></tr></table></figure>
+]]></content>
+      <tags>
+        <tag>C++</tag>
+        <tag>对象模型</tag>
+        <tag>内存</tag>
+        <tag>虚函数</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>C++ 对象模型实战（六）：多继承——多 vptr、this 调整与 adjustor thunk</title>
+    <url>/2026/10/07/20261007-06-cpp-object-model-multiple-inheritance/</url>
+    <content><![CDATA[<h2 id="这一篇解决什么问题"><a href="#这一篇解决什么问题" class="headerlink" title="这一篇解决什么问题"></a>这一篇解决什么问题</h2><p>单继承里基类永远舒舒服服躺在偏移 0。多继承打破了这份平静：两个基类不可能同时在偏移 0。这一篇回答：</p>
+<ol>
+<li>多继承对象的内部怎么摆？</li>
+<li>指向第二个基类的指针，和对象地址还相同吗？</li>
+<li>通过第二个基类指针调虚函数，this 是怎么”拨回”派生类的？</li>
+</ol>
+<span id="more"></span>
+<h2 id="多继承的三个要点"><a href="#多继承的三个要点" class="headerlink" title="多继承的三个要点"></a>多继承的三个要点</h2><p><strong>要点 1：基类子对象按声明顺序排列，每个含虚函数的基类带一份 vptr。</strong><br><code>class C : public A, public B</code> 的布局是：A 子对象（含 A 的 vptr）→ B 子对象（含 B 的 vptr）→ C 自己的成员。C 的对象里有<strong>两个 vptr</strong>，分别服务两张虚表视角。</p>
+<p><strong>要点 2：指向第二个基类的指针 ≠ 对象地址。</strong><br><code>A* pa = &amp;c</code> 地址不变（A 在偏移 0）；<code>B* pb = &amp;c</code> 则是 <code>&amp;c + sizeof(A)</code>——指针被编译器悄悄加了偏移。这个调整在指针转换时静态完成，和虚表无关。</p>
+<p><strong>要点 3：经第二个基类调用被重写的虚函数，需要把 this 调回去。</strong><br><code>pb-&gt;fb()</code> 时，pb 指向 B 子对象，但 C::fb 期望的 this 是完整的 C 对象（首地址）。差值就是 B 子对象的偏移。MSVC 的解法：C 的”B 视角虚表”里，fb 那一项存的不是 C::fb 本身，而是一小段<strong>调整桩（adjustor thunk）</strong>：先把 this 减去偏移，再跳进 C::fb。在反汇编里能看到名字带 <code>adjustor&#123;16&#125;</code> 字样的跳转目标。</p>
+<h2 id="验证工程"><a href="#验证工程" class="headerlink" title="验证工程"></a>验证工程</h2><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 多继承: 两个 vptr, 基类指针的地址偏移, this 调整 thunk, 成员函数指针.</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">A</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">fa</span><span class="params">()</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">&quot;A::fa\n&quot;</span>); &#125;</span><br><span class="line">    <span class="type">int</span> a = <span class="number">1</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">B</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">fb</span><span class="params">()</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">&quot;B::fb\n&quot;</span>); &#125;</span><br><span class="line">    <span class="type">int</span> b = <span class="number">2</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">C</span> : <span class="keyword">public</span> A, <span class="keyword">public</span> B &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">fa</span><span class="params">()</span> <span class="keyword">override</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">&quot;C::fa this=%p\n&quot;</span>, (<span class="type">void</span>*)<span class="keyword">this</span>); &#125;</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">fb</span><span class="params">()</span> <span class="keyword">override</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">&quot;C::fb this=%p\n&quot;</span>, (<span class="type">void</span>*)<span class="keyword">this</span>); &#125;  <span class="comment">// 对比 this 与 &amp;obj/pb, 验证 this 调整.</span></span><br><span class="line">    <span class="type">int</span> c = <span class="number">3</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;sizeof(A)=%zu  sizeof(B)=%zu  sizeof(C)=%zu\n&quot;</span>, <span class="built_in">sizeof</span>(A), <span class="built_in">sizeof</span>(B), <span class="built_in">sizeof</span>(C));</span><br><span class="line"></span><br><span class="line">    C obj;</span><br><span class="line">    A* pa = &amp;obj;</span><br><span class="line">    B* pb = &amp;obj;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;&amp;obj=%p\n&quot;</span>, (<span class="type">void</span>*)&amp;obj);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;pa  =%p  (same as &amp;obj)\n&quot;</span>, (<span class="type">void</span>*)pa);      <span class="comment">// 第一个基类在偏移 0, 与 &amp;obj 相同.</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;pb  =%p  (shifted from &amp;obj)\n&quot;</span>, (<span class="type">void</span>*)pb); <span class="comment">// 第二个基类子对象, 从 &amp;obj 后移.</span></span><br><span class="line"></span><br><span class="line">    pa-&gt;<span class="built_in">fa</span>();</span><br><span class="line">    pb-&gt;<span class="built_in">fb</span>();   <span class="comment">// 断点看反汇编: 经 B 的虚表跳到 adjustor thunk, 把 this 调回 C 再进 C::fb.</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 成员函数指针在多继承下不只是个裸地址, 还要携带 this 调整信息.</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;sizeof(&amp;C::fa)=%zu  sizeof(plain func ptr)=%zu\n&quot;</span>,</span><br><span class="line">           <span class="built_in">sizeof</span>(&amp;C::fa), <span class="built_in">sizeof</span>(<span class="built_in">void</span>(*)()));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="预测输出"><a href="#预测输出" class="headerlink" title="预测输出"></a>预测输出</h2><p>动手跑之前先推一遍：</p>
+<ul>
+<li>A、B 各 16（vptr 8 + int 4 + padding 4）；C = A 16 + B 16 + int 4 + padding 4 = <strong>40</strong>。</li>
+<li><code>pa == &amp;obj</code>；<code>pb - pa = 16</code>：B 子对象从 A 之后开始。</li>
+<li>输出 <code>C::fa</code>、<code>C::fb</code>：多态正常，只是 pb 那一路多走了一个 adjustor thunk。</li>
+<li>成员函数指针预测为 16 字节：多继承下它除了函数地址还要携带 this 调整量，比普通函数指针（8）大。这个数字各编译器差异很大，以实测为准。</li>
+</ul>
+<h2 id="实测输出"><a href="#实测输出" class="headerlink" title="实测输出"></a>实测输出</h2><p>VS2022 x64 Debug 下实际运行：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">sizeof(A)=16  sizeof(B)=16  sizeof(C)=40</span><br><span class="line">&amp;obj=000000A1894FFAD8</span><br><span class="line">pa  =000000A1894FFAD8  (same as &amp;obj)</span><br><span class="line">pb  =000000A1894FFAE8  (shifted from &amp;obj)</span><br><span class="line">C::fa this=000000A1894FFAD8</span><br><span class="line">C::fb this=000000A1894FFAD8</span><br><span class="line">sizeof(&amp;C::fa)=16  sizeof(plain func ptr)=8</span><br></pre></td></tr></table></figure>
+<h2 id="逐行比对"><a href="#逐行比对" class="headerlink" title="逐行比对"></a>逐行比对</h2><ul>
+<li>sizeof 16/16/40：命中。</li>
+<li><code>pa == &amp;obj == ...FAD8</code>：命中，第一个基类在偏移 0。</li>
+<li><code>pb = ...FAE8</code>，比 <code>&amp;obj</code> 大 <code>0x10</code>（16）：命中，B 子对象从 A 之后开始，指向 B 的指针被编译器悄悄加了 <code>sizeof(A)</code> 的偏移。</li>
+<li><code>sizeof(&amp;C::fa)=16</code>，普通函数指针 8：命中，多继承下成员函数指针携带 this 调整信息，体积翻倍。</li>
+</ul>
+<h2 id="this-调整的实测验证"><a href="#this-调整的实测验证" class="headerlink" title="this 调整的实测验证"></a>this 调整的实测验证</h2><p>最后两行是这篇文章最直接的证据。<code>C::fb</code> 是经由 <code>pb</code>（指向 B 子对象，…FAE8）调用的，调用约定里 rcx 装的也是 pb；但函数体里打印出来的 this 却是 <code>...FAD8</code>，和 <code>&amp;obj</code> 完全一致——<strong>中间有人把 this 减了 16</strong>，这就是 adjustor thunk 干的活。对照组 <code>C::fa</code> 经 <code>pa</code>（第一基类，偏移 0）调用，this 本来就等于 <code>&amp;obj</code>，不需要调整。</p>
+<p>值得记录的一次弯路：我先在反汇编里单步找 thunk，调用点（<code>mov rcx,[pb]; call [rax]</code>）和单继承长得一模一样，F11 跟进增量链接跳转表（ILT）后直接落到了 <code>C::fb</code> 函数体，没看到预想中的 <code>sub rcx, 16</code>，一度怀疑 thunk 不存在。最后靠”让函数自己打印 this”这个更直接的办法确认了调整确实发生——thunk 是编译器生成的一小段无名代码，夹在跳转表和函数体之间，单步时容易一眼掠过。教训：<strong>验证 this 调整，打印 this 比读汇编可靠</strong>。</p>
+<h2 id="用-d1-让编译器自证"><a href="#用-d1-让编译器自证" class="headerlink" title="用 /d1 让编译器自证"></a>用 /d1 让编译器自证</h2><p><code>/d1 reportAllClassLayout</code> 对 class C 的报告（去掉了开头的 <code>1&gt;</code> 编译器前缀）：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">class C    size(40):</span><br><span class="line">    +---</span><br><span class="line"> 0  | +--- (base class A)</span><br><span class="line"> 0  | | &#123;vfptr&#125;</span><br><span class="line"> 8  | | a</span><br><span class="line">    | | &lt;alignment member&gt; (size=4)</span><br><span class="line">    | +---</span><br><span class="line">16  | +--- (base class B)</span><br><span class="line">16  | | &#123;vfptr&#125;</span><br><span class="line">24  | | b</span><br><span class="line">    | | &lt;alignment member&gt; (size=4)</span><br><span class="line">    | +---</span><br><span class="line">32  | c</span><br><span class="line">    | &lt;alignment member&gt; (size=4)</span><br><span class="line">    +---</span><br><span class="line"></span><br><span class="line">C::$vftable@A@:</span><br><span class="line">    | &amp;C_meta</span><br><span class="line">    |  0</span><br><span class="line"> 0  | &amp;C::fa</span><br><span class="line"></span><br><span class="line">C::$vftable@B@:</span><br><span class="line">    | -16</span><br><span class="line"> 0  | &amp;C::fb</span><br><span class="line"></span><br><span class="line">C::fa this adjustor: 0</span><br><span class="line">C::fb this adjustor: 16</span><br></pre></td></tr></table></figure>
+<p>布局部分和运行输出逐项对上：A 子对象在偏移 0（含一份 vfptr），B 子对象在偏移 16（含第二份 vfptr），c 在 32，总共 40。</p>
+<p>最有说服力的是最后两行：<code>C::fa this adjustor: 0</code>、<code>C::fb this adjustor: 16</code>——编译器白纸黑字写明了：经 B 视角调 fb，this 要调整 16 字节。这就是 adjustor thunk 存在的官方自证。</p>
+<p>还有一个容易漏看的细节：<code>C::$vftable@B@</code> 的表头是 <code>-16</code>（A 视角那张是 <code>0</code>）。表头这一项记录的是”这个子对象离完整对象开头的偏移”，RTTI 和 dynamic_cast 靠它从基类子对象找回完整对象——上一篇结尾说 dynamic_cast 需要虚函数支持，机制上就落在这里。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">多继承布局: [A 子对象(vptr1)][B 子对象(vptr2)][C 成员]</span><br><span class="line">A* pa = &amp;c: 地址不变;  B* pb = &amp;c: 地址 + sizeof(A)</span><br><span class="line">pb-&gt;fb(): B 视角虚表的表项是 adjustor thunk, 先 sub this 再进 C::fb</span><br><span class="line">成员函数指针: 多继承下不是裸地址, 含 this 调整信息</span><br></pre></td></tr></table></figure>
+]]></content>
+      <tags>
+        <tag>C++</tag>
+        <tag>对象模型</tag>
+        <tag>内存</tag>
+        <tag>虚函数</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>C++ 对象模型实战（七）：菱形继承与虚继承——vbptr 与偏移表</title>
+    <url>/2026/10/07/20261007-07-cpp-object-model-virtual-inheritance/</url>
+    <content><![CDATA[<h2 id="这一篇解决什么问题"><a href="#这一篇解决什么问题" class="headerlink" title="这一篇解决什么问题"></a>这一篇解决什么问题</h2><p>多继承再叠一层就会出现菱形：A、B 都继承 V，C 同时继承 A 和 B。这时 V 在 C 里有几份？怎么解决？这一篇回答：</p>
+<ol>
+<li>普通继承的菱形为什么会带两份基类子对象，有什么问题？</li>
+<li>虚继承怎么做到只留一份，代价是什么？</li>
+<li>vbptr 和 vbtable（虚基类偏移表）是怎么工作的？</li>
+</ol>
+<span id="more"></span>
+<h2 id="普通菱形：两份-V-的尴尬"><a href="#普通菱形：两份-V-的尴尬" class="headerlink" title="普通菱形：两份 V 的尴尬"></a>普通菱形：两份 V 的尴尬</h2><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">  V          普通继承下, C1 的布局:</span><br><span class="line"> / \         [A1 子对象: V + a][B1 子对象: V + b]</span><br><span class="line">A1  B1       V 出现了两次</span><br><span class="line"> \ /</span><br><span class="line"> C1</span><br></pre></td></tr></table></figure>
+<p>后果不只是浪费内存：<code>c1.v</code> 编译直接报<strong>歧义</strong>错误，必须写 <code>c1.A1::v</code> 或 <code>c1.B1::v</code> 显式指定——同一个对象里有两个 v，编译器不知道你要哪个。</p>
+<h2 id="虚继承：一份-V，用间接换唯一"><a href="#虚继承：一份-V，用间接换唯一" class="headerlink" title="虚继承：一份 V，用间接换唯一"></a>虚继承：一份 V，用间接换唯一</h2><p>A2、B2 改成 <code>virtual public V</code> 后，C2 里 V 只有一份。实现思路（MSVC）：</p>
+<ol>
+<li><strong>V 被挪出常规子对象序列</strong>，放到对象尾部，由最派生类（C2）负责构造——A2、B2 不再各自携带 V。</li>
+<li>A2、B2 子对象里改放一个 <strong>vbptr</strong>（虚基类表指针，8 字节），指向一张 <strong>vbtable</strong>：表里存的是”从我的位置到 V 的偏移量”。</li>
+<li>访问 <code>a2.v</code> 变成：取 vbptr → 查表得偏移 → 加上去 → 找到 V。多了一次间接，但任何路径找到的 V 都是同一份。</li>
+</ol>
+<p>代价清晰可见：每个含虚基类的子对象多 8 字节 vbptr，每次访问虚基类成员多一次查表间接。</p>
+<h2 id="验证工程"><a href="#验证工程" class="headerlink" title="验证工程"></a>验证工程</h2><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 菱形继承与虚继承: 两份基类子对象 vs vbptr 定位的单份虚基类.</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">V</span> &#123; <span class="keyword">public</span>: <span class="type">int</span> v = <span class="number">0</span>; &#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 普通继承的菱形: C1 里有两份 V 子对象.</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">A1</span> : <span class="keyword">public</span> V &#123; <span class="keyword">public</span>: <span class="type">int</span> a = <span class="number">1</span>; &#125;;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">B1</span> : <span class="keyword">public</span> V &#123; <span class="keyword">public</span>: <span class="type">int</span> b = <span class="number">2</span>; &#125;;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">C1</span> : <span class="keyword">public</span> A1, <span class="keyword">public</span> B1 &#123;&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 虚继承的菱形: C2 里只有一份 V, 靠 vbptr 查表定位.</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">A2</span> : <span class="keyword">virtual</span> <span class="keyword">public</span> V &#123; <span class="keyword">public</span>: <span class="type">int</span> a = <span class="number">1</span>; &#125;;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">B2</span> : <span class="keyword">virtual</span> <span class="keyword">public</span> V &#123; <span class="keyword">public</span>: <span class="type">int</span> b = <span class="number">2</span>; &#125;;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">C2</span> : <span class="keyword">public</span> A2, <span class="keyword">public</span> B2 &#123;&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;plain   : sizeof(A1)=%zu  sizeof(C1)=%zu\n&quot;</span>, <span class="built_in">sizeof</span>(A1), <span class="built_in">sizeof</span>(C1));</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;virtual : sizeof(A2)=%zu  sizeof(C2)=%zu\n&quot;</span>, <span class="built_in">sizeof</span>(A2), <span class="built_in">sizeof</span>(C2));</span><br><span class="line"></span><br><span class="line">    C1 c1;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;C1 two V&#x27;s: &amp;A1::v=%p  &amp;B1::v=%p  (different)\n&quot;</span>,  <span class="comment">// 两份 V 子对象, 地址不同.</span></span><br><span class="line">           (<span class="type">void</span>*)&amp;c1.A1::v, (<span class="type">void</span>*)&amp;c1.B1::v);</span><br><span class="line"></span><br><span class="line">    C2 c2;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;C2 one V:   &amp;A2::v=%p  &amp;B2::v=%p  (same)\n&quot;</span>,       <span class="comment">// 只有一份 V, 两条路径地址相同.</span></span><br><span class="line">           (<span class="type">void</span>*)&amp;c2.A2::v, (<span class="type">void</span>*)&amp;c2.B2::v);</span><br><span class="line">    <span class="comment">// 配合 /d1 reportAllClassLayout 观察: vbptr, vbtable, 以及 V 被挪到对象尾部.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="预测输出"><a href="#预测输出" class="headerlink" title="预测输出"></a>预测输出</h2><p>动手跑之前先推一遍：</p>
+<ul>
+<li>A1 = V 4 + a 4 = 8；C1 = A1 8 + B1 8 = 16，两份 V 各归各的子对象。</li>
+<li>A2 变大：vbptr 8 + a 4 + padding + V（被挪到尾部）≈ 24；C2 里 A2、B2 各自的无 V 部分 + 共享的一份 V，估计 40 上下。虚继承的精确尺寸和对齐处理关系大，算错正常，关键是下面两条定性结论。</li>
+<li><strong>定性结论 1</strong>：c1 的两条路径取到两个不同地址（两份 V 实锤）。</li>
+<li><strong>定性结论 2</strong>：c2 的两条路径取到同一个地址（一份 V 实锤，歧义消失）。</li>
+</ul>
+<h2 id="实测输出"><a href="#实测输出" class="headerlink" title="实测输出"></a>实测输出</h2><p>VS2022 x64 Debug 下实际运行：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">plain   : sizeof(A1)=8  sizeof(C1)=16</span><br><span class="line">virtual : sizeof(A2)=24  sizeof(C2)=40</span><br><span class="line">C1 two V&#x27;s: &amp;A1::v=0000004102CFF9C8  &amp;B1::v=0000004102CFF9D0  (different)</span><br><span class="line">C2 one V:   &amp;A2::v=0000004102CFFA18  &amp;B2::v=0000004102CFFA18  (same)</span><br></pre></td></tr></table></figure>
+<h2 id="逐行比对"><a href="#逐行比对" class="headerlink" title="逐行比对"></a>逐行比对</h2><ul>
+<li><code>sizeof(A1)=8</code>、<code>sizeof(C1)=16</code>：命中。</li>
+<li><code>sizeof(A2)=24</code>、<code>sizeof(C2)=40</code>：命中。C2 的 40 可以拆开看：A2 部分（vbptr 8 + a 4 + padding 4 = 16）+ B2 部分（16）+ 尾部共享的一份 V（v 4 + padding 4 = 8）。V 被挪到对象尾部、每个子对象多带一个 vbptr，这就是虚继承比 C1（16 字节）大 2.5 倍的代价。</li>
+<li>C1 两个 v 地址不同，且正好差 8：命中。A1 子对象是 <code>[v][a]</code> 共 8 字节，B1 的 v 紧跟其后，差值 8 和 <code>sizeof(A1)=8</code> 互相印证。</li>
+<li>C2 两条路径地址相同：命中，一份 V 实锤，<code>c2.v</code> 不再有歧义。</li>
+</ul>
+<h2 id="用-d1-看-vbtable"><a href="#用-d1-看-vbtable" class="headerlink" title="用 /d1 看 vbtable"></a>用 /d1 看 vbtable</h2><p>这个工程的重点其实在编译输出里。<code>/d1 reportAllClassLayout</code> 对虚继承类会打印：</p>
+<ul>
+<li><code>vbptr</code> 的位置（通常在子对象偏移 0）；</li>
+<li><code>vbtable</code> 的内容：形如 <code>vbtable entry 0: 到自身偏移; entry 1: 到 V 的偏移</code>；</li>
+<li>V 子对象被放在整个对象布局的<strong>尾部</strong>，并用 <code>virtual base</code> 标注。</li>
+</ul>
+<p>把这份报告和打印的地址对照，”V 在尾部 + vbptr 查表”这套机制就完全对上了。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">普通菱形: 每路一份 V, c.v 歧义, 必须 A::v / B::v 显式区分</span><br><span class="line">虚继承: V 只有一份, 挪到对象尾部, 由最派生类构造</span><br><span class="line">机制: vbptr(每个子对象 8 字节) → vbtable(存到 V 的偏移) → 间接定位</span><br><span class="line">代价: 每个子对象多 8 字节 + 每次访问虚基类成员多一次间接</span><br></pre></td></tr></table></figure>
+]]></content>
+      <tags>
+        <tag>C++</tag>
+        <tag>对象模型</tag>
+        <tag>内存</tag>
+        <tag>虚函数</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>C++ 对象模型实战（八）：对象模型不是语言规定——Cfront、MSVC 与 ABI 对照</title>
+    <url>/2026/10/07/20261007-08-cpp-object-model-cfront-vs-msvc/</url>
+    <content><![CDATA[<h2 id="这一篇解决什么问题"><a href="#这一篇解决什么问题" class="headerlink" title="这一篇解决什么问题"></a>这一篇解决什么问题</h2><p>前面七篇的所有结论——vptr 在偏移 0、虚表按类共享、vbptr 查表——都来自 MSVC 的实测。这一篇退一步回答一个更根本的问题：这些机制是 C++ 语言规定的吗？换个编译器还成立吗？</p>
+<span id="more"></span>
+<h2 id="对象模型是实现选择，不是语言规定"><a href="#对象模型是实现选择，不是语言规定" class="headerlink" title="对象模型是实现选择，不是语言规定"></a>对象模型是实现选择，不是语言规定</h2><p>C++ 标准只规定<strong>行为</strong>（多态要生效、构造析构顺序要正确、虚基类只能有一份），从不规定<strong>实现</strong>。vptr、虚表、vbptr 这些概念在标准文本里根本不存在，它们是编译器为了兑现行为而发明的机制。</p>
+<p>《深度探索 C++ 对象模型》描述的是 1990 年代 Cfront（最早的 C++ 编译器，把 C++ 翻译成 C）的实现。书里的模型和今天 MSVC 的实测有不少出入，比如：</p>
+<ul>
+<li><strong>vptr 位置</strong>：Cfront 曾把 vptr 放在对象<strong>尾部</strong>（为了和 C 结构体布局兼容，派生类可以无缝当基类用）；MSVC、GCC 今天都放在<strong>头部</strong>（偏移 0），因为虚调用取 vptr 零偏移更高效。</li>
+<li><strong>虚继承的实现</strong>：Cfront 在每个子对象里放<strong>虚基类的直接指针</strong>（指针数量随虚基类个数膨胀）；MSVC 演进成 vbptr + vbtable（一张表统一管偏移）。</li>
+</ul>
+<p>所以这本书的正确用法是当”机制字典”查概念（为什么需要虚表、虚继承要解决什么），具体数字一律以本机编译器实测为准——这也是这个系列每篇都做实验的原因。</p>
+<h2 id="MSVC-与-GCC-Clang-的对照"><a href="#MSVC-与-GCC-Clang-的对照" class="headerlink" title="MSVC 与 GCC/Clang 的对照"></a>MSVC 与 GCC/Clang 的对照</h2><p>两大阵营的机制选择对比（定性，细节以各自 ABI 文档为准）：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>机制</th>
+<th>MSVC</th>
+<th>GCC / Clang（Itanium ABI）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>vptr 位置</td>
+<td>对象偏移 0</td>
+<td>对象偏移 0</td>
+</tr>
+<tr>
+<td>虚表内容</td>
+<td>纯函数指针数组</td>
+<td>表头还带 RTTI 指针、offset-to-top</td>
+</tr>
+<tr>
+<td>RTTI</td>
+<td>虚表前一个槽位（Complete Object Locator）</td>
+<td>虚表内（index -1）</td>
+</tr>
+<tr>
+<td>虚基类偏移</td>
+<td>独立的 vbptr + vbtable</td>
+<td>合并进虚表（vcall/vbase offsets）</td>
+</tr>
+<tr>
+<td>this 调整</td>
+<td>adjustor thunk 小跳板</td>
+<td>虚表里直接存偏移量（non-virtual thunk 也存在）</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>可以看到：要解决的问题完全一样（虚调用、this 调整、虚基类定位），解法各有各的工程审美。MSVC 喜欢”多张专表”（vftable、vbtable 分开），Itanium ABI 喜欢”一张大表全塞进去”。</p>
+<p>ABI（应用二进制接口）这个概念也由此而来：同一份 C++ 源码，两个编译器编出的对象布局不同、虚表结构不同，所以 MSVC 编的 dll 和 GCC 编的主程序不能直接互调 C++ 接口——能互通的只有 C 接口（extern “C”），因为 C 的 ABI 是统一的。</p>
+<h2 id="系列回顾：实测方法论"><a href="#系列回顾：实测方法论" class="headerlink" title="系列回顾：实测方法论"></a>系列回顾：实测方法论</h2><p>这个系列走下来，方法论比任何单个结论都重要：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">1. 写十几行最小代码, 让机制暴露出来</span><br><span class="line">2. sizeof / offsetof / 打印地址, 量化布局</span><br><span class="line">3. /d1 reportAllClassLayout 让编译器自证</span><br><span class="line">4. 断点 + 内存窗口 + 反汇编(Ctrl+K,G), 运行时验证</span><br><span class="line">5. 预测 → 实测 → 比对, 不一致的地方就是最好的学习点</span><br></pre></td></tr></table></figure>
+<p>以后遇到任何”对象模型”问题——比如 noexcept、final、协程对对象的影响——同一套方法直接套用：写最小工程，让编译器和调试器告诉你答案。</p>
+]]></content>
+      <tags>
+        <tag>C++</tag>
+        <tag>对象模型</tag>
+        <tag>内存</tag>
+      </tags>
+  </entry>
 </search>

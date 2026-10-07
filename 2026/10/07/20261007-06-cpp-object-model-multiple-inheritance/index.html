@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"hanxinle.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="这一篇解决什么问题单继承里基类永远舒舒服服躺在偏移 0。多继承打破了这份平静：两个基类不可能同时在偏移 0。这一篇回答：  多继承对象的内部怎么摆？ 指向第二个基类的指针，和对象地址还相同吗？ 通过第二个基类指针调虚函数，this 是怎么”拨回”派生类的？">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++ 对象模型实战（六）：多继承——多 vptr、this 调整与 adjustor thunk">
+<meta property="og:url" content="https://hanxinle.github.io/2026/10/07/20261007-06-cpp-object-model-multiple-inheritance/index.html">
+<meta property="og:site_name" content="工程师笔记">
+<meta property="og:description" content="这一篇解决什么问题单继承里基类永远舒舒服服躺在偏移 0。多继承打破了这份平静：两个基类不可能同时在偏移 0。这一篇回答：  多继承对象的内部怎么摆？ 指向第二个基类的指针，和对象地址还相同吗？ 通过第二个基类指针调虚函数，this 是怎么”拨回”派生类的？">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-10-07T11:30:00.000Z">
+<meta property="article:modified_time" content="2026-10-07T13:12:52.851Z">
+<meta property="article:author" content="Xinle">
+<meta property="article:tag" content="C++">
+<meta property="article:tag" content="对象模型">
+<meta property="article:tag" content="内存">
+<meta property="article:tag" content="虚函数">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://hanxinle.github.io/2026/10/07/20261007-06-cpp-object-model-multiple-inheritance/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>C++ 对象模型实战（六）：多继承——多 vptr、this 调整与 adjustor thunk | 工程师笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="工程师笔记" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">工程师笔记</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">动脑动手</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/hanxinle" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/10/07/20261007-06-cpp-object-model-multiple-inheritance/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xinle">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="工程师笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          C++ 对象模型实战（六）：多继承——多 vptr、this 调整与 adjustor thunk
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-10-07 19:30:00 / 修改时间：21:12:52" itemprop="dateCreated datePublished" datetime="2026-10-07T19:30:00+08:00">2026-10-07</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="这一篇解决什么问题"><a href="#这一篇解决什么问题" class="headerlink" title="这一篇解决什么问题"></a>这一篇解决什么问题</h2><p>单继承里基类永远舒舒服服躺在偏移 0。多继承打破了这份平静：两个基类不可能同时在偏移 0。这一篇回答：</p>
+<ol>
+<li>多继承对象的内部怎么摆？</li>
+<li>指向第二个基类的指针，和对象地址还相同吗？</li>
+<li>通过第二个基类指针调虚函数，this 是怎么”拨回”派生类的？</li>
+</ol>
+<span id="more"></span>
+<h2 id="多继承的三个要点"><a href="#多继承的三个要点" class="headerlink" title="多继承的三个要点"></a>多继承的三个要点</h2><p><strong>要点 1：基类子对象按声明顺序排列，每个含虚函数的基类带一份 vptr。</strong><br><code>class C : public A, public B</code> 的布局是：A 子对象（含 A 的 vptr）→ B 子对象（含 B 的 vptr）→ C 自己的成员。C 的对象里有<strong>两个 vptr</strong>，分别服务两张虚表视角。</p>
+<p><strong>要点 2：指向第二个基类的指针 ≠ 对象地址。</strong><br><code>A* pa = &amp;c</code> 地址不变（A 在偏移 0）；<code>B* pb = &amp;c</code> 则是 <code>&amp;c + sizeof(A)</code>——指针被编译器悄悄加了偏移。这个调整在指针转换时静态完成，和虚表无关。</p>
+<p><strong>要点 3：经第二个基类调用被重写的虚函数，需要把 this 调回去。</strong><br><code>pb-&gt;fb()</code> 时，pb 指向 B 子对象，但 C::fb 期望的 this 是完整的 C 对象（首地址）。差值就是 B 子对象的偏移。MSVC 的解法：C 的”B 视角虚表”里，fb 那一项存的不是 C::fb 本身，而是一小段<strong>调整桩（adjustor thunk）</strong>：先把 this 减去偏移，再跳进 C::fb。在反汇编里能看到名字带 <code>adjustor&#123;16&#125;</code> 字样的跳转目标。</p>
+<h2 id="验证工程"><a href="#验证工程" class="headerlink" title="验证工程"></a>验证工程</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 多继承: 两个 vptr, 基类指针的地址偏移, this 调整 thunk, 成员函数指针.</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">A</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">fa</span><span class="params">()</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">&quot;A::fa\n&quot;</span>); &#125;</span><br><span class="line">    <span class="type">int</span> a = <span class="number">1</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">B</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">fb</span><span class="params">()</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">&quot;B::fb\n&quot;</span>); &#125;</span><br><span class="line">    <span class="type">int</span> b = <span class="number">2</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">C</span> : <span class="keyword">public</span> A, <span class="keyword">public</span> B &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">fa</span><span class="params">()</span> <span class="keyword">override</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">&quot;C::fa this=%p\n&quot;</span>, (<span class="type">void</span>*)<span class="keyword">this</span>); &#125;</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">fb</span><span class="params">()</span> <span class="keyword">override</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">&quot;C::fb this=%p\n&quot;</span>, (<span class="type">void</span>*)<span class="keyword">this</span>); &#125;  <span class="comment">// 对比 this 与 &amp;obj/pb, 验证 this 调整.</span></span><br><span class="line">    <span class="type">int</span> c = <span class="number">3</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;sizeof(A)=%zu  sizeof(B)=%zu  sizeof(C)=%zu\n&quot;</span>, <span class="built_in">sizeof</span>(A), <span class="built_in">sizeof</span>(B), <span class="built_in">sizeof</span>(C));</span><br><span class="line"></span><br><span class="line">    C obj;</span><br><span class="line">    A* pa = &amp;obj;</span><br><span class="line">    B* pb = &amp;obj;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;&amp;obj=%p\n&quot;</span>, (<span class="type">void</span>*)&amp;obj);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;pa  =%p  (same as &amp;obj)\n&quot;</span>, (<span class="type">void</span>*)pa);      <span class="comment">// 第一个基类在偏移 0, 与 &amp;obj 相同.</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;pb  =%p  (shifted from &amp;obj)\n&quot;</span>, (<span class="type">void</span>*)pb); <span class="comment">// 第二个基类子对象, 从 &amp;obj 后移.</span></span><br><span class="line"></span><br><span class="line">    pa-&gt;<span class="built_in">fa</span>();</span><br><span class="line">    pb-&gt;<span class="built_in">fb</span>();   <span class="comment">// 断点看反汇编: 经 B 的虚表跳到 adjustor thunk, 把 this 调回 C 再进 C::fb.</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 成员函数指针在多继承下不只是个裸地址, 还要携带 this 调整信息.</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;sizeof(&amp;C::fa)=%zu  sizeof(plain func ptr)=%zu\n&quot;</span>,</span><br><span class="line">           <span class="built_in">sizeof</span>(&amp;C::fa), <span class="built_in">sizeof</span>(<span class="built_in">void</span>(*)()));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="预测输出"><a href="#预测输出" class="headerlink" title="预测输出"></a>预测输出</h2><p>动手跑之前先推一遍：</p>
+<ul>
+<li>A、B 各 16（vptr 8 + int 4 + padding 4）；C = A 16 + B 16 + int 4 + padding 4 = <strong>40</strong>。</li>
+<li><code>pa == &amp;obj</code>；<code>pb - pa = 16</code>：B 子对象从 A 之后开始。</li>
+<li>输出 <code>C::fa</code>、<code>C::fb</code>：多态正常，只是 pb 那一路多走了一个 adjustor thunk。</li>
+<li>成员函数指针预测为 16 字节：多继承下它除了函数地址还要携带 this 调整量，比普通函数指针（8）大。这个数字各编译器差异很大，以实测为准。</li>
+</ul>
+<h2 id="实测输出"><a href="#实测输出" class="headerlink" title="实测输出"></a>实测输出</h2><p>VS2022 x64 Debug 下实际运行：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">sizeof(A)=16  sizeof(B)=16  sizeof(C)=40</span><br><span class="line">&amp;obj=000000A1894FFAD8</span><br><span class="line">pa  =000000A1894FFAD8  (same as &amp;obj)</span><br><span class="line">pb  =000000A1894FFAE8  (shifted from &amp;obj)</span><br><span class="line">C::fa this=000000A1894FFAD8</span><br><span class="line">C::fb this=000000A1894FFAD8</span><br><span class="line">sizeof(&amp;C::fa)=16  sizeof(plain func ptr)=8</span><br></pre></td></tr></table></figure>
+<h2 id="逐行比对"><a href="#逐行比对" class="headerlink" title="逐行比对"></a>逐行比对</h2><ul>
+<li>sizeof 16/16/40：命中。</li>
+<li><code>pa == &amp;obj == ...FAD8</code>：命中，第一个基类在偏移 0。</li>
+<li><code>pb = ...FAE8</code>，比 <code>&amp;obj</code> 大 <code>0x10</code>（16）：命中，B 子对象从 A 之后开始，指向 B 的指针被编译器悄悄加了 <code>sizeof(A)</code> 的偏移。</li>
+<li><code>sizeof(&amp;C::fa)=16</code>，普通函数指针 8：命中，多继承下成员函数指针携带 this 调整信息，体积翻倍。</li>
+</ul>
+<h2 id="this-调整的实测验证"><a href="#this-调整的实测验证" class="headerlink" title="this 调整的实测验证"></a>this 调整的实测验证</h2><p>最后两行是这篇文章最直接的证据。<code>C::fb</code> 是经由 <code>pb</code>（指向 B 子对象，…FAE8）调用的，调用约定里 rcx 装的也是 pb；但函数体里打印出来的 this 却是 <code>...FAD8</code>，和 <code>&amp;obj</code> 完全一致——<strong>中间有人把 this 减了 16</strong>，这就是 adjustor thunk 干的活。对照组 <code>C::fa</code> 经 <code>pa</code>（第一基类，偏移 0）调用，this 本来就等于 <code>&amp;obj</code>，不需要调整。</p>
+<p>值得记录的一次弯路：我先在反汇编里单步找 thunk，调用点（<code>mov rcx,[pb]; call [rax]</code>）和单继承长得一模一样，F11 跟进增量链接跳转表（ILT）后直接落到了 <code>C::fb</code> 函数体，没看到预想中的 <code>sub rcx, 16</code>，一度怀疑 thunk 不存在。最后靠”让函数自己打印 this”这个更直接的办法确认了调整确实发生——thunk 是编译器生成的一小段无名代码，夹在跳转表和函数体之间，单步时容易一眼掠过。教训：<strong>验证 this 调整，打印 this 比读汇编可靠</strong>。</p>
+<h2 id="用-d1-让编译器自证"><a href="#用-d1-让编译器自证" class="headerlink" title="用 /d1 让编译器自证"></a>用 /d1 让编译器自证</h2><p><code>/d1 reportAllClassLayout</code> 对 class C 的报告（去掉了开头的 <code>1&gt;</code> 编译器前缀）：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">class C    size(40):</span><br><span class="line">    +---</span><br><span class="line"> 0  | +--- (base class A)</span><br><span class="line"> 0  | | &#123;vfptr&#125;</span><br><span class="line"> 8  | | a</span><br><span class="line">    | | &lt;alignment member&gt; (size=4)</span><br><span class="line">    | +---</span><br><span class="line">16  | +--- (base class B)</span><br><span class="line">16  | | &#123;vfptr&#125;</span><br><span class="line">24  | | b</span><br><span class="line">    | | &lt;alignment member&gt; (size=4)</span><br><span class="line">    | +---</span><br><span class="line">32  | c</span><br><span class="line">    | &lt;alignment member&gt; (size=4)</span><br><span class="line">    +---</span><br><span class="line"></span><br><span class="line">C::$vftable@A@:</span><br><span class="line">    | &amp;C_meta</span><br><span class="line">    |  0</span><br><span class="line"> 0  | &amp;C::fa</span><br><span class="line"></span><br><span class="line">C::$vftable@B@:</span><br><span class="line">    | -16</span><br><span class="line"> 0  | &amp;C::fb</span><br><span class="line"></span><br><span class="line">C::fa this adjustor: 0</span><br><span class="line">C::fb this adjustor: 16</span><br></pre></td></tr></table></figure>
+<p>布局部分和运行输出逐项对上：A 子对象在偏移 0（含一份 vfptr），B 子对象在偏移 16（含第二份 vfptr），c 在 32，总共 40。</p>
+<p>最有说服力的是最后两行：<code>C::fa this adjustor: 0</code>、<code>C::fb this adjustor: 16</code>——编译器白纸黑字写明了：经 B 视角调 fb，this 要调整 16 字节。这就是 adjustor thunk 存在的官方自证。</p>
+<p>还有一个容易漏看的细节：<code>C::$vftable@B@</code> 的表头是 <code>-16</code>（A 视角那张是 <code>0</code>）。表头这一项记录的是”这个子对象离完整对象开头的偏移”，RTTI 和 dynamic_cast 靠它从基类子对象找回完整对象——上一篇结尾说 dynamic_cast 需要虚函数支持，机制上就落在这里。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">多继承布局: [A 子对象(vptr1)][B 子对象(vptr2)][C 成员]</span><br><span class="line">A* pa = &amp;c: 地址不变;  B* pb = &amp;c: 地址 + sizeof(A)</span><br><span class="line">pb-&gt;fb(): B 视角虚表的表项是 adjustor thunk, 先 sub this 再进 C::fb</span><br><span class="line">成员函数指针: 多继承下不是裸地址, 含 this 调整信息</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C++</a>
+              <a href="/tags/%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B/" rel="tag"># 对象模型</a>
+              <a href="/tags/%E5%86%85%E5%AD%98/" rel="tag"># 内存</a>
+              <a href="/tags/%E8%99%9A%E5%87%BD%E6%95%B0/" rel="tag"># 虚函数</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/10/07/20261007-05-cpp-object-model-virtual-in-ctor-dtor/" rel="prev" title="C++ 对象模型实战（五）：虚函数机制（下）——构造中的 vptr 切换、虚析构与纯虚">
+      <i class="fa fa-chevron-left"></i> C++ 对象模型实战（五）：虚函数机制（下）——构造中的 vptr 切换、虚析构与纯虚
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2026/10/07/20261007-07-cpp-object-model-virtual-inheritance/" rel="next" title="C++ 对象模型实战（七）：菱形继承与虚继承——vbptr 与偏移表">
+      C++ 对象模型实战（七）：菱形继承与虚继承——vbptr 与偏移表 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%99%E4%B8%80%E7%AF%87%E8%A7%A3%E5%86%B3%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98"><span class="nav-number">1.</span> <span class="nav-text">这一篇解决什么问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E7%BB%A7%E6%89%BF%E7%9A%84%E4%B8%89%E4%B8%AA%E8%A6%81%E7%82%B9"><span class="nav-number">2.</span> <span class="nav-text">多继承的三个要点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81%E5%B7%A5%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text">验证工程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%A2%84%E6%B5%8B%E8%BE%93%E5%87%BA"><span class="nav-number">4.</span> <span class="nav-text">预测输出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E6%B5%8B%E8%BE%93%E5%87%BA"><span class="nav-number">5.</span> <span class="nav-text">实测输出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%90%E8%A1%8C%E6%AF%94%E5%AF%B9"><span class="nav-number">6.</span> <span class="nav-text">逐行比对</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#this-%E8%B0%83%E6%95%B4%E7%9A%84%E5%AE%9E%E6%B5%8B%E9%AA%8C%E8%AF%81"><span class="nav-number">7.</span> <span class="nav-text">this 调整的实测验证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%A8-d1-%E8%AE%A9%E7%BC%96%E8%AF%91%E5%99%A8%E8%87%AA%E8%AF%81"><span class="nav-number">8.</span> <span class="nav-text">用 &#x2F;d1 让编译器自证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">9.</span> <span class="nav-text">小结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xinle</p>
+  <div class="site-description" itemprop="description">hanxinle199@gmail.com</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">46</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Xinle</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/pangu@4/dist/browser/pangu.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

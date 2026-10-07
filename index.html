@@ -162,6 +162,285 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/10/07/20261007-08-cpp-object-model-cfront-vs-msvc/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xinle">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="工程师笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2026/10/07/20261007-08-cpp-object-model-cfront-vs-msvc/" class="post-title-link" itemprop="url">C++ 对象模型实战（八）：对象模型不是语言规定——Cfront、MSVC 与 ABI 对照</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-10-07 20:30:00 / 修改时间：21:12:52" itemprop="dateCreated datePublished" datetime="2026-10-07T20:30:00+08:00">2026-10-07</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="这一篇解决什么问题"><a href="#这一篇解决什么问题" class="headerlink" title="这一篇解决什么问题"></a>这一篇解决什么问题</h2><p>前面七篇的所有结论——vptr 在偏移 0、虚表按类共享、vbptr 查表——都来自 MSVC 的实测。这一篇退一步回答一个更根本的问题：这些机制是 C++ 语言规定的吗？换个编译器还成立吗？</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2026/10/07/20261007-08-cpp-object-model-cfront-vs-msvc/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/10/07/20261007-07-cpp-object-model-virtual-inheritance/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xinle">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="工程师笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2026/10/07/20261007-07-cpp-object-model-virtual-inheritance/" class="post-title-link" itemprop="url">C++ 对象模型实战（七）：菱形继承与虚继承——vbptr 与偏移表</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-10-07 20:00:00 / 修改时间：21:12:52" itemprop="dateCreated datePublished" datetime="2026-10-07T20:00:00+08:00">2026-10-07</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="这一篇解决什么问题"><a href="#这一篇解决什么问题" class="headerlink" title="这一篇解决什么问题"></a>这一篇解决什么问题</h2><p>多继承再叠一层就会出现菱形：A、B 都继承 V，C 同时继承 A 和 B。这时 V 在 C 里有几份？怎么解决？这一篇回答：</p>
+<ol>
+<li>普通继承的菱形为什么会带两份基类子对象，有什么问题？</li>
+<li>虚继承怎么做到只留一份，代价是什么？</li>
+<li>vbptr 和 vbtable（虚基类偏移表）是怎么工作的？</li>
+</ol>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2026/10/07/20261007-07-cpp-object-model-virtual-inheritance/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/10/07/20261007-06-cpp-object-model-multiple-inheritance/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xinle">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="工程师笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2026/10/07/20261007-06-cpp-object-model-multiple-inheritance/" class="post-title-link" itemprop="url">C++ 对象模型实战（六）：多继承——多 vptr、this 调整与 adjustor thunk</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-10-07 19:30:00 / 修改时间：21:12:52" itemprop="dateCreated datePublished" datetime="2026-10-07T19:30:00+08:00">2026-10-07</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="这一篇解决什么问题"><a href="#这一篇解决什么问题" class="headerlink" title="这一篇解决什么问题"></a>这一篇解决什么问题</h2><p>单继承里基类永远舒舒服服躺在偏移 0。多继承打破了这份平静：两个基类不可能同时在偏移 0。这一篇回答：</p>
+<ol>
+<li>多继承对象的内部怎么摆？</li>
+<li>指向第二个基类的指针，和对象地址还相同吗？</li>
+<li>通过第二个基类指针调虚函数，this 是怎么”拨回”派生类的？</li>
+</ol>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2026/10/07/20261007-06-cpp-object-model-multiple-inheritance/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/10/07/20261007-05-cpp-object-model-virtual-in-ctor-dtor/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xinle">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="工程师笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2026/10/07/20261007-05-cpp-object-model-virtual-in-ctor-dtor/" class="post-title-link" itemprop="url">C++ 对象模型实战（五）：虚函数机制（下）——构造中的 vptr 切换、虚析构与纯虚</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-10-07 19:00:00 / 修改时间：21:12:52" itemprop="dateCreated datePublished" datetime="2026-10-07T19:00:00+08:00">2026-10-07</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="这一篇解决什么问题"><a href="#这一篇解决什么问题" class="headerlink" title="这一篇解决什么问题"></a>这一篇解决什么问题</h2><p>上一篇弄清了虚表机制。这一篇看三个和虚表机制直接相关的”坑点”：</p>
+<ol>
+<li>在构造函数里调虚函数，为什么不多态？</li>
+<li>通过基类指针 delete 派生对象，为什么基类析构必须是 virtual？</li>
+<li>纯虚函数和 <code>__purecall</code> 报错是怎么回事。</li>
+</ol>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2026/10/07/20261007-05-cpp-object-model-virtual-in-ctor-dtor/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/10/07/20261007-04-cpp-object-model-vtable/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -3348,7 +3627,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-count">46</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
