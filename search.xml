@@ -3116,4 +3116,50 @@ return 0;
         <tag>内存</tag>
       </tags>
   </entry>
+  <entry>
+    <title>C++ 对象模型实战（二）：栈对象、堆对象与 this 指针的本质</title>
+    <url>/2026/10/07/20261007-cpp-object-model-stack-heap-this/</url>
+    <content><![CDATA[<h2 id="这一篇解决什么问题"><a href="#这一篇解决什么问题" class="headerlink" title="这一篇解决什么问题"></a>这一篇解决什么问题</h2><p>上一篇用几个结构体搞清楚了对象内部的布局。接下来我想弄清楚两件事：</p>
+<ol>
+<li><code>Point a(1);</code> 和 <code>Point* b = new Point(2);</code> 这两种写法，对象的内存到底在哪，生命周期差在哪。</li>
+<li>成员函数里随手就用的 <code>this</code>，它到底是个什么东西，从哪来的。</li>
+</ol>
+<p>还是一个最小工程，打印地址看现象。</p>
+<span id="more"></span>
+<h2 id="栈与堆：两种对象，两套生命周期"><a href="#栈与堆：两种对象，两套生命周期" class="headerlink" title="栈与堆：两种对象，两套生命周期"></a>栈与堆：两种对象，两套生命周期</h2><p>规则很简单：</p>
+<ul>
+<li><strong>栈对象</strong>（局部变量）：内存在栈上，构造发生在声明处，离开作用域自动析构。不用管，也轮不到你管。</li>
+<li><strong>堆对象</strong>（<code>new</code> 出来的）：内存在堆上，构造发生在 <code>new</code> 这一刻，只有 <code>delete</code> 才析构。忘了 <code>delete</code>，对象就一直在那，这就是内存泄漏。</li>
+</ul>
+<p>一个容易混淆的点：<code>Point* b</code> 这个<strong>指针变量本身</strong>是栈对象，它指向的 <code>Point</code> 才是堆对象。<code>&amp;b</code> 和 <code>b</code> 是两个地址，分属两个世界。</p>
+<h2 id="this-指针：一个隐藏的函数参数"><a href="#this-指针：一个隐藏的函数参数" class="headerlink" title="this 指针：一个隐藏的函数参数"></a>this 指针：一个隐藏的函数参数</h2><p>非静态成员函数在编译时会被改写：<code>show()</code> 实际变成类似 <code>show(const Point* this)</code> 的普通函数，调用处 <code>a.show()</code> 实际传入 <code>&amp;a</code>。</p>
+<p>在 MSVC x64 下，这个隐藏参数通过 <strong>rcx 寄存器</strong>传递（x64 调用约定的第一个参数）。所以 <code>this</code> 不是对象的组成部分，不占对象任何字节——它是每次调用成员函数时，由调用方临时递进来的一个地址。上一篇的布局实验也印证了这点：<code>sizeof</code> 里从来没有 this 的位置。</p>
+<h2 id="验证工程"><a href="#验证工程" class="headerlink" title="验证工程"></a>验证工程</h2><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 栈对象 vs 堆对象, this 指针本质.</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Point</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">Point</span>(<span class="type">int</span> x) : <span class="built_in">x_</span>(x) &#123; <span class="built_in">printf</span>(<span class="string">&quot;  ctor: this=%p\n&quot;</span>, (<span class="type">void</span>*)<span class="keyword">this</span>); &#125;</span><br><span class="line">    ~<span class="built_in">Point</span>()               &#123; <span class="built_in">printf</span>(<span class="string">&quot;  dtor: this=%p\n&quot;</span>, (<span class="type">void</span>*)<span class="keyword">this</span>); &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">show</span><span class="params">()</span> <span class="type">const</span> </span>&#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;  show: this=%p, x=%d, &amp;x_=%p\n&quot;</span>, (<span class="type">void</span>*)<span class="keyword">this</span>, x_, (<span class="type">void</span>*)&amp;x_);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="type">int</span> x_;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;--- stack object ---\n&quot;</span>);</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="function">Point <span class="title">a</span><span class="params">(<span class="number">1</span>)</span></span>;         <span class="comment">// 构造发生在声明处.</span></span><br><span class="line">        a.<span class="built_in">show</span>();</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;  &amp;a  =%p\n&quot;</span>, (<span class="type">void</span>*)&amp;a);</span><br><span class="line">    &#125;                       <span class="comment">// 离开作用域, 析构自动发生.</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;--- heap object ---\n&quot;</span>);</span><br><span class="line">    Point* b = <span class="keyword">new</span> <span class="built_in">Point</span>(<span class="number">2</span>);<span class="comment">// 构造发生在 new 这一刻.</span></span><br><span class="line">    b-&gt;<span class="built_in">show</span>();</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;  &amp;b  =%p (pointer b itself, on stack)\n&quot;</span>, (<span class="type">void</span>*)&amp;b);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;  b   =%p (Point object, on heap)\n&quot;</span>, (<span class="type">void</span>*)b);</span><br><span class="line">    <span class="keyword">delete</span> b;               <span class="comment">// 不 delete 析构永远不会发生, 内存泄漏.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="运行结果与解读"><a href="#运行结果与解读" class="headerlink" title="运行结果与解读"></a>运行结果与解读</h2><p>先给出我的预测（VS2022 x64 Debug，地址为预测的形态示意）：</p>
+<ul>
+<li>栈对象的 this、&amp;a、&amp;x<em> 三者完全相同（x</em> 偏移为 0），且是 <code>000000xx....FF....</code> 形态的栈地址。</li>
+<li>堆对象的 this、b、&amp;x_ 三者相同，是另一种前缀的堆地址；而 &amp;b（指针本身）仍是栈地址。</li>
+<li>栈对象的 dtor 在作用域结束处自动出现；堆对象的 dtor 只在 delete 之后出现。</li>
+</ul>
+<p>实际运行输出：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">--- stack object ---</span><br><span class="line">  ctor: this=00000037746FF8E4</span><br><span class="line">  show: this=00000037746FF8E4, x=1, &amp;x_=00000037746FF8E4</span><br><span class="line">  &amp;a  =00000037746FF8E4</span><br><span class="line">  dtor: this=00000037746FF8E4</span><br><span class="line">--- heap object ---</span><br><span class="line">  ctor: this=0000017FB2BD8DB0</span><br><span class="line">  show: this=0000017FB2BD8DB0, x=2, &amp;x_=0000017FB2BD8DB0</span><br><span class="line">  &amp;b  =00000037746FF908 (pointer b itself, on stack)</span><br><span class="line">  b   =0000017FB2BD8DB0 (Point object, on heap)</span><br><span class="line">  dtor: this=0000017FB2BD8DB0</span><br></pre></td></tr></table></figure>
+<p>逐行比对，三条预测全部命中：</p>
+<p><strong>第一，this 和 &amp;a 是同一个地址。</strong> <code>show()</code> 里打印的 <code>this</code> 和外部打印的 <code>&amp;a</code> 完全相同（都是 <code>...F8E4</code>），堆对象那边 <code>this</code> 也和 <code>b</code> 的值相同。这直接证实了”this 就是调用时传进来的对象地址”。</p>
+<p><strong>第二，栈和堆的地址形态肉眼可分。</strong> 栈地址是 <code>00000037...</code> 开头，堆地址是 <code>0000017F...</code> 开头，两个区域离得很远。同时注意 <code>&amp;b</code>（指针本身）是 <code>00000037...</code>——指针变量确实住在栈上，和它指向的堆对象天各一方。顺带一提，<code>&amp;b - &amp;a = F908 - F8E4 = 0x24</code>，两者都在 main 的同一个栈帧里，具体距离是编译器的帧布局决定的，不用深究。</p>
+<p><strong>第三，析构时机完全不同。</strong> 栈对象 <code>a</code> 的 <code>dtor</code> 紧跟在作用域结束的 <code>&#125;</code> 之后自动打印；堆对象的 <code>dtor</code> 只在 <code>delete b</code> 之后出现。把 <code>delete</code> 注释掉再跑，第二个 <code>dtor</code> 就永远消失了。</p>
+<p>另外 <code>&amp;x_</code> 和 <code>this</code> 相同，因为 <code>x_</code> 是 Point 的第一个（也是唯一一个）成员，偏移为 0——这正是上一篇布局规则的延续：成员地址 = this + 偏移。</p>
+<h2 id="在反汇编里看-this-的传递"><a href="#在反汇编里看-this-的传递" class="headerlink" title="在反汇编里看 this 的传递"></a>在反汇编里看 this 的传递</h2><p>想看隐藏的参数传递，最直接的办法是看汇编。在 VS 里 F5 调试，在 <code>a.show()</code> 这一行打断点，命中后右键选择「转到反汇编」（快捷键 Ctrl+K,G）。这是本次运行的实际反汇编：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">    Point a(1);</span><br><span class="line">00007FF7AE7B1BCA  mov   edx,1</span><br><span class="line">00007FF7AE7B1BCF  lea   rcx,[rbp+4]</span><br><span class="line">00007FF7AE7B1BD3  call  Point::Point</span><br><span class="line">    a.show();</span><br><span class="line">00007FF7AE7B1BD9  lea   rcx,[rbp+4]</span><br><span class="line">00007FF7AE7B1BDD  call  Point::show</span><br><span class="line">    printf(&quot;  &amp;a  =%p\n&quot;, (void*)&amp;a);</span><br><span class="line">00007FF7AE7B1BE3  lea   rdx,[rbp+4]</span><br><span class="line">00007FF7AE7B1BE7  lea   rcx,[string &quot;  &amp;a  =%p\n&quot;]</span><br><span class="line">00007FF7AE7B1BEE  call  printf</span><br></pre></td></tr></table></figure>
+<p>这段汇编证实了三件事。</p>
+<p><strong>1. <code>lea rcx, [rbp+4]</code> 出现了两次。</strong> 构造和 <code>show()</code> 调用前，都是先把 a 的地址（<code>rbp+4</code>，a 在栈帧里的位置）装进 rcx，再 call。this 作为隐藏参数经 rcx 传递，和预测一致。</p>
+<p><strong>2. 意外收获：<code>mov edx,1</code>。</strong> 构造调用的完整序列是 <code>mov edx,1</code> + <code>lea rcx,[rbp+4]</code> + <code>call Point::Point</code>——构造函数也是普通成员函数，同样收 this（rcx），显式参数 <code>1</code> 被挤到了第二个寄存器 rdx。这就是 x64 调用约定的参数顺序：rcx、rdx、r8、r9，this 占了第一个位置，其余参数顺次后移。这个细节是预测时没想到的，是看汇编带来的新发现。</p>
+<p><strong>3. printf 那三行是同一个约定的对照组。</strong> <code>lea rcx,[格式串]</code> + <code>lea rdx,[rbp+4]</code>——rcx 放第一个参数（格式串），rdx 放第二个（&amp;a）。成员函数调用和普通函数调用没有本质区别，只是编译器替成员函数多塞了一个 this 参数。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">栈对象: 声明即构造, 离开作用域自动析构, 地址在栈区</span><br><span class="line">堆对象: new 才构造, delete 才析构, 地址在堆区; 指针本身仍是栈变量</span><br><span class="line">this:   不占对象空间, 是调用成员函数时通过 rcx 传入的隐藏参数</span><br><span class="line">        成员访问 = this + 成员偏移</span><br></pre></td></tr></table></figure>
+]]></content>
+      <tags>
+        <tag>C++</tag>
+        <tag>对象模型</tag>
+        <tag>内存</tag>
+      </tags>
+  </entry>
 </search>
