@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"hanxinle.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="为什么从这个话题开始最近开始系统补 C++ 对象模型，这是面试高频内容，也是后面学虚函数、继承、用调试器看内存的基础。第一步先搞清楚最基本的问题：一个对象在内存里到底长什么样。 我写了几个结构体做实验，总结下来核心就是三条规则，sizeof 计算题基本都能从这三条推出来。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++ 对象模型实战（一）：对象布局、对齐与 sizeof 的三条规则">
+<meta property="og:url" content="https://hanxinle.github.io/2026/10/07/20261007-cpp-object-model-layout-alignment/index.html">
+<meta property="og:site_name" content="工程师笔记">
+<meta property="og:description" content="为什么从这个话题开始最近开始系统补 C++ 对象模型，这是面试高频内容，也是后面学虚函数、继承、用调试器看内存的基础。第一步先搞清楚最基本的问题：一个对象在内存里到底长什么样。 我写了几个结构体做实验，总结下来核心就是三条规则，sizeof 计算题基本都能从这三条推出来。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-10-07T08:15:00.000Z">
+<meta property="article:modified_time" content="2026-10-07T08:49:14.971Z">
+<meta property="article:author" content="Xinle">
+<meta property="article:tag" content="C++">
+<meta property="article:tag" content="对象模型">
+<meta property="article:tag" content="内存">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://hanxinle.github.io/2026/10/07/20261007-cpp-object-model-layout-alignment/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>C++ 对象模型实战（一）：对象布局、对齐与 sizeof 的三条规则 | 工程师笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><link rel="alternate" href="/atom.xml" title="工程师笔记" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">工程师笔记</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">动脑动手</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/hanxinle" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/10/07/20261007-cpp-object-model-layout-alignment/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xinle">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="工程师笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          C++ 对象模型实战（一）：对象布局、对齐与 sizeof 的三条规则
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-10-07 16:15:00 / 修改时间：16:49:14" itemprop="dateCreated datePublished" datetime="2026-10-07T16:15:00+08:00">2026-10-07</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="为什么从这个话题开始"><a href="#为什么从这个话题开始" class="headerlink" title="为什么从这个话题开始"></a>为什么从这个话题开始</h2><p>最近开始系统补 C++ 对象模型，这是面试高频内容，也是后面学虚函数、继承、用调试器看内存的基础。第一步先搞清楚最基本的问题：一个对象在内存里到底长什么样。</p>
+<p>我写了几个结构体做实验，总结下来核心就是三条规则，sizeof 计算题基本都能从这三条推出来。</p>
+<span id="more"></span>
+<p>写代码打印验证：用 <code>sizeof</code> / <code>offsetof</code> 看编译器给的答案，再用运行时打印的真实地址对一遍。两边对上了，才算真的理解。</p>
+<h2 id="三条规则"><a href="#三条规则" class="headerlink" title="三条规则"></a>三条规则</h2><p><strong>规则 1：成员按声明顺序排列，编译器不会替你重排。</strong><br>每个成员的偏移地址必须是它自身对齐值的倍数——<code>int</code> 对齐 4，<code>short</code> 对齐 2，<code>char</code> 对齐 1。不满足就补 padding（填充字节）。</p>
+<p><strong>规则 2：结构体总大小向上取整到「最大成员对齐值」的倍数。</strong><br>这是为了保证数组 <code>A arr[10]</code> 里每个元素都天然对齐。</p>
+<p><strong>规则 3：空类至少占 1 字节。</strong><br>C++ 要求每个可寻址对象有独一无二的地址。空类如果是 0 字节，数组里两个元素的地址就相同了，矛盾。所以编译器硬塞 1 字节。但它作为<strong>基类</strong>时有例外——空基类优化（EBO）：基类子对象可以不要独立地址，这 1 字节被优化掉。</p>
+<h2 id="验证工程"><a href="#验证工程" class="headerlink" title="验证工程"></a>验证工程</h2><p>四个结构体，把上面三条规则一次验证完：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstddef&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">A</span> &#123;              <span class="comment">// 声明顺序决定内存顺序, 编译器不重排.</span></span><br><span class="line">    <span class="type">char</span>  c;            <span class="comment">// offset 0, 占 1 字节.</span></span><br><span class="line">    <span class="type">int</span>   i;            <span class="comment">// 需 4 对齐, 前面补 3 字节 padding.</span></span><br><span class="line">    <span class="type">short</span> s;            <span class="comment">// offset 8, 结尾再补 2 字节凑齐对齐倍数.</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">B</span> &#123;              <span class="comment">// 与 A 成员相同, 按对齐值从大到小排列, padding 大幅减少.</span></span><br><span class="line">    <span class="type">int</span>   i;            <span class="comment">// offset 0, 占 4 字节, 天然对齐.</span></span><br><span class="line">    <span class="type">short</span> s;            <span class="comment">// offset 4, 2 的倍数, 无需 padding.</span></span><br><span class="line">    <span class="type">char</span>  c;            <span class="comment">// offset 6, 1 的倍数, 无需 padding.</span></span><br><span class="line">&#125;;                      <span class="comment">// 尾部补 1 字节凑齐 4 的倍数, sizeof(B) = 8, 比 A 省 4 字节.</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Empty</span> &#123;&#125;;        <span class="comment">// 空类必须可寻址, 编译器强制占 1 字节.</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">WithEmpty</span> : Empty &#123;  <span class="comment">// 空基类优化: 基类子对象不再占那 1 字节.</span></span><br><span class="line">    <span class="type">int</span> i;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="built_in">static_assert</span>(<span class="built_in">sizeof</span>(A) == <span class="number">12</span>, <span class="string">&quot;A: 1 + 3 pad + 4 + 2 + 2 pad&quot;</span>);</span><br><span class="line"><span class="built_in">static_assert</span>(<span class="built_in">sizeof</span>(B) == <span class="number">8</span>, <span class="string">&quot;B: 4 + 2 + 1 + 1 pad&quot;</span>);</span><br><span class="line"><span class="built_in">static_assert</span>(<span class="built_in">sizeof</span>(Empty) == <span class="number">1</span>, <span class="string">&quot;empty class needs an address&quot;</span>);</span><br><span class="line"><span class="built_in">static_assert</span>(<span class="built_in">sizeof</span>(WithEmpty) == <span class="number">4</span>, <span class="string">&quot;empty base optimized away&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;A:         sizeof=%2zu  alignof=%zu  c@%zu i@%zu s@%zu\n&quot;</span>,</span><br><span class="line">           <span class="built_in">sizeof</span>(A), <span class="built_in">alignof</span>(A), <span class="built_in">offsetof</span>(A, c), <span class="built_in">offsetof</span>(A, i), <span class="built_in">offsetof</span>(A, s));</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;B:         sizeof=%2zu  alignof=%zu  i@%zu s@%zu c@%zu\n&quot;</span>,</span><br><span class="line">           <span class="built_in">sizeof</span>(B), <span class="built_in">alignof</span>(B), <span class="built_in">offsetof</span>(B, i), <span class="built_in">offsetof</span>(B, s), <span class="built_in">offsetof</span>(B, c));</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Empty:     sizeof=%2zu\n&quot;</span>, <span class="built_in">sizeof</span>(Empty));</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;WithEmpty: sizeof=%2zu  (empty base optimization)\n&quot;</span>, <span class="built_in">sizeof</span>(WithEmpty));</span><br><span class="line"></span><br><span class="line">    A a&#123;&#125;;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;addresses: &amp;a=%p  &amp;c=%p  &amp;i=%p  &amp;s=%p\n&quot;</span>,</span><br><span class="line">           (<span class="type">void</span>*)&amp;a, (<span class="type">void</span>*)&amp;a.c, (<span class="type">void</span>*)&amp;a.i, (<span class="type">void</span>*)&amp;a.s);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>四条 <code>static_assert</code> 是编译期自检：布局一旦被改（换编译器、换平台、动结构体），编译直接报错，不用等运行才发现。</p>
+<h2 id="运行结果与解读"><a href="#运行结果与解读" class="headerlink" title="运行结果与解读"></a>运行结果与解读</h2><p>在 Visual Studio 2022 x64 Debug 下运行，输出如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">A:         sizeof=12  alignof=4  c@0 i@4 s@8</span><br><span class="line">B:         sizeof= 8  alignof=4  i@0 s@4 c@6</span><br><span class="line">Empty:     sizeof= 1</span><br><span class="line">WithEmpty: sizeof= 4  (empty base optimization)</span><br><span class="line">addresses: &amp;a=000000D0340FF568  &amp;c=000000D0340FF568  &amp;i=000000D0340FF56C  &amp;s=000000D0340FF570</span><br></pre></td></tr></table></figure>
+<p><code>c@0 i@4 s@8</code> 是成员的<strong>偏移量</strong>——从对象起始地址数，第几个字节是这个成员。A 的 12 字节内存地图画出来是这样：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">偏移:  0    1 2 3      4 5 6 7    8 9    10 11</span><br><span class="line">      [c] [padding]  [   i   ]  [ s ]  [padding]</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>c@0</code>：char 紧挨对象开头，所以 <code>&amp;a == &amp;a.c</code>（输出里两个都是 <code>...F568</code>）。</li>
+<li><code>i@4</code>：int 要求偏移是 4 的倍数，偏移 1~3 只能空着，这就是 padding。</li>
+<li><code>s@8</code>：short 要求 2 的倍数，偏移 8 恰好满足，直接放。</li>
+</ul>
+<p>再看最后一行的真实地址：<code>&amp;i - &amp;c = F56C - F568 = 4</code>，<code>&amp;s - &amp;i = F570 - F56C = 4</code>，和 <code>offsetof</code> 的结果一致。编译期算出来的布局和运行时看到的地址对得上，说明这套规则就是编译器实际在用的规则，不是纸面理论。</p>
+<p>另外注意 A 和 B：成员完全相同，只是顺序不同，sizeof 从 12 降到 8。这就是「成员按从大到小排列省空间」说法的来源，面试里 sizeof 计算题考的也就是这个。</p>
+<h2 id="padding-存在的理由"><a href="#padding-存在的理由" class="headerlink" title="padding 存在的理由"></a>padding 存在的理由</h2><p>padding 是编译器为满足对齐要求插入的空白字节，不属于任何成员，但实实在在占着 sizeof。为什么要对齐？这是 CPU 的硬件特性决定的：</p>
+<ul>
+<li>x64 上 CPU 一次从内存取 8 字节。一个 4 字节的 int 落在天然边界（地址是 4 的倍数）上一次取到；跨边界就要取两次再拼接，变慢。</li>
+<li>部分架构（老 ARM、SPARC）访问未对齐数据直接硬件异常。x86/x64 只是变慢，属于「能跑但亏」。</li>
+</ul>
+<p>所以编译器的做法是：牺牲少量空间，换每个成员都落在天然边界上。</p>
+<h2 id="让编译器自己画出布局图"><a href="#让编译器自己画出布局图" class="headerlink" title="让编译器自己画出布局图"></a>让编译器自己画出布局图</h2><p>除了运行时打印，MSVC 还能直接输出编译期确定的布局。在项目属性 → C/C++ → 命令行加上：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/d1 reportAllClassLayout</span><br></pre></td></tr></table></figure>
+<p>重新编译，输出窗口里就有每个类的完整布局报告。本工程实际打印如下（去掉了行首的生成前缀）：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">class A    size(12):</span><br><span class="line">    +---</span><br><span class="line"> 0  | c</span><br><span class="line">    | &lt;alignment member&gt; (size=3)</span><br><span class="line"> 4  | i</span><br><span class="line"> 8  | s</span><br><span class="line">    | &lt;alignment member&gt; (size=2)</span><br><span class="line">    +---</span><br><span class="line">class B    size(8):</span><br><span class="line">    +---</span><br><span class="line"> 0  | i</span><br><span class="line"> 4  | s</span><br><span class="line"> 6  | c</span><br><span class="line">    | &lt;alignment member&gt; (size=1)</span><br><span class="line">    +---</span><br><span class="line">class Empty    size(1):</span><br><span class="line">    +---</span><br><span class="line">    +---</span><br><span class="line">class WithEmpty    size(4):</span><br><span class="line">    +---</span><br><span class="line"> 0  | +--- (base class Empty)</span><br><span class="line">    | +---</span><br><span class="line"> 0  | i</span><br><span class="line">    +---</span><br></pre></td></tr></table></figure>
+<p>这份报告可以对照前面的结论看：</p>
+<ul>
+<li>A 里两处 <code>&lt;alignment member&gt;</code>（3 字节和 2 字节）就是编译器补的 padding，报告里标得清清楚楚。</li>
+<li>B 只有尾部 1 字节 padding，和「从大到小排列省空间」对应。</li>
+<li>WithEmpty 最值得注意：基类 Empty 和成员 i <strong>同在偏移 0</strong>。空基类不独占任何字节，EBO 在这个报告里是能直接看到的。</li>
+</ul>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">对象布局三规则</span><br><span class="line">├── 成员按声明顺序排列, 各自对齐, 不满补 padding</span><br><span class="line">├── 总大小取整到最大对齐值的倍数(为了数组)</span><br><span class="line">└── 空类 1 字节(为了可寻址), 作基类时可被 EBO 优化掉</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C++</a>
+              <a href="/tags/%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B/" rel="tag"># 对象模型</a>
+              <a href="/tags/%E5%86%85%E5%AD%98/" rel="tag"># 内存</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2026/09/28/20260928-claude-code-commands-and-cli-usage/" rel="prev" title="Claude Code 学习笔记：常用命令与 CLI 深度使用">
+      <i class="fa fa-chevron-left"></i> Claude Code 学习笔记：常用命令与 CLI 深度使用
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BB%8E%E8%BF%99%E4%B8%AA%E8%AF%9D%E9%A2%98%E5%BC%80%E5%A7%8B"><span class="nav-number">1.</span> <span class="nav-text">为什么从这个话题开始</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E6%9D%A1%E8%A7%84%E5%88%99"><span class="nav-number">2.</span> <span class="nav-text">三条规则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81%E5%B7%A5%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text">验证工程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E7%BB%93%E6%9E%9C%E4%B8%8E%E8%A7%A3%E8%AF%BB"><span class="nav-number">4.</span> <span class="nav-text">运行结果与解读</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#padding-%E5%AD%98%E5%9C%A8%E7%9A%84%E7%90%86%E7%94%B1"><span class="nav-number">5.</span> <span class="nav-text">padding 存在的理由</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%A9%E7%BC%96%E8%AF%91%E5%99%A8%E8%87%AA%E5%B7%B1%E7%94%BB%E5%87%BA%E5%B8%83%E5%B1%80%E5%9B%BE"><span class="nav-number">6.</span> <span class="nav-text">让编译器自己画出布局图</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">小结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xinle</p>
+  <div class="site-description" itemprop="description">hanxinle199@gmail.com</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">39</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2026</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Xinle</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/pangu@4/dist/browser/pangu.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
