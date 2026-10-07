@@ -3210,4 +3210,46 @@ return 0;
         <tag>内存</tag>
       </tags>
   </entry>
+  <entry>
+    <title>C++ 对象模型实战（四）：虚函数机制（上）——vptr、虚表与间接调用</title>
+    <url>/2026/10/07/20261007-04-cpp-object-model-vtable/</url>
+    <content><![CDATA[<h2 id="这一篇解决什么问题"><a href="#这一篇解决什么问题" class="headerlink" title="这一篇解决什么问题"></a>这一篇解决什么问题</h2><p>类一旦有了虚函数，对象内部就多了一样看不见的东西。这一篇回答：</p>
+<ol>
+<li>这个看不见的东西（vptr）放在对象哪里，占多大？</li>
+<li>虚表（vtable）长什么样，同类对象之间是什么关系？</li>
+<li>一次虚调用在汇编层面到底执行了什么？</li>
+</ol>
+<span id="more"></span>
+<h2 id="虚函数机制的三个要点"><a href="#虚函数机制的三个要点" class="headerlink" title="虚函数机制的三个要点"></a>虚函数机制的三个要点</h2><p><strong>要点 1：有虚函数的类，对象开头多一个 vptr。</strong><br>vptr 是一个指针（x64 下 8 字节），放在对象偏移 0 处，指向本类的虚表。所以 <code>Shape</code> 只有一个 int 成员，sizeof 却是 16（8 字节 vptr + 4 字节 int + 4 字节 padding），不是 4。</p>
+<p><strong>要点 2：虚表按类共享，重写就换表。</strong><br>虚表是一张函数指针数组，按虚函数声明顺序排列。它是编译期生成的静态数据，<strong>同类所有对象指向同一张表</strong>。派生类重写了某个虚函数，编译器就为派生类生成一张新表——布局一样，但被重写的表项换成了派生类的函数地址；没重写的表项原样保留。</p>
+<p><strong>要点 3：虚调用是一次间接跳转。</strong><br>普通成员调用是 <code>call 函数地址</code>（编译期定死）。虚调用是：取对象头的 vptr → 从表里取第 N 项 → call 这个表项。运行时查表，所以同一个 <code>p-&gt;draw()</code>，p 指向谁就调谁的版本——多态的全部秘密就在这一层间接里。</p>
+<h2 id="验证工程"><a href="#验证工程" class="headerlink" title="验证工程"></a>验证工程</h2><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 虚函数机制(上): vptr 位置, 虚表按类共享, 虚调用是间接跳转.</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstring&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Shape</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">draw</span><span class="params">()</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">&quot;Shape::draw\n&quot;</span>); &#125;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">area</span><span class="params">()</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">&quot;Shape::area\n&quot;</span>); &#125;</span><br><span class="line">    <span class="type">int</span> x = <span class="number">0</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Circle</span> : <span class="keyword">public</span> Shape &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">draw</span><span class="params">()</span> <span class="keyword">override</span> </span>&#123; <span class="built_in">printf</span>(<span class="string">&quot;Circle::draw\n&quot;</span>); &#125;  <span class="comment">// 重写 draw, area 保持继承.</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">void</span>* <span class="title">vptr_of</span><span class="params">(<span class="type">void</span>* obj)</span> </span>&#123;   <span class="comment">// 对象头 8 字节是 vptr, 指向本类的虚表.</span></span><br><span class="line">    <span class="type">void</span>* p;</span><br><span class="line">    <span class="built_in">memcpy</span>(&amp;p, obj, <span class="keyword">sizeof</span> p);</span><br><span class="line">    <span class="keyword">return</span> p;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;sizeof(Shape)=%zu  sizeof(Circle)=%zu\n&quot;</span>, <span class="built_in">sizeof</span>(Shape), <span class="built_in">sizeof</span>(Circle));</span><br><span class="line"></span><br><span class="line">    Shape a, b;</span><br><span class="line">    Circle c;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;vptr(a)=%p\n&quot;</span>, <span class="built_in">vptr_of</span>(&amp;a));</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;vptr(b)=%p  (same as a)\n&quot;</span>, <span class="built_in">vptr_of</span>(&amp;b));   <span class="comment">// 与 a 相同: 同类对象共享同一张虚表.</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;vptr(c)=%p  (differs from a)\n&quot;</span>, <span class="built_in">vptr_of</span>(&amp;c));  <span class="comment">// 与 a 不同: Circle 重写了虚函数, 换了一张表.</span></span><br><span class="line"></span><br><span class="line">    Shape* p = &amp;c;</span><br><span class="line">    p-&gt;<span class="built_in">draw</span>();      <span class="comment">// 经 c 的虚表间接跳转, 落到 Circle::draw.</span></span><br><span class="line">    p-&gt;<span class="built_in">area</span>();      <span class="comment">// Circle 没重写 area, 表项仍是 Shape::area.</span></span><br><span class="line">    <span class="comment">// 在 p-&gt;draw() 打断点看反汇编: mov rax,[rcx] 取 vptr, call [rax] 间接调用.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="预测输出"><a href="#预测输出" class="headerlink" title="预测输出"></a>预测输出</h2><p>动手跑之前，我先按三个要点把预期结果推一遍：</p>
+<ul>
+<li>sizeof 都是 16：vptr 8 + int 4 + padding 4。Circle 没有新数据成员，重写虚函数不改变对象大小，只换 vptr 指向的表。</li>
+<li><code>vptr(a) == vptr(b)</code>：同类共享虚表，表是静态数据，地址形如 <code>00007ff...</code>（在 exe 的只读数据段，和栈、堆地址形态都不同）。</li>
+<li><code>vptr(c) != vptr(a)</code>：Circle 重写了 draw，编译器给 Circle 单独造了一张表。</li>
+<li><code>p-&gt;draw()</code> 输出 <code>Circle::draw</code>（表项被替换），<code>p-&gt;area()</code> 输出 <code>Shape::area</code>（表项保留）。</li>
+</ul>
+<h2 id="实测输出"><a href="#实测输出" class="headerlink" title="实测输出"></a>实测输出</h2><p>VS2022 x64 Debug 下实际运行：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">sizeof(Shape)=16  sizeof(Circle)=16</span><br><span class="line">vptr(a)=00007FF744B8ADC8</span><br><span class="line">vptr(b)=00007FF744B8ADC8  (same as a)</span><br><span class="line">vptr(c)=00007FF744B8AE08  (differs from a)</span><br><span class="line">Circle::draw</span><br><span class="line">Shape::area</span><br></pre></td></tr></table></figure>
+<h2 id="逐行比对"><a href="#逐行比对" class="headerlink" title="逐行比对"></a>逐行比对</h2><ul>
+<li>sizeof 16、16：命中。</li>
+<li><code>vptr(a) == vptr(b) == ...ADC8</code>：命中，同类对象共享同一张虚表。</li>
+<li><code>vptr(c) = ...AE08</code>：命中，与 a 不同。两个值只差 <code>0x40</code>（64 字节）——两张虚表在只读数据段里挨着放，每张表 2 个函数指针（16 字节）再加上表前的 RTTI 定位信息，两张表正好隔 64 字节。</li>
+<li><code>Circle::draw</code>、<code>Shape::area</code>：命中，重写的换、没重写的留。</li>
+</ul>
+<h2 id="在反汇编里看间接调用"><a href="#在反汇编里看间接调用" class="headerlink" title="在反汇编里看间接调用"></a>在反汇编里看间接调用</h2><p>在 <code>p-&gt;draw()</code> 打断点，转到反汇编（Ctrl+K,G），实际看到：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mov  rax, qword ptr [p]     ; 取出对象地址</span><br><span class="line">mov  rax, qword ptr [rax]   ; 取对象头 8 字节: vptr, 指向 Circle 的虚表</span><br><span class="line">mov  rcx, qword ptr [p]     ; rcx = this, x64 调用约定的第一个参数</span><br><span class="line">call qword ptr [rax]        ; 调用表的第 0 项 (draw); area 在 [rax+8]</span><br></pre></td></tr></table></figure>
+<p>和我预测的三条相比，多了一条 <code>mov rcx, [p]</code>——调用成员函数前要把 this 装进 rcx（第二篇讲过 x64 前四个参数走 rcx/rdx/r8/r9），我当时漏算了这一步，其余完全一致。核心是最后那条 <code>call qword ptr [rax]</code>：<strong>call 的目标不在指令里，要运行时才从表里查出来</strong>。</p>
+<p>和第二篇 <code>call Point::show</code>（直接调用，地址写死）对比，这一层间接就是虚函数”多态”和”略慢”的共同来源。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">vptr: 对象偏移 0 处, 8 字节, 指向本类虚表</span><br><span class="line">虚表: 函数指针数组, 按类共享; 重写 → 编译器给派生类造新表</span><br><span class="line">虚调用: 取 vptr → 查表 → 间接 call, 运行时才定目标</span><br><span class="line">代价: 对象大 8 字节 + 一次间接跳转</span><br></pre></td></tr></table></figure>
+]]></content>
+      <tags>
+        <tag>C++</tag>
+        <tag>对象模型</tag>
+        <tag>内存</tag>
+        <tag>虚函数</tag>
+      </tags>
+  </entry>
 </search>
