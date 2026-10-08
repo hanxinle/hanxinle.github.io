@@ -20,17 +20,19 @@
     var CONFIG = {"hostname":"hanxinle.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":true,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="为什么学 Claude Code把 Claude Code 作为最重要的 AI Agent 工具来学习，原因有二：一是它是不同于 ChatGPT 的 Agent 模式的集大成者，二是它拥有最好的模型。 这篇笔记整理了 Claude Code 的两块核心内容：会话内的斜杠命令，以及命令行下的深度用法（参数与管道）。">
+  <meta name="description" content="为什么学 Claude Code把 Claude Code 作为最重要的 AI Agent 工具来学习，原因有二：一是它是不同于 ChatGPT 的 Agent 模式的集大成者，二是它拥有最好的模型。 这篇笔记整理了 Claude Code 的核心用法：会话内的斜杠命令、命令行下的深度用法（参数与管道）、实用插件，以及我自己和 Agent 分工的一些体会。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Claude Code 学习笔记：常用命令与 CLI 深度使用">
 <meta property="og:url" content="https://hanxinle.github.io/2026/09/28/20260928-claude-code-commands-and-cli-usage/index.html">
 <meta property="og:site_name" content="工程师笔记">
-<meta property="og:description" content="为什么学 Claude Code把 Claude Code 作为最重要的 AI Agent 工具来学习，原因有二：一是它是不同于 ChatGPT 的 Agent 模式的集大成者，二是它拥有最好的模型。 这篇笔记整理了 Claude Code 的两块核心内容：会话内的斜杠命令，以及命令行下的深度用法（参数与管道）。">
+<meta property="og:description" content="为什么学 Claude Code把 Claude Code 作为最重要的 AI Agent 工具来学习，原因有二：一是它是不同于 ChatGPT 的 Agent 模式的集大成者，二是它拥有最好的模型。 这篇笔记整理了 Claude Code 的核心用法：会话内的斜杠命令、命令行下的深度用法（参数与管道）、实用插件，以及我自己和 Agent 分工的一些体会。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-09-28T10:00:00.000Z">
-<meta property="article:modified_time" content="2026-09-28T11:53:54.278Z">
+<meta property="article:modified_time" content="2026-10-08T10:19:35.781Z">
 <meta property="article:author" content="Xinle">
-<meta property="article:tag" content="C&#x2F;C++,ASM,lisp,emacs,机器学习,计算机视觉,NLP...">
+<meta property="article:tag" content="Claude Code">
+<meta property="article:tag" content="AI Agent">
+<meta property="article:tag" content="工具">
 <meta name="twitter:card" content="summary">
 
 <link rel="canonical" href="https://hanxinle.github.io/2026/09/28/20260928-claude-code-commands-and-cli-usage/">
@@ -187,10 +189,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2026-09-28 18:00:00 / 修改时间：19:53:54" itemprop="dateCreated datePublished" datetime="2026-09-28T18:00:00+08:00">2026-09-28</time>
+              <time title="创建时间：2026-09-28 18:00:00" itemprop="dateCreated datePublished" datetime="2026-09-28T18:00:00+08:00">2026-09-28</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2026-10-08 18:19:35" itemprop="dateModified" datetime="2026-10-08T18:19:35+08:00">2026-10-08</time>
+              </span>
 
           
 
@@ -204,7 +212,7 @@
 
       
         <h2 id="为什么学-Claude-Code"><a href="#为什么学-Claude-Code" class="headerlink" title="为什么学 Claude Code"></a>为什么学 Claude Code</h2><p>把 Claude Code 作为最重要的 AI Agent 工具来学习，原因有二：一是它是不同于 ChatGPT 的 Agent 模式的集大成者，二是它拥有最好的模型。</p>
-<p>这篇笔记整理了 Claude Code 的两块核心内容：会话内的斜杠命令，以及命令行下的深度用法（参数与管道）。</p>
+<p>这篇笔记整理了 Claude Code 的核心用法：会话内的斜杠命令、命令行下的深度用法（参数与管道）、实用插件，以及我自己和 Agent 分工的一些体会。</p>
 <span id="more"></span>
 <h2 id="会话内命令"><a href="#会话内命令" class="headerlink" title="会话内命令"></a>会话内命令</h2><p>会话内命令以 <code>/</code> 开头，覆盖会话管理、配置、诊断、扩展等场景：</p>
 <div class="table-container">
@@ -383,9 +391,29 @@
 <p>与其它工具整合，有如下用法：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git diff | claude -p &quot;解析这些变更的影响&quot;</span><br><span class="line">npm test 2&amp;1 | claude -p &quot;分析测试失败的原因&quot;</span><br><span class="line">tail -f app.log | claude -p &quot;监控异常模式&quot;</span><br></pre></td></tr></table></figure>
 <p>这个模式把 claude 变成了管道中的一环：上游产生数据，claude 负责理解和总结，非常适合接在 CI、日志监控等自动化流程里。</p>
+<h2 id="插件备忘：claude-hud-状态栏"><a href="#插件备忘：claude-hud-状态栏" class="headerlink" title="插件备忘：claude-hud 状态栏"></a>插件备忘：claude-hud 状态栏</h2><blockquote>
+<p>本节内容原文发布于 2026-06-21（《Claude Code 使用备注》）。</p>
+</blockquote>
+<p><code>claude-hud</code> 是一个状态栏（statusline / HUD）插件，在界面底部显示上下文占用、模型信息、任务进度等，让长时间任务里对会话资源消耗有直观感知。</p>
+<p>安装步骤：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/plugin marketplace add jarrodwatts/claude-hud</span><br><span class="line">/plugin install claude-hud</span><br><span class="line">/reload-plugins</span><br></pre></td></tr></table></figure>
+<p>安装完成后运行 <code>/claude-hud:setup</code> 初始化配置，后续调整显示内容用 <code>/claude-hud:configure</code>。</p>
+<h2 id="使用体会：我和-Agent-的分工方式"><a href="#使用体会：我和-Agent-的分工方式" class="headerlink" title="使用体会：我和 Agent 的分工方式"></a>使用体会：我和 Agent 的分工方式</h2><blockquote>
+<p>本节内容原文发布于 2026-06-03（《Vibe Coding 接触下来的一点体会》），有删节。</p>
+</blockquote>
+<p>2026 年工作方式最大的变化是开始使用 AI Agent。以前用 ChatGPT 网页端对话，因为对项目非常熟悉、工作都是函数级别的修改，网页聊天足够；切换到 Agent 模式后，发现它很挑战使用者的水平——即便在大厂，Agent 总体来说提效有限，进度把控、交付质量还是要打问号，往往靠加班填补。也观察到一些研发对 Agent 的依赖导致丧失了对工程的熟练度：以前大部分代码手敲，做事有掌控感；现在拿着 AI 生成的代码，大家都在慢慢适应。</p>
+<p>我的想法是：Agent 技术一定要用，而且拿出专门时间学，目标是提高工作质量的上限，而不只是图一时干活快。具体策略有几条：</p>
+<ul>
+<li><strong>不陷入过度准备</strong>：本来想攒够 Agent 知识再开干，后来觉得这样遥遥无期，索性用常用的 20% 基础功能先跑起来，事实证明挺好。</li>
+<li><strong>用规范指导，而非随口对话</strong>：纯对话往往词不达意，有走一步看一步的不踏实感。改成先写规范（编码规范沉淀为 .clang-format，工程规范沉淀为学习资料），让规范指导 Agent。</li>
+<li><strong>用 Agent 消化存量资产</strong>：用 CC 梳理了大学老师留下的老代码，沉淀出一套独特的编码规范和工程规范，以前没注意到的工程技术也能借助 CC 消化掉。这是用规范驱动 CC 的第一步。</li>
+<li><strong>重度参与编码</strong>：不是所有项目都全交给 AI——写代码本身有乐趣和成就感，全交出去会回到本文开头说的问题。目前的选择是部分项目（如非 C++ 项目）尽量交给 AI 把控，其余的自己深度参与，还在练。</li>
+</ul>
 <h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ul>
 <li>会话内用 <code>/</code> 命令管理会话和配置，记住 <code>/clear</code>、<code>/compact</code>、<code>/resume</code> 就够日常使用了。</li>
 <li>命令行用 <code>-p</code> 加管道，可以把 claude 嵌入任何现有工作流，这是它区别于聊天框式 AI 的核心能力。</li>
+<li>装上 claude-hud，对上下文消耗心里有数。</li>
+<li>工具之外更重要的是分工：规范先行、重度参与编码，Agent 用来抬高质量上限，而不是替代自己。</li>
 </ul>
 
     </div>
@@ -395,6 +423,11 @@
     
 
       <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Claude-Code/" rel="tag"># Claude Code</a>
+              <a href="/tags/AI-Agent/" rel="tag"># AI Agent</a>
+              <a href="/tags/%E5%B7%A5%E5%85%B7/" rel="tag"># 工具</a>
+          </div>
 
         
 
@@ -467,7 +500,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%AD%A6-Claude-Code"><span class="nav-number">1.</span> <span class="nav-text">为什么学 Claude Code</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BC%9A%E8%AF%9D%E5%86%85%E5%91%BD%E4%BB%A4"><span class="nav-number">2.</span> <span class="nav-text">会话内命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CLI-%E6%B7%B1%E5%BA%A6%E4%BD%BF%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">CLI 深度使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E5%8F%82%E6%95%B0"><span class="nav-number">3.1.</span> <span class="nav-text">常用参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%95%E4%B8%AA%E6%8C%87%E4%BB%A4%E8%B0%83%E7%94%A8"><span class="nav-number">3.2.</span> <span class="nav-text">单个指令调用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%B2%E6%B5%81%E5%A4%84%E7%90%86%EF%BC%88%E7%AE%A1%E9%81%93%EF%BC%89"><span class="nav-number">3.3.</span> <span class="nav-text">串流处理（管道）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">小结</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%AD%A6-Claude-Code"><span class="nav-number">1.</span> <span class="nav-text">为什么学 Claude Code</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BC%9A%E8%AF%9D%E5%86%85%E5%91%BD%E4%BB%A4"><span class="nav-number">2.</span> <span class="nav-text">会话内命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CLI-%E6%B7%B1%E5%BA%A6%E4%BD%BF%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">CLI 深度使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E5%8F%82%E6%95%B0"><span class="nav-number">3.1.</span> <span class="nav-text">常用参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%95%E4%B8%AA%E6%8C%87%E4%BB%A4%E8%B0%83%E7%94%A8"><span class="nav-number">3.2.</span> <span class="nav-text">单个指令调用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%B2%E6%B5%81%E5%A4%84%E7%90%86%EF%BC%88%E7%AE%A1%E9%81%93%EF%BC%89"><span class="nav-number">3.3.</span> <span class="nav-text">串流处理（管道）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6%E5%A4%87%E5%BF%98%EF%BC%9Aclaude-hud-%E7%8A%B6%E6%80%81%E6%A0%8F"><span class="nav-number">4.</span> <span class="nav-text">插件备忘：claude-hud 状态栏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E4%BD%93%E4%BC%9A%EF%BC%9A%E6%88%91%E5%92%8C-Agent-%E7%9A%84%E5%88%86%E5%B7%A5%E6%96%B9%E5%BC%8F"><span class="nav-number">5.</span> <span class="nav-text">使用体会：我和 Agent 的分工方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">6.</span> <span class="nav-text">小结</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -481,14 +514,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-count">45</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-count">31</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
