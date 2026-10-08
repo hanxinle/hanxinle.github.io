@@ -162,6 +162,74 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/10/08/20261008-03-tls-thread-local-storage/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xinle">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="工程师笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2026/10/08/20261008-03-tls-thread-local-storage/" class="post-title-link" itemprop="url">Windows TLS（线程局部存储）：同一个变量名，每个线程各一份</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-10-08 21:30:00 / 修改时间：22:47:34" itemprop="dateCreated datePublished" datetime="2026-10-08T21:30:00+08:00">2026-10-08</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="TLS-解决什么问题"><a href="#TLS-解决什么问题" class="headerlink" title="TLS 解决什么问题"></a>TLS 解决什么问题</h2><p>全局变量是所有线程共享的，多线程访问要么加锁，要么用原子操作。但有一类数据天生不该共享：错误码、当前用户上下文、日志缓冲区。为它们加锁纯属浪费——线程之间根本不想共享。</p>
+<p>TLS（Thread Local Storage，线程局部存储）就是答案：<strong>同一个变量名下，每个线程持有独立副本</strong>。写法像全局变量，行为是线程私有。</p>
+<p>最经典的例子是错误码：线程 A 调用失败设了错误码，线程 B 同时失败——如果错误码是普通全局变量，A 还没读就被 B 覆盖了。所以 <code>errno</code> 和 <code>GetLastError()</code> 的值都存在 TLS 里，每个线程读到的都是自己那次失败。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2026/10/08/20261008-03-tls-thread-local-storage/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/10/08/20261008-02-matlab-digital-image-processing/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -3694,7 +3762,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-count">48</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

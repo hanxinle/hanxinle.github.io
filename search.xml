@@ -3800,4 +3800,65 @@ return 0;
         <tag>DLL</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Windows TLS（线程局部存储）：同一个变量名，每个线程各一份</title>
+    <url>/2026/10/08/20261008-03-tls-thread-local-storage/</url>
+    <content><![CDATA[<h2 id="TLS-解决什么问题"><a href="#TLS-解决什么问题" class="headerlink" title="TLS 解决什么问题"></a>TLS 解决什么问题</h2><p>全局变量是所有线程共享的，多线程访问要么加锁，要么用原子操作。但有一类数据天生不该共享：错误码、当前用户上下文、日志缓冲区。为它们加锁纯属浪费——线程之间根本不想共享。</p>
+<p>TLS（Thread Local Storage，线程局部存储）就是答案：<strong>同一个变量名下，每个线程持有独立副本</strong>。写法像全局变量，行为是线程私有。</p>
+<p>最经典的例子是错误码：线程 A 调用失败设了错误码，线程 B 同时失败——如果错误码是普通全局变量，A 还没读就被 B 覆盖了。所以 <code>errno</code> 和 <code>GetLastError()</code> 的值都存在 TLS 里，每个线程读到的都是自己那次失败。</p>
+<span id="more"></span>
+<h2 id="分类：静态-TLS-与动态-TLS"><a href="#分类：静态-TLS-与动态-TLS" class="headerlink" title="分类：静态 TLS 与动态 TLS"></a>分类：静态 TLS 与动态 TLS</h2><p>Windows 提供两套机制：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th></th>
+<th>静态 TLS（<code>__declspec(thread)</code>）</th>
+<th>动态 TLS（TlsAlloc 系列 API）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>声明时机</td>
+<td>编译期，写死在代码里</td>
+<td>运行时申请，用几个领几个</td>
+</tr>
+<tr>
+<td>能存什么</td>
+<td>完整对象（有类型、有大小）</td>
+<td>一个指针大小的格子，复杂数据自己 new 出来存指针</td>
+</tr>
+<tr>
+<td>释放责任</td>
+<td>线程退出时系统自动回收</td>
+<td>槽位要 <code>TlsFree</code>，槽里 new 的对象也要自己 delete</td>
+</tr>
+<tr>
+<td>典型使用者</td>
+<td>自己写的 exe</td>
+<td><strong>DLL 作者</strong>（DLL 不知道宿主环境，动态 TLS 最保险）</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="静态-TLS：一个关键字"><a href="#静态-TLS：一个关键字" class="headerlink" title="静态 TLS：一个关键字"></a>静态 TLS：一个关键字</h2><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 每个线程都有自己独立的一份 g_counter.</span></span><br><span class="line">__declspec(thread) <span class="type">int</span> g_counter = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="function">DWORD WINAPI <span class="title">ThreadProc</span><span class="params">(LPVOID param)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> id = (<span class="type">int</span>)(INT_PTR)param;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">3</span>; ++i) &#123;</span><br><span class="line">        ++g_counter;   <span class="comment">// 各加各的, 互不干扰, 不需要锁.</span></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;线程 %d: g_counter = %d (地址 %p)\n&quot;</span>, id, g_counter, &amp;g_counter);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    HANDLE h[<span class="number">3</span>];</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">3</span>; ++i)</span><br><span class="line">        h[i] = <span class="built_in">CreateThread</span>(<span class="literal">NULL</span>, <span class="number">0</span>, ThreadProc, (LPVOID)(INT_PTR)i, <span class="number">0</span>, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="built_in">WaitForMultipleObjects</span>(<span class="number">3</span>, h, TRUE, INFINITE);</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">3</span>; ++i) <span class="built_in">CloseHandle</span>(h[i]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>运行结果（地址因运行而异，关键是三个线程的地址各不相同、计数值各自从 0 涨到 3）：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">线程 0: g_counter = 1 (地址 0000007B1A2C0000)</span><br><span class="line">线程 1: g_counter = 1 (地址 0000007B1A2C1000)</span><br><span class="line">线程 2: g_counter = 1 (地址 0000007B1A2C2000)</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>如果 <code>g_counter</code> 是普通全局变量，三个线程抢同一块内存，最终值是几全看调度运气；加上 <code>__declspec(thread)</code> 后每个线程都是 3，一个锁字都不用写。</p>
+<p>C++11 之后更推荐标准写法 <code>thread_local int g_counter = 0;</code>，跨平台，语义相同。</p>
+<h2 id="动态-TLS：API-四件套"><a href="#动态-TLS：API-四件套" class="headerlink" title="动态 TLS：API 四件套"></a>动态 TLS：API 四件套</h2><p>模型是”槽位（slot）”：系统给每个进程一张槽位表（至少 64 个，最多 1088 个），每个线程在同一张表的<strong>同一索引</strong>下有自己独立的格子。<code>TlsAlloc</code> 领索引，<code>TlsSetValue/GetValue</code> 操作当前线程那一格。</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio&gt;</span></span></span><br><span class="line"></span><br><span class="line">DWORD g_tlsIndex = TLS_OUT_OF_INDEXES;   <span class="comment">// 全局只存&quot;索引&quot;, 数据各线程私有.</span></span><br><span class="line"></span><br><span class="line"><span class="function">DWORD WINAPI <span class="title">ThreadProc</span><span class="params">(LPVOID param)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> id = (<span class="type">int</span>)(INT_PTR)param;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 每个线程 new 自己的缓冲区, 存进自己的格子.</span></span><br><span class="line">    <span class="type">int</span>* p = <span class="keyword">new</span> <span class="built_in">int</span>(id * <span class="number">100</span>);</span><br><span class="line">    <span class="built_in">TlsSetValue</span>(g_tlsIndex, p);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 取出来的一定是自己存进去的那份.</span></span><br><span class="line">    <span class="type">int</span>* q = (<span class="type">int</span>*)<span class="built_in">TlsGetValue</span>(g_tlsIndex);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;线程 %d: 取到 %d\n&quot;</span>, id, *q);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">delete</span> p;   <span class="comment">// 格子里的对象线程自己负责释放.</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    g_tlsIndex = <span class="built_in">TlsAlloc</span>();             <span class="comment">// 进程级申请一次槽位.</span></span><br><span class="line">    <span class="keyword">if</span> (g_tlsIndex == TLS_OUT_OF_INDEXES) <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    HANDLE h[<span class="number">2</span>] = &#123;</span><br><span class="line">        <span class="built_in">CreateThread</span>(<span class="literal">NULL</span>, <span class="number">0</span>, ThreadProc, (LPVOID)<span class="number">0</span>, <span class="number">0</span>, <span class="literal">NULL</span>),</span><br><span class="line">        <span class="built_in">CreateThread</span>(<span class="literal">NULL</span>, <span class="number">0</span>, ThreadProc, (LPVOID)<span class="number">1</span>, <span class="number">0</span>, <span class="literal">NULL</span>)</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="built_in">WaitForMultipleObjects</span>(<span class="number">2</span>, h, TRUE, INFINITE);</span><br><span class="line">    <span class="built_in">CloseHandle</span>(h[<span class="number">0</span>]); <span class="built_in">CloseHandle</span>(h[<span class="number">1</span>]);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">TlsFree</span>(g_tlsIndex);                 <span class="comment">// 还回槽位.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意分工：<code>TlsAlloc/TlsFree</code> 是<strong>进程级</strong>的（索引全局共享），<code>TlsSetValue/TlsGetValue</code> 是<strong>线程级</strong>的（各写各的格子）。</p>
+<h2 id="为什么-DLL-章必讲-TLS"><a href="#为什么-DLL-章必讲-TLS" class="headerlink" title="为什么 DLL 章必讲 TLS"></a>为什么 DLL 章必讲 TLS</h2><p>TLS 是 DLL 作者的基础设施。DLL 被任意进程加载、被进程里任意多个线程同时调用，要保存”每个线程的上下文”（比如 Hook 库记录当前线程是否在钩子里、防重入），几乎只能靠 TLS。标准套路挂在 <code>DllMain</code> 的线程通知上：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">__declspec(dllexport) DWORD g_tlsIndex = TLS_OUT_OF_INDEXES;</span><br><span class="line"></span><br><span class="line"><span class="function">BOOL WINAPI <span class="title">DllMain</span><span class="params">(HINSTANCE hinst, DWORD reason, LPVOID)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">switch</span> (reason) &#123;</span><br><span class="line">    <span class="keyword">case</span> DLL_PROCESS_ATTACH:</span><br><span class="line">        g_tlsIndex = <span class="built_in">TlsAlloc</span>();          <span class="comment">// 进程加载时领槽位.</span></span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> DLL_THREAD_ATTACH:               <span class="comment">// 每个新线程进来: 可在此分配线程上下文.</span></span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> DLL_THREAD_DETACH:               <span class="comment">// 线程退出: 释放它格子里的对象, 防泄漏.</span></span><br><span class="line">        <span class="function"><span class="keyword">delete</span> <span class="title">TlsGetValue</span><span class="params">(g_tlsIndex)</span></span>;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> DLL_PROCESS_DETACH:</span><br><span class="line">        <span class="built_in">TlsFree</span>(g_tlsIndex);              <span class="comment">// 进程卸载时还槽位.</span></span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> TRUE;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="一个要记住的坑"><a href="#一个要记住的坑" class="headerlink" title="一个要记住的坑"></a>一个要记住的坑</h2><p>静态 TLS 变量如果带<strong>非平凡构造/析构</strong>（比如 <code>__declspec(thread) SomeClass obj;</code>），放在隐式加载的 DLL 里，在老系统（Vista 之前）上可能直接导致 DLL 加载失败。所以 DLL 里要稳妥就选动态 TLS，或者用 C++11 <code>thread_local</code>——编译器会为它生成特殊的延迟初始化代码，绕开这个坑。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">TLS = 同一名称, 每线程一份</span><br><span class="line">├── 静态: __declspec(thread) / thread_local, 编译期声明, 存完整对象, 自动回收</span><br><span class="line">└── 动态: TlsAlloc/SetValue/GetValue/Free, 运行期领槽位, 存指针, 自己释放</span><br><span class="line">    └── DLL 的标准姿势: DllMain 里 PROCESS_ATTACH 领槽, THREAD_DETACH 清数据</span><br></pre></td></tr></table></figure>
+<p>回到并发工具箱看，TLS 是”不共享”的极端，互斥锁是”共享但排队”，原子操作是”共享但一锤定音”——同一个问题的三种取舍，按数据该不该共享来选。</p>
+]]></content>
+      <tags>
+        <tag>Windows</tag>
+        <tag>多线程</tag>
+        <tag>DLL</tag>
+      </tags>
+  </entry>
 </search>
