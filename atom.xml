@@ -6,7 +6,7 @@
   <link href="https://hanxinle.github.io/atom.xml" rel="self"/>
   
   <link href="https://hanxinle.github.io/"/>
-  <updated>2026-10-07T13:12:52.855Z</updated>
+  <updated>2026-10-08T10:12:32.231Z</updated>
   <id>https://hanxinle.github.io/</id>
   
   <author>
@@ -15,6 +15,29 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>C++ 并发编程笔记：join/detach 与 future/promise 两个最基础的模型</title>
+    <link href="https://hanxinle.github.io/2026/10/08/20261008-01-cpp-concurrency-join-detach-future-promise/"/>
+    <id>https://hanxinle.github.io/2026/10/08/20261008-01-cpp-concurrency-join-detach-future-promise/</id>
+    <published>2026-10-08T02:30:00.000Z</published>
+    <updated>2026-10-08T10:12:32.231Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="为什么先讲这两个"><a href="#为什么先讲这两个" class="headerlink" title="为什么先讲这两个"></a>为什么先讲这两个</h2><p>最近开始读《C++并发编程实战》。前四章讲了不少东西，但真正绕不开的基础模型就两个：线程创建之后<strong>怎么收尾</strong>（join/detach），以及线程的结果<strong>怎么拿回来</strong>（future/promise）。书里的完整例子偏复杂，我把概念剥到最简，再从随书源码里挑了几个简洁的实例补上，用最小代码把这两个模型讲清楚。</p><span id="more"></span><h2 id="一、join-和-detach：线程的两种归宿"><a href="#一、join-和-detach：线程的两种归宿" class="headerlink" title="一、join 和 detach：线程的两种归宿"></a>一、join 和 detach：线程的两种归宿</h2><p>一个 <code>std::thread</code> 对象创建出来后，只有两条路：<strong>join（等他干完）</strong> 或 <strong>detach（放他单飞）</strong>。</p><p>而且必须二选一——两条路都不走，<code>std::thread</code> 析构时直接调用 <code>std::terminate()</code>，程序当场崩溃。这不是警告，是硬性规定。</p><h3 id="join：阻塞等待"><a href="#join：阻塞等待" class="headerlink" title="join：阻塞等待"></a>join：阻塞等待</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">worker</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">seconds</span>(<span class="number">2</span>));</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;worker 干完了\n&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="function">std::thread <span class="title">t</span><span class="params">(worker)</span></span>;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;主线程等待中...\n&quot;</span>;</span><br><span class="line">    t.<span class="built_in">join</span>();                        <span class="comment">// 卡在这里, 直到 worker 返回.</span></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;确认干完, 继续\n&quot;</span>;  <span class="comment">// 这行一定在 worker 之后打印.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p><code>join()</code> 让主线程<strong>挂起</strong>，直到目标线程执行完毕。输出顺序是确定的：worker 打印在前，主线程收尾在后。</p><p>适用场景：要用线程的计算结果、退出前必须确认线程收拾干净。</p><h3 id="detach：脱离托管"><a href="#detach：脱离托管" class="headerlink" title="detach：脱离托管"></a>detach：脱离托管</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="function">std::thread <span class="title">t</span><span class="params">(worker)</span></span>;</span><br><span class="line">    t.<span class="built_in">detach</span>();   <span class="comment">// 从此 t 和线程再无关系, 无法 join、无法拿结果.</span></span><br><span class="line">    <span class="comment">// main 立刻往下走, 线程在后台自生自灭.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p><code>detach()</code> 把线程交给系统托管，<code>std::thread</code> 对象变成空壳。适用场景：日志线程、后台监控这种”发了就不用管”的任务。</p><p>书里的一个例子把 detach 的正确姿势演示得很清楚——文档编辑器每”新建文档”就开一个线程（listing_2.4，简化后）：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">edit_document</span><span class="params">(std::string <span class="type">const</span>&amp; filename)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">open_document_and_display_gui</span>(filename);</span><br><span class="line">    <span class="keyword">while</span> (!<span class="built_in">done_editing</span>()) &#123;</span><br><span class="line">        user_command cmd = <span class="built_in">get_user_input</span>();</span><br><span class="line">        <span class="keyword">if</span> (cmd.type == open_new_document) &#123;</span><br><span class="line">            std::string new_name = <span class="built_in">get_filename_from_user</span>();</span><br><span class="line">            <span class="function">std::thread <span class="title">t</span><span class="params">(edit_document, new_name)</span></span>;  <span class="comment">// 按值传参, 避开悬垂引用.</span></span><br><span class="line">            t.<span class="built_in">detach</span>();                              <span class="comment">// 新文档线程独立运行, 不用管.</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="built_in">process_user_input</span>(cmd);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>两个细节值得注意：文件名是<strong>按值</strong>传进去的（新线程拿的是拷贝，不是引用）；主线程不需要知道文档什么时候关——这正是 detach 的典型画像：任务独立、结果不需要回收。</p><h3 id="两个必须知道的坑"><a href="#两个必须知道的坑" class="headerlink" title="两个必须知道的坑"></a>两个必须知道的坑</h3><p><strong>坑 1：detach 后访问局部变量 = 悬垂引用。</strong></p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">bad</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> x = <span class="number">42</span>;</span><br><span class="line">    <span class="function">std::thread <span class="title">t</span><span class="params">([&amp;x] &#123; std::cout &lt;&lt; x; &#125;)</span></span>;  <span class="comment">// 按引用捕获局部变量.</span></span><br><span class="line">    t.<span class="built_in">detach</span>();</span><br><span class="line">&#125;   <span class="comment">// 函数返回, x 销毁, 后台线程还在读 -&gt; 未定义行为.</span></span><br></pre></td></tr></table></figure><p>函数一返回 <code>x</code> 就没了，后台线程手里捏着的是一块已释放的栈内存。所以 detach 的线程只能按值捕获，或者访问全局/堆上的对象。</p><p><strong>坑 2：detach 之后不能再 join。</strong></p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">std::thread <span class="title">t</span><span class="params">(worker)</span></span>;</span><br><span class="line">t.<span class="built_in">detach</span>();</span><br><span class="line">t.<span class="built_in">join</span>();  <span class="comment">// 崩溃! 线程已脱离, 不可 join.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 正确姿势: 先检查.</span></span><br><span class="line"><span class="keyword">if</span> (t.<span class="built_in">joinable</span>()) &#123;</span><br><span class="line">    t.<span class="built_in">join</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p><code>joinable()</code> 返回 false 的情况：空线程、已 join 过、已 detach 过、被 move 走过。</p><h3 id="“忘-join-就崩”的解药：RAII-包一层"><a href="#“忘-join-就崩”的解药：RAII-包一层" class="headerlink" title="“忘 join 就崩”的解药：RAII 包一层"></a>“忘 join 就崩”的解药：RAII 包一层</h3><p>既然”既不 join 也不 detach”等于自杀，书里给了一个经典方案：把线程包进 RAII 类，析构时自动 join（listing_2.6）：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">scoped_thread</span> &#123;</span><br><span class="line">    std::thread t;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">explicit</span> <span class="title">scoped_thread</span><span class="params">(std::thread t_)</span> : t(std::move(t_)) &#123;</span></span><br><span class="line">        <span class="keyword">if</span> (!t.<span class="built_in">joinable</span>())</span><br><span class="line">            <span class="keyword">throw</span> std::<span class="built_in">logic_error</span>(<span class="string">&quot;No thread&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    ~<span class="built_in">scoped_thread</span>() &#123; t.<span class="built_in">join</span>(); &#125;                       <span class="comment">// 出作用域自动 join.</span></span><br><span class="line">    <span class="built_in">scoped_thread</span>(scoped_thread <span class="type">const</span>&amp;) = <span class="keyword">delete</span>;</span><br><span class="line">    scoped_thread&amp; <span class="keyword">operator</span>=(scoped_thread <span class="type">const</span>&amp;) = <span class="keyword">delete</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure><p>用法和普通 <code>std::thread</code> 一样，但函数无论如何退出（正常返回也好、抛异常也好），析构函数都会把 join 补上。这个思路后来被标准收编，就是 C++20 的 <code>std::jthread</code>——能直接用的项目就别自己造轮子了。</p><h3 id="一张表对比"><a href="#一张表对比" class="headerlink" title="一张表对比"></a>一张表对比</h3><div class="table-container"><table><thead><tr><th></th><th>join</th><th>detach</th></tr></thead><tbody><tr><td>主线程行为</td><td>阻塞等待</td><td>立即继续</td></tr><tr><td>能否感知线程结束</td><td>能</td><td>不能</td></tr><tr><td>典型场景</td><td>要结果、要顺序</td><td>后台任务、守护线程</td></tr><tr><td>最大风险</td><td>忘 join，析构即崩</td><td>悬垂引用、main 退出杀线程</td></tr></tbody></table></div><p>最后一个细节值得单独说：main 返回时进程退出，<strong>detached 线程会被直接杀掉</strong>，可能日志写到一半就没了。所以实际工程里的”后台线程”通常也不是真撒手——退出前用条件变量之类的机制通知它收尾，只是不用 join 干等。</p><h2 id="二、future-和-promise：线程结果的传送带"><a href="#二、future-和-promise：线程结果的传送带" class="headerlink" title="二、future 和 promise：线程结果的传送带"></a>二、future 和 promise：线程结果的传送带</h2><p><code>std::thread</code> 本身<strong>不能返回值</strong>。传统做法是：共享变量 + 互斥锁 + join，三件套配下来很啰嗦。future/promise 是标准库给的一条”传送带”，专门解决线程把结果送回来的问题。</p><h3 id="最省事的用法：std-async-std-future"><a href="#最省事的用法：std-async-std-future" class="headerlink" title="最省事的用法：std::async + std::future"></a>最省事的用法：std::async + std::future</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;future&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">slow_compute</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">seconds</span>(<span class="number">2</span>));</span><br><span class="line">    <span class="keyword">return</span> <span class="number">42</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 后台开跑, 立刻拿回一张&quot;取货单&quot;.</span></span><br><span class="line">    std::future&lt;<span class="type">int</span>&gt; f = std::<span class="built_in">async</span>(std::launch::async, slow_compute);</span><br><span class="line"></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;主线程继续干别的...\n&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 要结果时取货, 没算完就在这里等.</span></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;结果: &quot;</span> &lt;&lt; f.<span class="built_in">get</span>() &lt;&lt; <span class="string">&quot;\n&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>把 <code>future</code> 理解成<strong>取货单</strong>：<code>std::async</code> 下单发货，<code>f.get()</code> 取货。货没好就等着，货好了直接拿走。线程创建、结果传递、异常传递全部自动处理。注意 <code>get()</code> 只能调一次——取货单撕掉就没了。</p><h3 id="手动版：std-promise-std-future"><a href="#手动版：std-promise-std-future" class="headerlink" title="手动版：std::promise + std::future"></a>手动版：std::promise + std::future</h3><p>如果想自己控制”什么时候、在哪个线程里放结果”，就用 promise：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;future&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;thread&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">worker</span><span class="params">(std::promise&lt;<span class="type">int</span>&gt; p)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">seconds</span>(<span class="number">1</span>));</span><br><span class="line">        p.<span class="built_in">set_value</span>(<span class="number">42</span>);            <span class="comment">// 把结果放上传送带.</span></span><br><span class="line">    &#125; <span class="built_in">catch</span> (...) &#123;</span><br><span class="line">        p.<span class="built_in">set_exception</span>(std::<span class="built_in">current_exception</span>());  <span class="comment">// 异常也能传.</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    std::promise&lt;<span class="type">int</span>&gt; p;</span><br><span class="line">    std::future&lt;<span class="type">int</span>&gt; f = p.<span class="built_in">get_future</span>();  <span class="comment">// 先拿取货单, 再开工.</span></span><br><span class="line"></span><br><span class="line">    <span class="function">std::thread <span class="title">t</span><span class="params">(worker, std::move(p))</span></span>;  <span class="comment">// promise 只能 move, 不能拷贝.</span></span><br><span class="line"></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;结果: &quot;</span> &lt;&lt; f.<span class="built_in">get</span>() &lt;&lt; <span class="string">&quot;\n&quot;</span>;  <span class="comment">// 阻塞直到 set_value.</span></span><br><span class="line">    t.<span class="built_in">join</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>记住三个要点就够了：</p><ol><li><code>promise</code> 是<strong>写端</strong>（放结果），<code>future</code> 是<strong>读端</strong>（取结果），一对孪生，通过 <code>get_future()</code> 建立连接。</li><li><code>set_value()</code> 一放，<code>get()</code> 就放行——<strong>天然带同步</strong>，不用自己写互斥锁和条件变量。这比”共享变量 + mutex + join”干净得多。</li><li>异常也能传：工作线程里 <code>set_exception()</code>，主线程 <code>get()</code> 时异常被重新抛出，错误处理的路径和正常返回值统一了。</li></ol><h3 id="promise-的真实用武之地：数据自己上门时才填结果"><a href="#promise-的真实用武之地：数据自己上门时才填结果" class="headerlink" title="promise 的真实用武之地：数据自己上门时才填结果"></a>promise 的真实用武之地：数据自己上门时才填结果</h3><p>什么时候 promise 比 async 合适？书里的网络连接处理循环是个标准答案（listing_4.10，简化后）：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">process_connections</span><span class="params">(connection_set&amp; connections)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (!<span class="built_in">done</span>(connections)) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">auto</span> connection = connections.<span class="built_in">begin</span>(); connection != connections.<span class="built_in">end</span>(); ++connection) &#123;</span><br><span class="line">            <span class="keyword">if</span> (connection-&gt;<span class="built_in">has_incoming_data</span>()) &#123;</span><br><span class="line">                data_packet data = connection-&gt;<span class="built_in">incoming</span>();</span><br><span class="line">                std::promise&lt;payload_type&gt;&amp; p = connection-&gt;<span class="built_in">get_promise</span>(data.id);</span><br><span class="line">                p.<span class="built_in">set_value</span>(data.payload);   <span class="comment">// 数据到了才填结果, 等待方立刻被唤醒.</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (connection-&gt;<span class="built_in">has_outgoing_data</span>()) &#123;</span><br><span class="line">                outgoing_packet data = connection-&gt;<span class="built_in">top_of_outgoing_queue</span>();</span><br><span class="line">                connection-&gt;<span class="built_in">send</span>(data.payload);</span><br><span class="line">                data.promise.<span class="built_in">set_value</span>(<span class="literal">true</span>);  <span class="comment">// 通知发送方: 发完了.</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>这里的模式是：<strong>发起请求时先拿到一个 promise（和对应的 future），结果要等网络数据回来那一刻才产生</strong>。产生结果的线程和时机由事件决定，而不是由”某个函数跑完”决定——async 表达不了这个，promise 可以。消息队列、异步 IO 回调、RPC 框架里全是这个模式的影子。</p><h3 id="怎么选"><a href="#怎么选" class="headerlink" title="怎么选"></a>怎么选</h3><div class="table-container"><table><thead><tr><th>场景</th><th>选择</th></tr></thead><tbody><tr><td>跑个任务拿返回值</td><td><code>std::async</code>，别犹豫</td></tr><tr><td>结果的产生时机/线程要自己控制（比如回调里填结果）</td><td><code>std::promise</code></td></tr><tr><td>任务和线程解耦（先打包任务，后决定在哪条线程跑）</td><td><code>std::packaged_task</code></td></tr><tr><td>多个线程等同一个结果</td><td><code>std::shared_future</code>（可拷贝、可多次 get）</td></tr></tbody></table></div><h2 id="三、这本书还讲了什么：一张延伸地图"><a href="#三、这本书还讲了什么：一张延伸地图" class="headerlink" title="三、这本书还讲了什么：一张延伸地图"></a>三、这本书还讲了什么：一张延伸地图</h2><p>两个基础模型够日常用了，但这本书的覆盖面远不止这些。我把其余章节的核心内容扫了一遍，列出这张地图——知道这些主题存在、各自解决什么问题，等真遇到时再来查，比现在就硬记细节划算得多。</p><h3 id="异步任务三件套对比：async-packaged-task-promise"><a href="#异步任务三件套对比：async-packaged-task-promise" class="headerlink" title="异步任务三件套对比：async / packaged_task / promise"></a>异步任务三件套对比：async / packaged_task / promise</h3><p>三者都能产生 future，区别在于”谁来跑、谁来填”：</p><div class="table-container"><table><thead><tr><th></th><th><code>std::async</code></th><th><code>std::packaged_task</code></th><th><code>std::promise</code></th></tr></thead><tbody><tr><td>本质</td><td>一行启动异步任务</td><td>把函数打包成”可搬运的任务”</td><td>手工填结果的写端</td></tr><tr><td>谁创建线程</td><td>标准库</td><td>自己</td><td>自己</td></tr><tr><td>结果何时产生</td><td>函数返回时</td><td>任务被调用时</td><td>任意时机（如事件回调）</td></tr><tr><td>典型场景</td><td>默认选择</td><td>任务队列、线程池</td><td>异步 IO、消息循环</td></tr></tbody></table></div><p>三者是同一个”传送带”机制的三种封装层级：async 最省心，packaged_task 把任务和线程解耦，promise 最底层也最自由。</p><h3 id="其余章节一句话索引"><a href="#其余章节一句话索引" class="headerlink" title="其余章节一句话索引"></a>其余章节一句话索引</h3><div class="table-container"><table><thead><tr><th>主题</th><th>解决什么</th><th>代表案例</th></tr></thead><tbody><tr><td>互斥与锁（第3章）</td><td>共享数据不被写花：<code>lock_guard</code> 守作用域，<code>std::lock</code> 一次锁多把防死锁，锁分层（hierarchical_mutex）从制度上杜绝环路</td><td>listing_3.1、3.7</td></tr><tr><td>条件变量（第4章）</td><td>生产者-消费者：消费者 <code>wait</code> 挂起不占 CPU，生产者 <code>notify_one</code> 唤醒</td><td>listing_4.1</td></tr><tr><td>读写锁</td><td>读多写少场景：<code>shared_mutex</code> 允许多个读者并发</td><td>第3章后段</td></tr><tr><td>future 带超时</td><td><code>wait_for</code> / <code>wait_until</code>：等结果但不死等，服务器必备</td><td>第4章后段</td></tr><tr><td>原子操作与内存模型（第5章）</td><td>不加锁的共享：<code>std::atomic</code> + <code>memory_order</code> 控制指令重排可见性，全书最烧脑的一章</td><td>listing_5.4</td></tr><tr><td>并发容器（第6、7章）</td><td>线程安全队列（锁版容易，无锁版极难），无锁数据结构是专家领域</td><td>listing_6.2</td></tr><tr><td>并行算法设计（第8章）</td><td>把排序、累加这类算法切开分给多线程，核心是划分与负载均衡</td><td>并行快排</td></tr><tr><td>线程池（第9章）</td><td>固定数量线程 + 任务队列，<code>hardware_concurrency()</code> 定线程数，避免线程爆炸</td><td>listing_9.1</td></tr><tr><td>并发测试（第11章）</td><td>并发 bug 怎么复现：压力测试、时序注入</td><td>—</td></tr></tbody></table></div><p>我的取舍：第 3、4 章的互斥和条件变量是日常刚需，值得单独练；第 5 章内存模型和第 7 章无锁数据结构属于”知道存在即可”，真要用到现场翻书或问 LLM；线程池不必自己写，知道原理、用成熟实现就好。</p><h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">线程的两个基础模型</span><br><span class="line">├── 收尾: join / detach 二选一, 不选就 terminate</span><br><span class="line">│   ├── join   -&gt; 等结果、保顺序, 风险是忘 join 即崩(RAII/std::jthread 解药)</span><br><span class="line">│   └── detach -&gt; 后台任务, 风险是悬垂引用 + main 退出强杀(按值传参避险)</span><br><span class="line">└── 传值: future / promise 传送带</span><br><span class="line">    ├── std::async   -&gt; 一行代码跑任务拿结果, 默认选它</span><br><span class="line">    └── std::promise -&gt; 事件驱动填结果(网络包到了才 set_value), 异常也能传</span><br></pre></td></tr></table></figure><p>文中标注 listing 编号的例子来自《C++并发编程实战》随书源码，我做了简化和中文化注释，语义不变。</p><p>这两个模型是后面所有并发设施的底座：线程池、并行算法、<code>std::packaged_task</code>，拆开看都是这两套机制的组合。先把最小例子跑熟，再看书里复杂的例子就顺了。</p>]]></content>
+    
+    
+    <summary type="html">&lt;h2 id=&quot;为什么先讲这两个&quot;&gt;&lt;a href=&quot;#为什么先讲这两个&quot; class=&quot;headerlink&quot; title=&quot;为什么先讲这两个&quot;&gt;&lt;/a&gt;为什么先讲这两个&lt;/h2&gt;&lt;p&gt;最近开始读《C++并发编程实战》。前四章讲了不少东西，但真正绕不开的基础模型就两个：线程创建之后&lt;strong&gt;怎么收尾&lt;/strong&gt;（join/detach），以及线程的结果&lt;strong&gt;怎么拿回来&lt;/strong&gt;（future/promise）。书里的完整例子偏复杂，我把概念剥到最简，再从随书源码里挑了几个简洁的实例补上，用最小代码把这两个模型讲清楚。&lt;/p&gt;</summary>
+    
+    
+    
+    
+    <category term="C++" scheme="https://hanxinle.github.io/tags/C/"/>
+    
+    <category term="并发编程" scheme="https://hanxinle.github.io/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/"/>
+    
+    <category term="多线程" scheme="https://hanxinle.github.io/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/"/>
+    
+  </entry>
   
   <entry>
     <title>C++ 对象模型实战（八）：对象模型不是语言规定——Cfront、MSVC 与 ABI 对照</title>
@@ -179,12 +202,6 @@
     
     
     
-    <category term="C++" scheme="https://hanxinle.github.io/tags/C/"/>
-    
-    <category term="对象模型" scheme="https://hanxinle.github.io/tags/%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B/"/>
-    
-    <category term="内存" scheme="https://hanxinle.github.io/tags/%E5%86%85%E5%AD%98/"/>
-    
   </entry>
   
   <entry>
@@ -207,12 +224,6 @@
     
     
     
-    <category term="C++" scheme="https://hanxinle.github.io/tags/C/"/>
-    
-    <category term="对象模型" scheme="https://hanxinle.github.io/tags/%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B/"/>
-    
-    <category term="内存" scheme="https://hanxinle.github.io/tags/%E5%86%85%E5%AD%98/"/>
-    
   </entry>
   
   <entry>
@@ -231,12 +242,6 @@
     
     
     
-    <category term="C++" scheme="https://hanxinle.github.io/tags/C/"/>
-    
-    <category term="对象模型" scheme="https://hanxinle.github.io/tags/%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B/"/>
-    
-    <category term="内存" scheme="https://hanxinle.github.io/tags/%E5%86%85%E5%AD%98/"/>
-    
   </entry>
   
   <entry>
@@ -254,12 +259,6 @@
     
     
     
-    
-    <category term="AI Agent" scheme="https://hanxinle.github.io/tags/AI-Agent/"/>
-    
-    <category term="工具" scheme="https://hanxinle.github.io/tags/%E5%B7%A5%E5%85%B7/"/>
-    
-    <category term="Claude Code" scheme="https://hanxinle.github.io/tags/Claude-Code/"/>
     
   </entry>
   
@@ -287,14 +286,6 @@
     
     
     
-    <category term="C++" scheme="https://hanxinle.github.io/tags/C/"/>
-    
-    <category term="Windows" scheme="https://hanxinle.github.io/tags/Windows/"/>
-    
-    <category term="Crash 治理" scheme="https://hanxinle.github.io/tags/Crash-%E6%B2%BB%E7%90%86/"/>
-    
-    <category term="WinDbg" scheme="https://hanxinle.github.io/tags/WinDbg/"/>
-    
   </entry>
   
   <entry>
@@ -312,16 +303,6 @@
     
     
     
-    
-    <category term="C++" scheme="https://hanxinle.github.io/tags/C/"/>
-    
-    <category term="多线程" scheme="https://hanxinle.github.io/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/"/>
-    
-    <category term="Windows" scheme="https://hanxinle.github.io/tags/Windows/"/>
-    
-    <category term="Crash 治理" scheme="https://hanxinle.github.io/tags/Crash-%E6%B2%BB%E7%90%86/"/>
-    
-    <category term="DLL" scheme="https://hanxinle.github.io/tags/DLL/"/>
     
   </entry>
   
@@ -341,14 +322,6 @@
     
     
     
-    <category term="C++" scheme="https://hanxinle.github.io/tags/C/"/>
-    
-    <category term="Windows" scheme="https://hanxinle.github.io/tags/Windows/"/>
-    
-    <category term="Crash 治理" scheme="https://hanxinle.github.io/tags/Crash-%E6%B2%BB%E7%90%86/"/>
-    
-    <category term="调试" scheme="https://hanxinle.github.io/tags/%E8%B0%83%E8%AF%95/"/>
-    
   </entry>
   
   <entry>
@@ -366,14 +339,6 @@
     
     
     
-    
-    <category term="C++" scheme="https://hanxinle.github.io/tags/C/"/>
-    
-    <category term="Windows" scheme="https://hanxinle.github.io/tags/Windows/"/>
-    
-    <category term="Crash 治理" scheme="https://hanxinle.github.io/tags/Crash-%E6%B2%BB%E7%90%86/"/>
-    
-    <category term="调试" scheme="https://hanxinle.github.io/tags/%E8%B0%83%E8%AF%95/"/>
     
   </entry>
   
@@ -394,14 +359,6 @@
     
     
     
-    <category term="C++" scheme="https://hanxinle.github.io/tags/C/"/>
-    
-    <category term="Windows" scheme="https://hanxinle.github.io/tags/Windows/"/>
-    
-    <category term="Crash 治理" scheme="https://hanxinle.github.io/tags/Crash-%E6%B2%BB%E7%90%86/"/>
-    
-    <category term="调试" scheme="https://hanxinle.github.io/tags/%E8%B0%83%E8%AF%95/"/>
-    
   </entry>
   
   <entry>
@@ -418,12 +375,6 @@
     
     
     
-    
-    <category term="Qt" scheme="https://hanxinle.github.io/tags/Qt/"/>
-    
-    <category term="FFmpeg" scheme="https://hanxinle.github.io/tags/FFmpeg/"/>
-    
-    <category term="OpenGL" scheme="https://hanxinle.github.io/tags/OpenGL/"/>
     
   </entry>
   
@@ -442,10 +393,6 @@
     
     
     
-    <category term="AI Agent" scheme="https://hanxinle.github.io/tags/AI-Agent/"/>
-    
-    <category term="Claude Code" scheme="https://hanxinle.github.io/tags/Claude-Code/"/>
-    
   </entry>
   
   <entry>
@@ -462,10 +409,6 @@
     
     
     
-    
-    <category term="AI Agent" scheme="https://hanxinle.github.io/tags/AI-Agent/"/>
-    
-    <category term="Claude Code" scheme="https://hanxinle.github.io/tags/Claude-Code/"/>
     
   </entry>
   
@@ -485,8 +428,6 @@
     
     
     
-    <category term="C++" scheme="https://hanxinle.github.io/tags/C/"/>
-    
   </entry>
   
   <entry>
@@ -503,27 +444,6 @@
     
     
     
-    
-    <category term="工具" scheme="https://hanxinle.github.io/tags/%E5%B7%A5%E5%85%B7/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>开发环境问题处理</title>
-    <link href="https://hanxinle.github.io/2023/12/02/hardware-notes/"/>
-    <id>https://hanxinle.github.io/2023/12/02/hardware-notes/</id>
-    <published>2023-12-02T06:08:34.000Z</published>
-    <updated>2026-05-09T12:18:35.516Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="1-一些教训"><a href="#1-一些教训" class="headerlink" title="1 一些教训"></a>1 一些教训</h1><p>非必要不升级系统，导致很多经典软件不能用，最后重新安装系统解决这些问题的.</p><span id="more"></span><h1 id="2-樱桃键盘"><a href="#2-樱桃键盘" class="headerlink" title="2 樱桃键盘"></a>2 樱桃键盘</h1><div class="table-container"><table><thead><tr><th>问题</th><th>按键</th></tr></thead><tbody><tr><td>win 键盘失效</td><td>fn+F9</td></tr><tr><td>F1~F3 与音量强制关联</td><td>fn+Ctrl</td></tr></tbody></table></div><h1 id="3-Git-状态图标异常"><a href="#3-Git-状态图标异常" class="headerlink" title="3 Git 状态图标异常"></a>3 Git 状态图标异常</h1><p><code>WIN+R</code> 启动注册表，找到这一项：</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">计算机\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIconOverlayIdentifiers\</span><br></pre></td></tr></table></figure><p>删掉该项下的 <code>Tortoise1Normal</code> 前的所有内容，任务管理器中重启 EXPLORER。</p><h1 id="4"><a href="#4" class="headerlink" title="4"></a>4</h1>]]></content>
-    
-    
-    <summary type="html">&lt;h1 id=&quot;1-一些教训&quot;&gt;&lt;a href=&quot;#1-一些教训&quot; class=&quot;headerlink&quot; title=&quot;1 一些教训&quot;&gt;&lt;/a&gt;1 一些教训&lt;/h1&gt;&lt;p&gt;非必要不升级系统，导致很多经典软件不能用，最后重新安装系统解决这些问题的.&lt;/p&gt;</summary>
-    
-    
-    
-    
-    <category term="工具" scheme="https://hanxinle.github.io/tags/%E5%B7%A5%E5%85%B7/"/>
     
   </entry>
   

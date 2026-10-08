@@ -478,9 +478,6 @@
 </ul>
 <p>或通过命令行：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/MD  /MDd  /MT  /MTd</span><br></pre></td></tr></table></figure></p>
 ]]></content>
-      <tags>
-        <tag>C++</tag>
-      </tags>
   </entry>
   <entry>
     <title>Claude Code 使用备注</title>
@@ -492,10 +489,6 @@
 <h2 id="这个插件的作用"><a href="#这个插件的作用" class="headerlink" title="这个插件的作用"></a>这个插件的作用</h2><p><code>claude-hud</code> 是一个 Claude Code 的状态栏（statusline / HUD）插件，作用是在 Claude Code 界面底部显示当前状态信息，例如上下文占用、模型信息、任务进度等。它能让使用 Agent 时对当前会话的资源消耗和运行状态有更直观的感知，避免在长时间任务里对进度一无所知。</p>
 <p>后续如果想调整显示内容，可以用 <code>/claude-hud:configure</code> 进行配置。</p>
 ]]></content>
-      <tags>
-        <tag>AI Agent</tag>
-        <tag>Claude Code</tag>
-      </tags>
   </entry>
   <entry>
     <title>借助 gcc 理解编译系统（compilation system）</title>
@@ -582,9 +575,6 @@ return 0;
 <p>```</p>
 <p>将 0x550、0x68a 分别填入 <em>callq</em> 地址，对 <em>f_sum</em>调用使用了静态链接，在程序创建后就已经确定。查看 <em>printf</em> 调用地址发现该地址位于 <em>section.plt</em>，并且对应一条跳转指令，这涉及动态链接概念，创建可执行文件时仍不确定 <em>printf</em> 所在位置，需要运行时才能确定函数地址，当前暂时只想一个辅助代码的位置 <em>.plt</em> 处。</p>
 ]]></content>
-      <tags>
-        <tag>gcc/gdb</tag>
-      </tags>
   </entry>
   <entry>
     <title>Vibe Coding 接触下来的一点体会</title>
@@ -599,10 +589,6 @@ return 0;
 <p>写代码是一件很开心、很有成就感的事情，不是所有项目都想全部交给 AI 来做，不然少了很多乐趣，也会遇到本文一开始提到的问题。我会选择部分项目，例如非 C++ 项目由 AI 来尽可能多的把控工作内容，目前我还做不到，还在继续练。</p>
 <p>此外，CC 除了写代码，还能做视频，我也用它生成了若干视频，以后做科普类的短视频，部分工作可以交给它了。</p>
 ]]></content>
-      <tags>
-        <tag>AI Agent</tag>
-        <tag>Claude Code</tag>
-      </tags>
   </entry>
   <entry>
     <title>C/C++ 技术随笔</title>
@@ -614,9 +600,6 @@ return 0;
 </ol>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">class Single &#123;</span><br><span class="line">public:</span><br><span class="line">    static Single *Get() &#123;</span><br><span class="line">        static Single re;</span><br><span class="line">        return &amp;re;</span><br><span class="line">    &#125;</span><br><span class="line">    void Set(int x, int y) &#123;</span><br><span class="line">        a = x;</span><br><span class="line">        b = y;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void Print() &#123; std::cout &lt;&lt; a &lt;&lt; &quot; &quot; &lt;&lt; b &lt;&lt; std::endl; &#125;</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">    int a = 0;</span><br><span class="line">    int b = 0;</span><br><span class="line">    Single() &#123;&#125;</span><br><span class="line">    Single(const Single &amp;) &#123;&#125;</span><br><span class="line">    Single &amp;operator=(const Single &amp;) &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">int main() &#123;</span><br><span class="line">    auto s = Single::Get();</span><br><span class="line">    s-&gt;Set(12, 13);</span><br><span class="line">    s-&gt;Get()-&gt;Print();</span><br><span class="line">    std::thread([]() &#123;</span><br><span class="line">        auto sa = Single::Get();</span><br><span class="line">        sa-&gt;Set(01, 3);</span><br><span class="line">           &#125;).join();</span><br><span class="line">    s-&gt;Get()-&gt;Print();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// output</span><br><span class="line">12 13</span><br><span class="line">1 3</span><br></pre></td></tr></table></figure>
 ]]></content>
-      <tags>
-        <tag>C++</tag>
-      </tags>
   </entry>
   <entry>
     <title>gdb 使用</title>
@@ -708,9 +691,6 @@ return 0;
 <p><em>c</em>会运行到程序结束，<em>finish</em> 跳出 <em>step over(快捷键 s)</em> 进入的函数.  </p>
 <h2 id="2-vim-编辑代码"><a href="#2-vim-编辑代码" class="headerlink" title="2 vim 编辑代码"></a>2 vim 编辑代码</h2><p>终端中输入 <code>export EDITOR=vim</code>  后在 gdb 中输入 <em>edit</em> 即可在 vim 中打开文件.</p>
 ]]></content>
-      <tags>
-        <tag>gcc/gdb</tag>
-      </tags>
   </entry>
   <entry>
     <title>GitHub 使用</title>
@@ -842,10 +822,6 @@ return 0;
 </li>
 </ul>
 ]]></content>
-      <tags>
-        <tag>工具</tag>
-        <tag>Git</tag>
-      </tags>
   </entry>
   <entry>
     <title>Git 案例</title>
@@ -862,10 +838,6 @@ return 0;
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">bin/</span><br><span class="line">bin/*</span><br></pre></td></tr></table></figure>
 <p>保存文件，之前追踪的 bin 文件夹及其内部内容，在本地立刻就不会被追踪，这个通过 git status 即可发现。即，允许不提交 .gitignore 的方式使得本地追踪生效。</p>
 ]]></content>
-      <tags>
-        <tag>工具</tag>
-        <tag>Git</tag>
-      </tags>
   </entry>
   <entry>
     <title>H.264 总结</title>
@@ -873,9 +845,6 @@ return 0;
     <content><![CDATA[<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">┌──────────────────────────────────────────────────┐</span><br><span class="line">│                   H.264 码流                      │</span><br><span class="line">├──────────────────────────────────────────────────┤</span><br><span class="line">│ NAL 网络抽象层：负责适配网络传输                   │</span><br><span class="line">│   NALU = NAL Header + RBSP(编码数据)              │</span><br><span class="line">│   传输打包交给 RTP 等协议(有专门的 RFC 文档和开源库) │</span><br><span class="line">├──────────────────────────────────────────────────┤</span><br><span class="line">│ VCL 视频编码层：负责视频内容的压缩表示              │</span><br><span class="line">│   GOP: I 帧(帧内预测) → P 帧(前向预测) → B 帧(双向预测) │</span><br><span class="line">│   编码流程: 预测 → 变换 → 量化 → 熵编码             │</span><br><span class="line">└──────────────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
 <p>这个图片是经过概念梳理后做的信息提取说明图，但是理清了 H.264 的内部关系，并且对 H.264 的结构和网络传输的概念予以说明，H.264 的传输说明应该关注的是 RTP 等协议，这些都有专门的 RFC 文档和对应的开源库。</p>
 ]]></content>
-      <tags>
-        <tag>音视频</tag>
-      </tags>
   </entry>
   <entry>
     <title>开发环境问题处理</title>
@@ -906,9 +875,6 @@ return 0;
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">计算机\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIconOverlayIdentifiers\</span><br></pre></td></tr></table></figure>
 <p>删掉该项下的 <code>Tortoise1Normal</code> 前的所有内容，任务管理器中重启 EXPLORER。</p>
 <h1 id="4"><a href="#4" class="headerlink" title="4"></a>4</h1>]]></content>
-      <tags>
-        <tag>工具</tag>
-      </tags>
   </entry>
   <entry>
     <title>C++和lua混合程序设计</title>
@@ -921,9 +887,6 @@ return 0;
 <p>{lauxlib}.h/.c、{lua}.h/.c、lualib.h、luaconf.h，注释掉 lua.c 中的 main 函数，新建 main.lua 文件，代码就一条 <code>print (&quot;hello world.&quot;)</code>，记得新工程导入 dll 和 lib 文件,该工程的 main.cpp 如下:</p>
 <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="string">&quot;C&quot;</span> &#123;</span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;lauxlib.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;lua.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;lualib.h&quot;</span></span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstring&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    lua_State *lua = <span class="built_in">lua_open</span>();</span><br><span class="line">    <span class="built_in">luaopen_base</span>(lua);</span><br><span class="line">    <span class="built_in">luaopen_table</span>(lua);</span><br><span class="line">    <span class="built_in">luaL_openlibs</span>(lua);</span><br><span class="line">    <span class="built_in">luaopen_string</span>(lua);</span><br><span class="line">    <span class="built_in">luaopen_math</span>(lua);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">luaL_loadfile</span>(lua, <span class="string">&quot;main.lua&quot;</span>)) &#123;</span><br><span class="line">        <span class="type">const</span> <span class="type">char</span> *error = <span class="built_in">lua_tostring</span>(lua, <span class="number">-1</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%s\n ִrun script file failed.&quot;</span>, error);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">lua_pcall</span>(lua, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)) &#123;</span><br><span class="line">        <span class="type">const</span> <span class="type">char</span> *error = <span class="built_in">lua_tostring</span>(lua, <span class="number">-1</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%s\n ִrun script file failed.&quot;</span>, error);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 ]]></content>
-      <tags>
-        <tag>工具</tag>
-      </tags>
   </entry>
   <entry>
     <title>MPI集群配置和mxnet分布式训练</title>
@@ -967,10 +930,6 @@ return 0;
 <p>分布式训练命令如下:</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">export PS_VERBOSE=1</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python ../../tools/launch.py -n 2 --launcher mpi -H mpi_file python train_mnist.py --network lenet --kv-store dist_syncINFO:root:Epoch[9] Batch [100] Speed: 155.30 samples/sec</span><br><span class="line"></span><br></pre></td></tr></table></figure>]]></content>
-      <tags>
-        <tag>工具</tag>
-        <tag>mpich</tag>
-      </tags>
   </entry>
   <entry>
     <title>补充 hexo 博客的使用</title>
@@ -988,9 +947,6 @@ return 0;
 <h1 id="4-图片显示的方法"><a href="#4-图片显示的方法" class="headerlink" title="4 图片显示的方法"></a>4 图片显示的方法</h1><p>在 public 路径下找到和博客文件同名的文件夹，将图像文件放入其中，在博客中直接引用即可，例如下文</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">![](1.jpg)</span><br></pre></td></tr></table></figure>
 ]]></content>
-      <tags>
-        <tag>工具</tag>
-      </tags>
   </entry>
   <entry>
     <title>《Linux 多线程服务端编程》阅读与实践（1）</title>
@@ -1005,10 +961,6 @@ return 0;
 <p>更进一步的实践是一个网盘应用，当前实现的网盘原型链接是</p>
 <p><a href="https://github.com/hanxinle/XCloud-Disk">https://github.com/hanxinle/XCloud-Disk</a> 。</p>
 ]]></content>
-      <tags>
-        <tag>网络编程</tag>
-        <tag>多线程</tag>
-      </tags>
   </entry>
   <entry>
     <title>OBS 编译记录</title>
@@ -1063,9 +1015,6 @@ return 0;
 <p>生成的路径是 <strong>&lt;盘符&gt;:\obs_2019\obs-studio\build_2019\rundir\Debug\bin\32bit</strong></p>
 <p>生成成功不能运行的话，右击 INSTALL - 仅用于项目 - 仅生成 INSTALL ，可在配置的 安装目录中发现软件，可进入 bin 路径启动验证功能。</p>
 ]]></content>
-      <tags>
-        <tag>OBS</tag>
-      </tags>
   </entry>
   <entry>
     <title>自然语言处理综述</title>
@@ -1145,9 +1094,6 @@ return 0;
 <h1 id="我的两个关于自然语言处理的-Github-仓库"><a href="#我的两个关于自然语言处理的-Github-仓库" class="headerlink" title="我的两个关于自然语言处理的 Github 仓库"></a>我的两个关于自然语言处理的 Github 仓库</h1><p>[1]. <a href="https://github.com/hanxinle/Xnlp">本文对应 GitHub 仓库</a></p>
 <p>[2]. <a href="https://github.com/hanxinle/XChatbot">对话机器人</a></p>
 ]]></content>
-      <tags>
-        <tag>自然语言处理</tag>
-      </tags>
   </entry>
   <entry>
     <title>使用 OBS 开发零散记录</title>
@@ -1213,9 +1159,6 @@ return 0;
 <p>带界面的窗口出问题记得使用 exit(0);</p>
 <p>obs 要先创建场景再创建源，然后才能使用。</p>
 ]]></content>
-      <tags>
-        <tag>OBS</tag>
-      </tags>
   </entry>
   <entry>
     <title>OpenGL小记</title>
@@ -1224,9 +1167,6 @@ return 0;
 <h2 id="GitHub-Repo-of-Mine"><a href="#GitHub-Repo-of-Mine" class="headerlink" title="GitHub Repo of Mine"></a>GitHub Repo of Mine</h2><p><a href="https://github.com/hanxinle/opengl_stuff">hanxinle/opengl_stuff</a></p>
 <h2 id="术语解释"><a href="#术语解释" class="headerlink" title="术语解释"></a>术语解释</h2><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="https://learnopengl-cn.github.io/">1 learn-opengl-cn</a><br><a href="https://github.com/JoeyDeVries/LearnOpenGL">2 资料1对应的 GitHub</a><br>3 <a href="https://github.com/TheCherno/OpenGL">TheCherno OpenGL 教程整理的工程</a><br>4 计算机图像学（使用OpenGL和C++）【书籍】</p>
 <!-- more -->]]></content>
-      <tags>
-        <tag>OpenGL</tag>
-      </tags>
   </entry>
   <entry>
     <title>程序的内存布局</title>
@@ -1240,10 +1180,6 @@ return 0;
 <p>创建100个线程，观察/proc/slabinfo，可以看到进程控制块 PCB 增加，进程共享空间没有增加。创建多个进程，二者都增加。</p>
 <p>其它话题，例如进程状态、进程调度、文件系统也可以通过 /proc 获取信息。个人认为开发人员应该将这部分学习的重心放在了解系统的接口上面，就是与写程序直接相关的内容，熟悉系统接口的使用的优先级应该高于了解 Linux 系统的实现。</p>
 ]]></content>
-      <tags>
-        <tag>gcc/gdb</tag>
-        <tag>Linux</tag>
-      </tags>
   </entry>
   <entry>
     <title>C++ 特性之 promise/future 示例</title>
@@ -1265,9 +1201,6 @@ return 0;
 <p>示例2（来自参考文献）：</p>
 <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;future&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;numeric&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;chrono&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">accumulate</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    std::vector&lt;<span class="type">int</span>&gt;::iterator first, std::vector&lt;<span class="type">int</span>&gt;::iterator last, std::promise&lt;<span class="type">int</span>&gt; accumulate_promise)</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> sum = std::<span class="built_in">accumulate</span>(first, last, <span class="number">0</span>);</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;1 accumulate running...&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">    accumulate_promise.<span class="built_in">set_value</span>(sum); <span class="comment">// Notify future</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">do_work</span><span class="params">(std::promise&lt;<span class="type">double</span>&gt; barrier)</span> </span>&#123;</span><br><span class="line">    std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">seconds</span>(<span class="number">1</span>));</span><br><span class="line"></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;5 thread do_work running   barrier.set_value().&quot;</span> &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">    barrier.<span class="built_in">set_value</span>(<span class="number">0.1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Demonstrate using promise&lt;int&gt; to transmit a result between threads.</span></span><br><span class="line">    std::vector&lt;<span class="type">int</span>&gt; numbers = &#123; <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span> &#125;;</span><br><span class="line">    std::promise&lt;<span class="type">int</span>&gt; accumulate_promise;</span><br><span class="line">    std::future&lt;<span class="type">int</span>&gt; accumulate_future = accumulate_promise.<span class="built_in">get_future</span>();</span><br><span class="line">    <span class="function">std::thread <span class="title">work_thread</span><span class="params">(accumulate, numbers.begin(), numbers.end(), std::move(accumulate_promise))</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// future::get() will wait until the future has a valid result and retrieves it.</span></span><br><span class="line">    <span class="comment">// Calling wait() before get() is not needed</span></span><br><span class="line">    <span class="comment">// accumulate_future.wait();  // wait for result</span></span><br><span class="line">    accumulate_future.<span class="built_in">wait</span>();</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;2 result=&quot;</span> &lt;&lt; accumulate_future.<span class="built_in">get</span>() &lt;&lt; <span class="string">&#x27;\n&#x27;</span>;</span><br><span class="line">    work_thread.<span class="built_in">join</span>(); <span class="comment">// wait for thread completion</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// Demonstrate using promise&lt;void&gt; to signal state between threads.</span></span><br><span class="line">    std::promise&lt;<span class="type">double</span>&gt; barrier;</span><br><span class="line">    std::future&lt;<span class="type">double</span>&gt; barrier_future = barrier.<span class="built_in">get_future</span>();</span><br><span class="line">    std::cout &lt;&lt;  <span class="string">&quot;3 before running thread do work.&quot;</span> &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">    <span class="function">std::thread <span class="title">new_work_thread</span><span class="params">(do_work, std::move(barrier))</span></span>;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;4 after unning thread do work.   barrier_future.wait(); &quot;</span> &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">    barrier_future.<span class="built_in">wait</span>();</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;6 double = &quot;</span> &lt;&lt; barrier_future.<span class="built_in">get</span>() &lt;&lt; std::endl;</span><br><span class="line">    new_work_thread.<span class="built_in">join</span>();</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;7 after join.&quot;</span> &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
 ]]></content>
-      <tags>
-        <tag>C++</tag>
-      </tags>
   </entry>
   <entry>
     <title>SRS 多种手段推拉流</title>
@@ -1283,9 +1216,6 @@ return 0;
 <h2 id="vlc拉流"><a href="#vlc拉流" class="headerlink" title="vlc拉流"></a>vlc拉流</h2><p>“媒体”——“打开网络串流”，如果是rtsp链接，可以填写如下rtsp://@:8554/11，其中@表示localhost，有些时候不添加可能会掉坑。</p>
 <h1 id="FFmpeg推拉流"><a href="#FFmpeg推拉流" class="headerlink" title="FFmpeg推拉流"></a>FFmpeg推拉流</h1><p>获取摄像头名称：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -list_devices true -f dshow -i dummy</span><br></pre></td></tr></table></figure><br>摄像头推流命令，其中-s控制的是分辨率:<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -f dshow -i video=&quot;HD Webcam eMeet C960&quot; -vcodec libx264 -acodec copy -preset:v ultrafast -tune:v zerolatency -s 320x240 -f flv rtmp://&lt;ip or domain-name&gt;/live/livestream4</span><br></pre></td></tr></table></figure><br>文件推流命令：<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ffmpeg -re -i a.flv -vcodec copy -acodec copy -f flv -y rtmp://localhost/live/livestream</span><br></pre></td></tr></table></figure></p>
 ]]></content>
-      <tags>
-        <tag>SRS</tag>
-      </tags>
   </entry>
   <entry>
     <title>Qt 开发随笔，不断更新ing</title>
@@ -1317,9 +1247,6 @@ return 0;
 </ol>
 <p>   刚刚测试了升级窗口部件，原来是设置后点击提升才有效果，接下来就可以在工程中添加刚刚设置的类，记得设置 Q_OBJECT 以及构造函数的编写，如果忘了写父类相关信息，会造成不显示等问题。</p>
 ]]></content>
-      <tags>
-        <tag>Qt</tag>
-      </tags>
   </entry>
   <entry>
     <title>SICP 相关</title>
@@ -1336,9 +1263,6 @@ return 0;
 <figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">#lang sicp</span><br><span class="line">(<span class="name"><span class="built_in">+</span></span> <span class="number">12</span> <span class="number">12</span>)</span><br></pre></td></tr></table></figure>
 <p>点击右上角Load File 按钮或者 Run File 按钮，命令行页面会输出 24，表示安装成功。</p>
 ]]></content>
-      <tags>
-        <tag>Lisp/Scheme</tag>
-      </tags>
   </entry>
   <entry>
     <title>状态模式实现与内存泄漏问题解决</title>
@@ -1365,10 +1289,6 @@ return 0;
 <p>另外，对于 CrtDumpMemoryLeaks() 的位置如果放置在 system 前，则会出现在 return 0 程序结束前，过早检查资源的情况。</p>
 <p>最后，对于 main 中使用 shared_ptr<User>，后续测试其一直保持 use_count 保持为 1，导致 User 对象资源不释放，在程序结束前添加 pu.reset() 将其引用技术置为0，后续测试无内存泄漏问题。</User></p>
 ]]></content>
-      <tags>
-        <tag>C++</tag>
-        <tag>设计模式</tag>
-      </tags>
   </entry>
   <entry>
     <title>技术的简单性、累积性和组合性</title>
@@ -1383,9 +1303,6 @@ return 0;
 <p>我的经验是，在结构和组合前，一定要先建立一个整体的大局观，然后从最有正反馈的地方着手，即先跑起来，然后边积累边改进，改进的具体方法就是结构和组合的方式，即注意整体中短板部分的改进。</p>
 <p>这样一点点积累，一个点只有组合为一个部件才是有生命力的，而改进的对象就是一个个部件。其次才是部件的组合，道哥讲述了结构性和组合性，我则发现最适合自己的是整体性-累积性，累积到部件再和道哥的理论研究结合起来，最大效率吸收旧技术的精华，同时催生新技术，迸发新技术的能量。</p>
 ]]></content>
-      <tags>
-        <tag>技术思考</tag>
-      </tags>
   </entry>
   <entry>
     <title>Ubuntu/Winodws 开发环境打点备忘</title>
@@ -1419,9 +1336,6 @@ return 0;
 <p>Windows 10 中执行 ping 命令即可验证。</p>
 <h1 id="4-Windows-系统局域网传输文件"><a href="#4-Windows-系统局域网传输文件" class="headerlink" title="4 Windows 系统局域网传输文件"></a>4 Windows 系统局域网传输文件</h1><p>将要分享的文件放入文件夹，然后将该文件夹分享给 Everyone，另一台 Windows 中 <em>WIN+R</em> 后执行 \\<pc1的ip>，即可访问分享的文件夹，和配置 samba 并访问相似。 </pc1的ip></p>
 ]]></content>
-      <tags>
-        <tag>工具</tag>
-      </tags>
   </entry>
   <entry>
     <title>Visual Studio dll的编写和使用</title>
@@ -1441,9 +1355,6 @@ return 0;
 <figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> comment(lib，<span class="string">&quot;MyDll.lib&quot;</span>)</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span>  </span>&#123;</span><br><span class="line"><span class="type">int</span> result;</span><br><span class="line">result=<span class="built_in">min</span>(<span class="number">8</span>,<span class="number">10</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">printf</span>(<span class="string">&quot;比较的结果为%d\n&quot;</span>,result);</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <p>（PS：该方式看似简单，看是我这边佛系编译，遇到问题真是头大）</p>
 ]]></content>
-      <tags>
-        <tag>Windows</tag>
-      </tags>
   </entry>
   <entry>
     <title>Vim 教程</title>
@@ -1605,9 +1516,6 @@ return 0;
 <p>[2] <a href="https://www.imooc.com/learn/1129">慕课网 PegasusWang 的高质量免费教程</a></p>
 <p>[3] <a href="https://zhuanlan.zhihu.com/p/113316942">Chrome插件Vimium使用教程</a></p>
 ]]></content>
-      <tags>
-        <tag>工具</tag>
-      </tags>
   </entry>
   <entry>
     <title>WebRTC 库在 Windows 平台编译（支持 H.264）</title>
@@ -1831,9 +1739,6 @@ return 0;
 <p><a href="https://bugs.chromium.org/p/webrtc/issues/detail?id=9213%23c13">https://bugs.chromium.org/p/webrtc/issues/detail?id=9213#c13</a></p>
 </blockquote>
 ]]></content>
-      <tags>
-        <tag>WebRTC</tag>
-      </tags>
   </entry>
   <entry>
     <title>Windows程序设计总结</title>
@@ -1842,11 +1747,6 @@ return 0;
 <h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><span id="more"></span>
 <h1 id="正文和GitHub"><a href="#正文和GitHub" class="headerlink" title="正文和GitHub"></a>正文和GitHub</h1><p>访问以下<a href="https://github.com/hanxinle/Windows-Develop-Notes">链接</a>，可以看到教程在 ReadMe 中，并且有工程。</p>
 ]]></content>
-      <tags>
-        <tag>Qt</tag>
-        <tag>Windows</tag>
-        <tag>MFC</tag>
-      </tags>
   </entry>
   <entry>
     <title>hexo搭建环境完毕后写博客的步骤</title>
@@ -1886,9 +1786,6 @@ return 0;
 <li>执行 <code>hexo clean</code>，再执行 <code>hexo g &amp;&amp; hexo d</code>。</li>
 </ol>
 ]]></content>
-      <tags>
-        <tag>工具</tag>
-      </tags>
   </entry>
   <entry>
     <title>Xinle_Player：一个 Qt6 + FFmpeg + OpenGL 播放器与特效系统的演进</title>
@@ -1986,11 +1883,6 @@ return 0;
 </ul>
 <p>代码在 <a href="https://github.com/hanxinle/Xinle_Player">hanxinle/Xinle_Player</a>，欢迎参考。</p>
 ]]></content>
-      <tags>
-        <tag>Qt</tag>
-        <tag>FFmpeg</tag>
-        <tag>OpenGL</tag>
-      </tags>
   </entry>
   <entry>
     <title>Windows C++ Crash 治理全景：异常机制、崩溃类型与工具链实践</title>
@@ -2134,12 +2026,6 @@ return 0;
 <h2 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h2><p>Windows C++ 崩溃治理不是背几个 API 就能解决的事情。它需要一个完整的认知框架：异常是怎么被一层层处理的、不同类型崩溃在 Debug / Release 下为什么表现不同、为什么有些 bug 本地不复现客户环境才崩、大型工程中有哪些”防御性知识”平时用不上但一出事就致命。</p>
 <p>当这些知识点连成网络之后，再拿到一个 dump 文件，你就不会只盯着调用栈发呆，而是能判断：这大概是哪一类问题、应该用什么工具验证、修复后如何回归。到那时候，这些知识才真正变成生产力。</p>
 ]]></content>
-      <tags>
-        <tag>C++</tag>
-        <tag>Windows</tag>
-        <tag>Crash 治理</tag>
-        <tag>调试</tag>
-      </tags>
   </entry>
   <entry>
     <title>Windows C++ 异常处理机制：VEH、SEH、UEF 与 MiniDump 实战</title>
@@ -2342,12 +2228,6 @@ return 0;
 <h2 id="一个完整的崩溃捕获闭环"><a href="#一个完整的崩溃捕获闭环" class="headerlink" title="一个完整的崩溃捕获闭环"></a>一个完整的崩溃捕获闭环</h2><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">程序运行</span><br><span class="line">    ↓</span><br><span class="line">异常发生</span><br><span class="line">    ↓</span><br><span class="line">VEH 记录日志（可选）</span><br><span class="line">    ↓</span><br><span class="line">SEH / C++ EH 尝试局部处理</span><br><span class="line">    ↓</span><br><span class="line">UEF 生成 MiniDump</span><br><span class="line">    ↓</span><br><span class="line">离线分析（WinDbg + PDB）</span><br><span class="line">    ↓</span><br><span class="line">定位代码行，修复 bug</span><br></pre></td></tr></table></figure>
 <p>下一篇会进入具体崩溃类型的分析：空指针、堆破坏、栈溢出、未初始化、内存耗尽、纯虚调用，以及它们在 Debug / Release 下的行为差异。</p>
 ]]></content>
-      <tags>
-        <tag>C++</tag>
-        <tag>Windows</tag>
-        <tag>Crash 治理</tag>
-        <tag>调试</tag>
-      </tags>
   </entry>
   <entry>
     <title>Windows C++ 常见崩溃类型：从空指针到纯虚调用的现象与治理</title>
@@ -2529,12 +2409,6 @@ return 0;
 </div>
 <h2 id="下篇预告"><a href="#下篇预告" class="headerlink" title="下篇预告"></a>下篇预告</h2><p>下一篇会讲并发与工程问题：多线程竞争、DLL 加载、断言、静态初始化顺序（SIOF）、跨模块内存分配。这些问题在小项目里很少出现，但在大型 C++ 工程中是导致”启动就崩”和”客户环境崩”的典型原因。</p>
 ]]></content>
-      <tags>
-        <tag>C++</tag>
-        <tag>Windows</tag>
-        <tag>Crash 治理</tag>
-        <tag>调试</tag>
-      </tags>
   </entry>
   <entry>
     <title>Windows C++ 并发与工程问题：多线程竞争、SIOF 与跨模块内存分配</title>
@@ -2639,13 +2513,6 @@ return 0;
 </div>
 <h2 id="下篇预告"><a href="#下篇预告" class="headerlink" title="下篇预告"></a>下篇预告</h2><p>下一篇也是本系列的最后一篇，会进入<strong>工具链实战</strong>：用 WinDbg 分析 MiniDump、用 AddressSanitizer 和 gflags 抓堆破坏、用 Crashpad 做崩溃上报、以及 PDB 符号服务器的搭建。到那时候，这套知识就真正能从”看懂”变成”定位”。</p>
 ]]></content>
-      <tags>
-        <tag>C++</tag>
-        <tag>多线程</tag>
-        <tag>Windows</tag>
-        <tag>Crash 治理</tag>
-        <tag>DLL</tag>
-      </tags>
   </entry>
   <entry>
     <title>Windows C++ 崩溃治理工具链：WinDbg、ASan、Crashpad 与符号服务器</title>
@@ -2867,12 +2734,6 @@ return 0;
 </ol>
 <p>希望这个系列对你排查 Windows C++ 崩溃问题有所帮助。</p>
 ]]></content>
-      <tags>
-        <tag>C++</tag>
-        <tag>Windows</tag>
-        <tag>Crash 治理</tag>
-        <tag>WinDbg</tag>
-      </tags>
   </entry>
   <entry>
     <title>Claude Code 学习笔记：常用命令与 CLI 深度使用</title>
@@ -3062,11 +2923,6 @@ return 0;
 <li>命令行用 <code>-p</code> 加管道，可以把 claude 嵌入任何现有工作流，这是它区别于聊天框式 AI 的核心能力。</li>
 </ul>
 ]]></content>
-      <tags>
-        <tag>AI Agent</tag>
-        <tag>工具</tag>
-        <tag>Claude Code</tag>
-      </tags>
   </entry>
   <entry>
     <title>C++ 对象模型实战（三）：单继承——基类子对象位置、构造链与切片</title>
@@ -3110,11 +2966,6 @@ return 0;
 <h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">单继承布局: [基类子对象][派生成员追加]</span><br><span class="line">构造顺序: Base → Derived, 析构严格反向</span><br><span class="line">Base* pb = &amp;derived: 地址不变(基类在偏移 0)</span><br><span class="line">Base copy = derived: 切片, 派生部分丢失</span><br></pre></td></tr></table></figure>
 <p>切片值得单独警惕：它是按值语义的天然结果，不报错不警告。所以涉及继承体系时，传参和返回一律用指针或引用，按值传递基类几乎总是 bug。</p>
 ]]></content>
-      <tags>
-        <tag>C++</tag>
-        <tag>对象模型</tag>
-        <tag>内存</tag>
-      </tags>
   </entry>
   <entry>
     <title>C++ 对象模型实战（一）：对象布局、对齐与 sizeof 的三条规则</title>
@@ -3158,11 +3009,6 @@ return 0;
 </ul>
 <h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">对象布局三规则</span><br><span class="line">├── 成员按声明顺序排列, 各自对齐, 不满补 padding</span><br><span class="line">├── 总大小取整到最大对齐值的倍数(为了数组)</span><br><span class="line">└── 空类 1 字节(为了可寻址), 作基类时可被 EBO 优化掉</span><br></pre></td></tr></table></figure>
 ]]></content>
-      <tags>
-        <tag>C++</tag>
-        <tag>对象模型</tag>
-        <tag>内存</tag>
-      </tags>
   </entry>
   <entry>
     <title>C++ 对象模型实战（二）：栈对象、堆对象与 this 指针的本质</title>
@@ -3204,11 +3050,6 @@ return 0;
 <p><strong>3. printf 那三行是同一个约定的对照组。</strong> <code>lea rcx,[格式串]</code> + <code>lea rdx,[rbp+4]</code>——rcx 放第一个参数（格式串），rdx 放第二个（&amp;a）。成员函数调用和普通函数调用没有本质区别，只是编译器替成员函数多塞了一个 this 参数。</p>
 <h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">栈对象: 声明即构造, 离开作用域自动析构, 地址在栈区</span><br><span class="line">堆对象: new 才构造, delete 才析构, 地址在堆区; 指针本身仍是栈变量</span><br><span class="line">this:   不占对象空间, 是调用成员函数时通过 rcx 传入的隐藏参数</span><br><span class="line">        成员访问 = this + 成员偏移</span><br></pre></td></tr></table></figure>
 ]]></content>
-      <tags>
-        <tag>C++</tag>
-        <tag>对象模型</tag>
-        <tag>内存</tag>
-      </tags>
   </entry>
   <entry>
     <title>C++ 对象模型实战（四）：虚函数机制（上）——vptr、虚表与间接调用</title>
@@ -3458,6 +3299,216 @@ return 0;
         <tag>C++</tag>
         <tag>对象模型</tag>
         <tag>内存</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>C++ 并发编程笔记：join/detach 与 future/promise 两个最基础的模型</title>
+    <url>/2026/10/08/20261008-01-cpp-concurrency-join-detach-future-promise/</url>
+    <content><![CDATA[<h2 id="为什么先讲这两个"><a href="#为什么先讲这两个" class="headerlink" title="为什么先讲这两个"></a>为什么先讲这两个</h2><p>最近开始读《C++并发编程实战》。前四章讲了不少东西，但真正绕不开的基础模型就两个：线程创建之后<strong>怎么收尾</strong>（join/detach），以及线程的结果<strong>怎么拿回来</strong>（future/promise）。书里的完整例子偏复杂，我把概念剥到最简，再从随书源码里挑了几个简洁的实例补上，用最小代码把这两个模型讲清楚。</p>
+<span id="more"></span>
+<h2 id="一、join-和-detach：线程的两种归宿"><a href="#一、join-和-detach：线程的两种归宿" class="headerlink" title="一、join 和 detach：线程的两种归宿"></a>一、join 和 detach：线程的两种归宿</h2><p>一个 <code>std::thread</code> 对象创建出来后，只有两条路：<strong>join（等他干完）</strong> 或 <strong>detach（放他单飞）</strong>。</p>
+<p>而且必须二选一——两条路都不走，<code>std::thread</code> 析构时直接调用 <code>std::terminate()</code>，程序当场崩溃。这不是警告，是硬性规定。</p>
+<h3 id="join：阻塞等待"><a href="#join：阻塞等待" class="headerlink" title="join：阻塞等待"></a>join：阻塞等待</h3><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;thread&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">worker</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">seconds</span>(<span class="number">2</span>));</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;worker 干完了\n&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="function">std::thread <span class="title">t</span><span class="params">(worker)</span></span>;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;主线程等待中...\n&quot;</span>;</span><br><span class="line">    t.<span class="built_in">join</span>();                        <span class="comment">// 卡在这里, 直到 worker 返回.</span></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;确认干完, 继续\n&quot;</span>;  <span class="comment">// 这行一定在 worker 之后打印.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>join()</code> 让主线程<strong>挂起</strong>，直到目标线程执行完毕。输出顺序是确定的：worker 打印在前，主线程收尾在后。</p>
+<p>适用场景：要用线程的计算结果、退出前必须确认线程收拾干净。</p>
+<h3 id="detach：脱离托管"><a href="#detach：脱离托管" class="headerlink" title="detach：脱离托管"></a>detach：脱离托管</h3><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="function">std::thread <span class="title">t</span><span class="params">(worker)</span></span>;</span><br><span class="line">    t.<span class="built_in">detach</span>();   <span class="comment">// 从此 t 和线程再无关系, 无法 join、无法拿结果.</span></span><br><span class="line">    <span class="comment">// main 立刻往下走, 线程在后台自生自灭.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>detach()</code> 把线程交给系统托管，<code>std::thread</code> 对象变成空壳。适用场景：日志线程、后台监控这种”发了就不用管”的任务。</p>
+<p>书里的一个例子把 detach 的正确姿势演示得很清楚——文档编辑器每”新建文档”就开一个线程（listing_2.4，简化后）：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">edit_document</span><span class="params">(std::string <span class="type">const</span>&amp; filename)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">open_document_and_display_gui</span>(filename);</span><br><span class="line">    <span class="keyword">while</span> (!<span class="built_in">done_editing</span>()) &#123;</span><br><span class="line">        user_command cmd = <span class="built_in">get_user_input</span>();</span><br><span class="line">        <span class="keyword">if</span> (cmd.type == open_new_document) &#123;</span><br><span class="line">            std::string new_name = <span class="built_in">get_filename_from_user</span>();</span><br><span class="line">            <span class="function">std::thread <span class="title">t</span><span class="params">(edit_document, new_name)</span></span>;  <span class="comment">// 按值传参, 避开悬垂引用.</span></span><br><span class="line">            t.<span class="built_in">detach</span>();                              <span class="comment">// 新文档线程独立运行, 不用管.</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="built_in">process_user_input</span>(cmd);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>两个细节值得注意：文件名是<strong>按值</strong>传进去的（新线程拿的是拷贝，不是引用）；主线程不需要知道文档什么时候关——这正是 detach 的典型画像：任务独立、结果不需要回收。</p>
+<h3 id="两个必须知道的坑"><a href="#两个必须知道的坑" class="headerlink" title="两个必须知道的坑"></a>两个必须知道的坑</h3><p><strong>坑 1：detach 后访问局部变量 = 悬垂引用。</strong></p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">bad</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> x = <span class="number">42</span>;</span><br><span class="line">    <span class="function">std::thread <span class="title">t</span><span class="params">([&amp;x] &#123; std::cout &lt;&lt; x; &#125;)</span></span>;  <span class="comment">// 按引用捕获局部变量.</span></span><br><span class="line">    t.<span class="built_in">detach</span>();</span><br><span class="line">&#125;   <span class="comment">// 函数返回, x 销毁, 后台线程还在读 -&gt; 未定义行为.</span></span><br></pre></td></tr></table></figure>
+<p>函数一返回 <code>x</code> 就没了，后台线程手里捏着的是一块已释放的栈内存。所以 detach 的线程只能按值捕获，或者访问全局/堆上的对象。</p>
+<p><strong>坑 2：detach 之后不能再 join。</strong></p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">std::thread <span class="title">t</span><span class="params">(worker)</span></span>;</span><br><span class="line">t.<span class="built_in">detach</span>();</span><br><span class="line">t.<span class="built_in">join</span>();  <span class="comment">// 崩溃! 线程已脱离, 不可 join.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 正确姿势: 先检查.</span></span><br><span class="line"><span class="keyword">if</span> (t.<span class="built_in">joinable</span>()) &#123;</span><br><span class="line">    t.<span class="built_in">join</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>joinable()</code> 返回 false 的情况：空线程、已 join 过、已 detach 过、被 move 走过。</p>
+<h3 id="“忘-join-就崩”的解药：RAII-包一层"><a href="#“忘-join-就崩”的解药：RAII-包一层" class="headerlink" title="“忘 join 就崩”的解药：RAII 包一层"></a>“忘 join 就崩”的解药：RAII 包一层</h3><p>既然”既不 join 也不 detach”等于自杀，书里给了一个经典方案：把线程包进 RAII 类，析构时自动 join（listing_2.6）：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">scoped_thread</span> &#123;</span><br><span class="line">    std::thread t;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">explicit</span> <span class="title">scoped_thread</span><span class="params">(std::thread t_)</span> : t(std::move(t_)) &#123;</span></span><br><span class="line">        <span class="keyword">if</span> (!t.<span class="built_in">joinable</span>())</span><br><span class="line">            <span class="keyword">throw</span> std::<span class="built_in">logic_error</span>(<span class="string">&quot;No thread&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    ~<span class="built_in">scoped_thread</span>() &#123; t.<span class="built_in">join</span>(); &#125;                       <span class="comment">// 出作用域自动 join.</span></span><br><span class="line">    <span class="built_in">scoped_thread</span>(scoped_thread <span class="type">const</span>&amp;) = <span class="keyword">delete</span>;</span><br><span class="line">    scoped_thread&amp; <span class="keyword">operator</span>=(scoped_thread <span class="type">const</span>&amp;) = <span class="keyword">delete</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>用法和普通 <code>std::thread</code> 一样，但函数无论如何退出（正常返回也好、抛异常也好），析构函数都会把 join 补上。这个思路后来被标准收编，就是 C++20 的 <code>std::jthread</code>——能直接用的项目就别自己造轮子了。</p>
+<h3 id="一张表对比"><a href="#一张表对比" class="headerlink" title="一张表对比"></a>一张表对比</h3><div class="table-container">
+<table>
+<thead>
+<tr>
+<th></th>
+<th>join</th>
+<th>detach</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>主线程行为</td>
+<td>阻塞等待</td>
+<td>立即继续</td>
+</tr>
+<tr>
+<td>能否感知线程结束</td>
+<td>能</td>
+<td>不能</td>
+</tr>
+<tr>
+<td>典型场景</td>
+<td>要结果、要顺序</td>
+<td>后台任务、守护线程</td>
+</tr>
+<tr>
+<td>最大风险</td>
+<td>忘 join，析构即崩</td>
+<td>悬垂引用、main 退出杀线程</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>最后一个细节值得单独说：main 返回时进程退出，<strong>detached 线程会被直接杀掉</strong>，可能日志写到一半就没了。所以实际工程里的”后台线程”通常也不是真撒手——退出前用条件变量之类的机制通知它收尾，只是不用 join 干等。</p>
+<h2 id="二、future-和-promise：线程结果的传送带"><a href="#二、future-和-promise：线程结果的传送带" class="headerlink" title="二、future 和 promise：线程结果的传送带"></a>二、future 和 promise：线程结果的传送带</h2><p><code>std::thread</code> 本身<strong>不能返回值</strong>。传统做法是：共享变量 + 互斥锁 + join，三件套配下来很啰嗦。future/promise 是标准库给的一条”传送带”，专门解决线程把结果送回来的问题。</p>
+<h3 id="最省事的用法：std-async-std-future"><a href="#最省事的用法：std-async-std-future" class="headerlink" title="最省事的用法：std::async + std::future"></a>最省事的用法：std::async + std::future</h3><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;future&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">slow_compute</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">seconds</span>(<span class="number">2</span>));</span><br><span class="line">    <span class="keyword">return</span> <span class="number">42</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 后台开跑, 立刻拿回一张&quot;取货单&quot;.</span></span><br><span class="line">    std::future&lt;<span class="type">int</span>&gt; f = std::<span class="built_in">async</span>(std::launch::async, slow_compute);</span><br><span class="line"></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;主线程继续干别的...\n&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 要结果时取货, 没算完就在这里等.</span></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;结果: &quot;</span> &lt;&lt; f.<span class="built_in">get</span>() &lt;&lt; <span class="string">&quot;\n&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>把 <code>future</code> 理解成<strong>取货单</strong>：<code>std::async</code> 下单发货，<code>f.get()</code> 取货。货没好就等着，货好了直接拿走。线程创建、结果传递、异常传递全部自动处理。注意 <code>get()</code> 只能调一次——取货单撕掉就没了。</p>
+<h3 id="手动版：std-promise-std-future"><a href="#手动版：std-promise-std-future" class="headerlink" title="手动版：std::promise + std::future"></a>手动版：std::promise + std::future</h3><p>如果想自己控制”什么时候、在哪个线程里放结果”，就用 promise：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;future&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;thread&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">worker</span><span class="params">(std::promise&lt;<span class="type">int</span>&gt; p)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        std::this_thread::<span class="built_in">sleep_for</span>(std::chrono::<span class="built_in">seconds</span>(<span class="number">1</span>));</span><br><span class="line">        p.<span class="built_in">set_value</span>(<span class="number">42</span>);            <span class="comment">// 把结果放上传送带.</span></span><br><span class="line">    &#125; <span class="built_in">catch</span> (...) &#123;</span><br><span class="line">        p.<span class="built_in">set_exception</span>(std::<span class="built_in">current_exception</span>());  <span class="comment">// 异常也能传.</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    std::promise&lt;<span class="type">int</span>&gt; p;</span><br><span class="line">    std::future&lt;<span class="type">int</span>&gt; f = p.<span class="built_in">get_future</span>();  <span class="comment">// 先拿取货单, 再开工.</span></span><br><span class="line"></span><br><span class="line">    <span class="function">std::thread <span class="title">t</span><span class="params">(worker, std::move(p))</span></span>;  <span class="comment">// promise 只能 move, 不能拷贝.</span></span><br><span class="line"></span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;结果: &quot;</span> &lt;&lt; f.<span class="built_in">get</span>() &lt;&lt; <span class="string">&quot;\n&quot;</span>;  <span class="comment">// 阻塞直到 set_value.</span></span><br><span class="line">    t.<span class="built_in">join</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>记住三个要点就够了：</p>
+<ol>
+<li><code>promise</code> 是<strong>写端</strong>（放结果），<code>future</code> 是<strong>读端</strong>（取结果），一对孪生，通过 <code>get_future()</code> 建立连接。</li>
+<li><code>set_value()</code> 一放，<code>get()</code> 就放行——<strong>天然带同步</strong>，不用自己写互斥锁和条件变量。这比”共享变量 + mutex + join”干净得多。</li>
+<li>异常也能传：工作线程里 <code>set_exception()</code>，主线程 <code>get()</code> 时异常被重新抛出，错误处理的路径和正常返回值统一了。</li>
+</ol>
+<h3 id="promise-的真实用武之地：数据自己上门时才填结果"><a href="#promise-的真实用武之地：数据自己上门时才填结果" class="headerlink" title="promise 的真实用武之地：数据自己上门时才填结果"></a>promise 的真实用武之地：数据自己上门时才填结果</h3><p>什么时候 promise 比 async 合适？书里的网络连接处理循环是个标准答案（listing_4.10，简化后）：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">process_connections</span><span class="params">(connection_set&amp; connections)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (!<span class="built_in">done</span>(connections)) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">auto</span> connection = connections.<span class="built_in">begin</span>(); connection != connections.<span class="built_in">end</span>(); ++connection) &#123;</span><br><span class="line">            <span class="keyword">if</span> (connection-&gt;<span class="built_in">has_incoming_data</span>()) &#123;</span><br><span class="line">                data_packet data = connection-&gt;<span class="built_in">incoming</span>();</span><br><span class="line">                std::promise&lt;payload_type&gt;&amp; p = connection-&gt;<span class="built_in">get_promise</span>(data.id);</span><br><span class="line">                p.<span class="built_in">set_value</span>(data.payload);   <span class="comment">// 数据到了才填结果, 等待方立刻被唤醒.</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (connection-&gt;<span class="built_in">has_outgoing_data</span>()) &#123;</span><br><span class="line">                outgoing_packet data = connection-&gt;<span class="built_in">top_of_outgoing_queue</span>();</span><br><span class="line">                connection-&gt;<span class="built_in">send</span>(data.payload);</span><br><span class="line">                data.promise.<span class="built_in">set_value</span>(<span class="literal">true</span>);  <span class="comment">// 通知发送方: 发完了.</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的模式是：<strong>发起请求时先拿到一个 promise（和对应的 future），结果要等网络数据回来那一刻才产生</strong>。产生结果的线程和时机由事件决定，而不是由”某个函数跑完”决定——async 表达不了这个，promise 可以。消息队列、异步 IO 回调、RPC 框架里全是这个模式的影子。</p>
+<h3 id="怎么选"><a href="#怎么选" class="headerlink" title="怎么选"></a>怎么选</h3><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>选择</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>跑个任务拿返回值</td>
+<td><code>std::async</code>，别犹豫</td>
+</tr>
+<tr>
+<td>结果的产生时机/线程要自己控制（比如回调里填结果）</td>
+<td><code>std::promise</code></td>
+</tr>
+<tr>
+<td>任务和线程解耦（先打包任务，后决定在哪条线程跑）</td>
+<td><code>std::packaged_task</code></td>
+</tr>
+<tr>
+<td>多个线程等同一个结果</td>
+<td><code>std::shared_future</code>（可拷贝、可多次 get）</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="三、这本书还讲了什么：一张延伸地图"><a href="#三、这本书还讲了什么：一张延伸地图" class="headerlink" title="三、这本书还讲了什么：一张延伸地图"></a>三、这本书还讲了什么：一张延伸地图</h2><p>两个基础模型够日常用了，但这本书的覆盖面远不止这些。我把其余章节的核心内容扫了一遍，列出这张地图——知道这些主题存在、各自解决什么问题，等真遇到时再来查，比现在就硬记细节划算得多。</p>
+<h3 id="异步任务三件套对比：async-packaged-task-promise"><a href="#异步任务三件套对比：async-packaged-task-promise" class="headerlink" title="异步任务三件套对比：async / packaged_task / promise"></a>异步任务三件套对比：async / packaged_task / promise</h3><p>三者都能产生 future，区别在于”谁来跑、谁来填”：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th></th>
+<th><code>std::async</code></th>
+<th><code>std::packaged_task</code></th>
+<th><code>std::promise</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本质</td>
+<td>一行启动异步任务</td>
+<td>把函数打包成”可搬运的任务”</td>
+<td>手工填结果的写端</td>
+</tr>
+<tr>
+<td>谁创建线程</td>
+<td>标准库</td>
+<td>自己</td>
+<td>自己</td>
+</tr>
+<tr>
+<td>结果何时产生</td>
+<td>函数返回时</td>
+<td>任务被调用时</td>
+<td>任意时机（如事件回调）</td>
+</tr>
+<tr>
+<td>典型场景</td>
+<td>默认选择</td>
+<td>任务队列、线程池</td>
+<td>异步 IO、消息循环</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>三者是同一个”传送带”机制的三种封装层级：async 最省心，packaged_task 把任务和线程解耦，promise 最底层也最自由。</p>
+<h3 id="其余章节一句话索引"><a href="#其余章节一句话索引" class="headerlink" title="其余章节一句话索引"></a>其余章节一句话索引</h3><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>主题</th>
+<th>解决什么</th>
+<th>代表案例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>互斥与锁（第3章）</td>
+<td>共享数据不被写花：<code>lock_guard</code> 守作用域，<code>std::lock</code> 一次锁多把防死锁，锁分层（hierarchical_mutex）从制度上杜绝环路</td>
+<td>listing_3.1、3.7</td>
+</tr>
+<tr>
+<td>条件变量（第4章）</td>
+<td>生产者-消费者：消费者 <code>wait</code> 挂起不占 CPU，生产者 <code>notify_one</code> 唤醒</td>
+<td>listing_4.1</td>
+</tr>
+<tr>
+<td>读写锁</td>
+<td>读多写少场景：<code>shared_mutex</code> 允许多个读者并发</td>
+<td>第3章后段</td>
+</tr>
+<tr>
+<td>future 带超时</td>
+<td><code>wait_for</code> / <code>wait_until</code>：等结果但不死等，服务器必备</td>
+<td>第4章后段</td>
+</tr>
+<tr>
+<td>原子操作与内存模型（第5章）</td>
+<td>不加锁的共享：<code>std::atomic</code> + <code>memory_order</code> 控制指令重排可见性，全书最烧脑的一章</td>
+<td>listing_5.4</td>
+</tr>
+<tr>
+<td>并发容器（第6、7章）</td>
+<td>线程安全队列（锁版容易，无锁版极难），无锁数据结构是专家领域</td>
+<td>listing_6.2</td>
+</tr>
+<tr>
+<td>并行算法设计（第8章）</td>
+<td>把排序、累加这类算法切开分给多线程，核心是划分与负载均衡</td>
+<td>并行快排</td>
+</tr>
+<tr>
+<td>线程池（第9章）</td>
+<td>固定数量线程 + 任务队列，<code>hardware_concurrency()</code> 定线程数，避免线程爆炸</td>
+<td>listing_9.1</td>
+</tr>
+<tr>
+<td>并发测试（第11章）</td>
+<td>并发 bug 怎么复现：压力测试、时序注入</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>我的取舍：第 3、4 章的互斥和条件变量是日常刚需，值得单独练；第 5 章内存模型和第 7 章无锁数据结构属于”知道存在即可”，真要用到现场翻书或问 LLM；线程池不必自己写，知道原理、用成熟实现就好。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">线程的两个基础模型</span><br><span class="line">├── 收尾: join / detach 二选一, 不选就 terminate</span><br><span class="line">│   ├── join   -&gt; 等结果、保顺序, 风险是忘 join 即崩(RAII/std::jthread 解药)</span><br><span class="line">│   └── detach -&gt; 后台任务, 风险是悬垂引用 + main 退出强杀(按值传参避险)</span><br><span class="line">└── 传值: future / promise 传送带</span><br><span class="line">    ├── std::async   -&gt; 一行代码跑任务拿结果, 默认选它</span><br><span class="line">    └── std::promise -&gt; 事件驱动填结果(网络包到了才 set_value), 异常也能传</span><br></pre></td></tr></table></figure>
+<p>文中标注 listing 编号的例子来自《C++并发编程实战》随书源码，我做了简化和中文化注释，语义不变。</p>
+<p>这两个模型是后面所有并发设施的底座：线程池、并行算法、<code>std::packaged_task</code>，拆开看都是这两套机制的组合。先把最小例子跑熟，再看书里复杂的例子就顺了。</p>
+]]></content>
+      <tags>
+        <tag>C++</tag>
+        <tag>并发编程</tag>
+        <tag>多线程</tag>
       </tags>
   </entry>
 </search>
