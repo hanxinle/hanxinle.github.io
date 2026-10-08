@@ -38,6 +38,30 @@
   </entry>
   
   <entry>
+    <title>Windows DLL 三种加载方式：隐式、显式、延迟加载到底差在哪</title>
+    <link href="https://hanxinle.github.io/2026/10/08/20261008-02-dll-load-implicit-explicit-delay/"/>
+    <id>https://hanxinle.github.io/2026/10/08/20261008-02-dll-load-implicit-explicit-delay/</id>
+    <published>2026-10-08T12:30:00.000Z</published>
+    <updated>2026-10-08T14:38:42.207Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="一个容易误读的讲法"><a href="#一个容易误读的讲法" class="headerlink" title="一个容易误读的讲法"></a>一个容易误读的讲法</h2><p>读王端明《深入浅出 Windows API 程序设计》核心编程篇的 DLL 章，书里先讲显式加载的好处是”DLL 不存在，exe 也能跑起来”，接着讲延迟加载，又说它有”目录里没有 DLL 也能把程序运行起来”的优势。两段话放一起看容易犯迷糊：延迟加载写法上明明还是隐式的（链 .lib、直接调函数），怎么也有显式加载的好处？这是不是讲错了？</p><p>结论：书上没错，但要把两件事拆开看——<strong>写法上的链接方式</strong>和<strong>加载发生的时机</strong>。延迟加载是”写法上隐式、时机上独立”的第三种方式，不等于隐式加载。</p><span id="more"></span><h2 id="三种方式对照"><a href="#三种方式对照" class="headerlink" title="三种方式对照"></a>三种方式对照</h2><div class="table-container"><table><thead><tr><th></th><th>隐式加载</th><th>显式加载</th><th>延迟加载</th></tr></thead><tbody><tr><td>写法</td><td>链接 .lib，直接调函数</td><td><code>LoadLibrary</code> + <code>GetProcAddress</code>，手动拿函数指针</td><td>链接 .lib，直接调函数（加 <code>/DELAYLOAD:dll名</code> 链接选项）</td></tr><tr><td>DLL 何时被加载</td><td><strong>进程启动时</strong>，加载器解析整个导入表</td><td>你调 <code>LoadLibrary</code> 那一刻</td><td><strong>第一次调用该 DLL 的某个函数时</strong></td></tr><tr><td>DLL 不存在，exe 能启动吗</td><td><strong>不能</strong>，进程直接起不来（弹”找不到 xxx.dll”）</td><td>能，<code>LoadLibrary</code> 返回 NULL，自己决定怎么办</td><td>能</td></tr><tr><td>DLL 不存在且真的调用了它的函数</td><td>不会发生（启动就死了）</td><td>不会发生（拿不到指针，走自己的失败分支）</td><td><strong>调用那一刻才失败</strong>：抛结构化异常，默认进程崩，可用失败钩子 <code>__pfnDliFailureHook2</code> 兜底</td></tr></tbody></table></div><h2 id="两段”优势”的真实关系"><a href="#两段”优势”的真实关系" class="headerlink" title="两段”优势”的真实关系"></a>两段”优势”的真实关系</h2><p>显式加载的优势是<strong>全程可控</strong>：DLL 不在程序照样跑，连调用失败都在你手里。</p><p>延迟加载只有这个优势的<strong>一半</strong>：DLL 不在程序<strong>能启动</strong>，它把失败从启动时刻推迟到调用时刻。程序跑的这条路径如果不碰这个 DLL，就白赚了启动速度和健壮性；真碰了而 DLL 不在，照样要处理异常。</p><p>所以延迟加载并没有推翻”显式加载更安全”的说法，它只是让隐式写法的代码也获得了”先跑起来”的能力。</p><h2 id="代码长什么样"><a href="#代码长什么样" class="headerlink" title="代码长什么样"></a>代码长什么样</h2><p>显式加载（完全自己控制）：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;cstdio&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">int</span> <span class="params">(WINAPI *AddFunc)</span><span class="params">(<span class="type">int</span>, <span class="type">int</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    HMODULE h = <span class="built_in">LoadLibraryW</span>(<span class="string">L&quot;MyMath.dll&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (!h) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;DLL 不存在, 走降级逻辑\n&quot;</span>);   <span class="comment">// 程序没死, 自己接住.</span></span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    AddFunc add = (AddFunc)<span class="built_in">GetProcAddress</span>(h, <span class="string">&quot;add&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (add) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;1 + 2 = %d\n&quot;</span>, <span class="built_in">add</span>(<span class="number">1</span>, <span class="number">2</span>));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">FreeLibrary</span>(h);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>延迟加载（代码和隐式一模一样，只改链接选项）：</p><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">项目属性 → 链接器 → 输入 → 延迟加载的 DLL: MyMath.dll</span><br><span class="line">或命令行: /DELAYLOAD:MyMath.dll</span><br></pre></td></tr></table></figure><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 源码层面和隐式加载完全相同, 直接调, 不用 GetProcAddress.</span></span><br><span class="line">__declspec(dllimport) <span class="function"><span class="type">int</span> <span class="title">add</span><span class="params">(<span class="type">int</span>, <span class="type">int</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 程序启动时 MyMath.dll 还没加载.</span></span><br><span class="line">    <span class="comment">// 第一次调 add() 时系统才真正去加载它, 此刻 DLL 不在就抛异常.</span></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">add</span>(<span class="number">1</span>, <span class="number">2</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h2 id="一句话记忆"><a href="#一句话记忆" class="headerlink" title="一句话记忆"></a>一句话记忆</h2><ul><li>隐式：启动时结账，缺货直接不开门。</li><li>显式：全程自助，自己去仓库取货，取不到自己想办法。</li><li>延迟加载：先开门营业，用到哪件货才去取，取不到时当场出事（但留了钩子让你补救）。</li></ul><h2 id="延迟加载的典型用途"><a href="#延迟加载的典型用途" class="headerlink" title="延迟加载的典型用途"></a>延迟加载的典型用途</h2><p>某个 DLL 只在少数功能路径上用到时最合适：打印功能、某些系统版本才存在的新 API、体积大的可选组件。推迟加载既加快启动速度，又让”可选组件缺失”不阻塞主功能。判断标准就一条：<strong>这条路径上 DLL 缺失是可以接受、需要降级的，还是致命的</strong>——前者用延迟加载很划算，后者还是老老实实隐式加载，启动时就暴露问题。</p>]]></content>
+    
+    
+    <summary type="html">&lt;h2 id=&quot;一个容易误读的讲法&quot;&gt;&lt;a href=&quot;#一个容易误读的讲法&quot; class=&quot;headerlink&quot; title=&quot;一个容易误读的讲法&quot;&gt;&lt;/a&gt;一个容易误读的讲法&lt;/h2&gt;&lt;p&gt;读王端明《深入浅出 Windows API 程序设计》核心编程篇的 DLL 章，书里先讲显式加载的好处是”DLL 不存在，exe 也能跑起来”，接着讲延迟加载，又说它有”目录里没有 DLL 也能把程序运行起来”的优势。两段话放一起看容易犯迷糊：延迟加载写法上明明还是隐式的（链 .lib、直接调函数），怎么也有显式加载的好处？这是不是讲错了？&lt;/p&gt;
+&lt;p&gt;结论：书上没错，但要把两件事拆开看——&lt;strong&gt;写法上的链接方式&lt;/strong&gt;和&lt;strong&gt;加载发生的时机&lt;/strong&gt;。延迟加载是”写法上隐式、时机上独立”的第三种方式，不等于隐式加载。&lt;/p&gt;</summary>
+    
+    
+    
+    
+    <category term="C++" scheme="https://hanxinle.github.io/tags/C/"/>
+    
+    <category term="Windows" scheme="https://hanxinle.github.io/tags/Windows/"/>
+    
+    <category term="DLL" scheme="https://hanxinle.github.io/tags/DLL/"/>
+    
+  </entry>
+  
+  <entry>
     <title>C++ 并发编程笔记：join/detach 与 future/promise 两个最基础的模型</title>
     <link href="https://hanxinle.github.io/2026/10/08/20261008-01-cpp-concurrency-join-detach-future-promise/"/>
     <id>https://hanxinle.github.io/2026/10/08/20261008-01-cpp-concurrency-join-detach-future-promise/</id>
@@ -502,25 +526,6 @@
     
     
     <summary type="html">&lt;h1 id=&quot;1-选择要保留的文件&quot;&gt;&lt;a href=&quot;#1-选择要保留的文件&quot; class=&quot;headerlink&quot; title=&quot;1 选择要保留的文件&quot;&gt;&lt;/a&gt;1 选择要保留的文件&lt;/h1&gt;&lt;p&gt;保留_config.yml, themes/, source/, scaffolds/,package.jsona,.gitignore 这些文件夹,其它可以删除。&lt;/p&gt;</summary>
-    
-    
-    
-    
-    <category term="工具" scheme="https://hanxinle.github.io/tags/%E5%B7%A5%E5%85%B7/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>开发环境问题处理</title>
-    <link href="https://hanxinle.github.io/2023/12/02/hardware-notes/"/>
-    <id>https://hanxinle.github.io/2023/12/02/hardware-notes/</id>
-    <published>2023-12-02T06:08:34.000Z</published>
-    <updated>2026-06-28T03:16:24.561Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="1-一些教训"><a href="#1-一些教训" class="headerlink" title="1 一些教训"></a>1 一些教训</h1><p>非必要不升级系统，导致很多经典软件不能用，最后重新安装系统解决这些问题的.</p><span id="more"></span><h1 id="2-樱桃键盘"><a href="#2-樱桃键盘" class="headerlink" title="2 樱桃键盘"></a>2 樱桃键盘</h1><div class="table-container"><table><thead><tr><th>问题</th><th>按键</th></tr></thead><tbody><tr><td>win 键盘失效</td><td>fn+F9</td></tr><tr><td>F1~F3 与音量强制关联</td><td>fn+Ctrl</td></tr></tbody></table></div><h1 id="3-Git-状态图标异常"><a href="#3-Git-状态图标异常" class="headerlink" title="3 Git 状态图标异常"></a>3 Git 状态图标异常</h1><p><code>WIN+R</code> 启动注册表，找到这一项：</p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">计算机\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ShellIconOverlayIdentifiers\</span><br></pre></td></tr></table></figure><p>删掉该项下的 <code>Tortoise1Normal</code> 前的所有内容，任务管理器中重启 EXPLORER。</p><h1 id="4"><a href="#4" class="headerlink" title="4"></a>4</h1>]]></content>
-    
-    
-    <summary type="html">&lt;h1 id=&quot;1-一些教训&quot;&gt;&lt;a href=&quot;#1-一些教训&quot; class=&quot;headerlink&quot; title=&quot;1 一些教训&quot;&gt;&lt;/a&gt;1 一些教训&lt;/h1&gt;&lt;p&gt;非必要不升级系统，导致很多经典软件不能用，最后重新安装系统解决这些问题的.&lt;/p&gt;</summary>
     
     
     
