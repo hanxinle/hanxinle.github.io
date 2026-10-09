@@ -162,6 +162,140 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/10/09/20261009-02-dll-injection-techniques/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xinle">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="工程师笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2026/10/09/20261009-02-dll-injection-techniques/" class="post-title-link" itemprop="url">Windows DLL 注入技术全景：七种方式一张图</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-10-09 15:00:00 / 修改时间：15:30:40" itemprop="dateCreated datePublished" datetime="2026-10-09T15:00:00+08:00">2026-10-09</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="为什么注入有这么多花样"><a href="#为什么注入有这么多花样" class="headerlink" title="为什么注入有这么多花样"></a>为什么注入有这么多花样</h2><p>DLL 注入回答的是同一个问题：<strong>怎么让你的代码在别人的进程里跑起来</strong>。答案有很多个，因为 Windows 提供了多条”合法通道”——消息钩子、远程线程、调试器、APC 队列、输入法框架——每一条都能借来送 DLL 进门。学这一块的目标不是把每种方式的 API 步骤背下来（不现实也没必要），而是建立全景认知：看到一种注入手法，知道它借的是哪条通道、有什么前提和短板。</p>
+<p>这篇笔记按王端明《深入浅出 Windows API 程序设计：核心编程篇》的章节组织，把七种方式连同配套工程一起过一遍。所有工程都在随书源码 Chapter6（个别在 Chapter4/8）。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2026/10/09/20261009-02-dll-injection-techniques/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/10/09/20261009-01-windows-hook-message-hook/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xinle">
+      <meta itemprop="description" content="hanxinle199@gmail.com">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="工程师笔记">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2026/10/09/20261009-01-windows-hook-message-hook/" class="post-title-link" itemprop="url">Windows Hook 入门：局部钩子与远程钩子，兼全局键盘钩子实战</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2026-10-09 10:00:00 / 修改时间：15:30:40" itemprop="dateCreated datePublished" datetime="2026-10-09T10:00:00+08:00">2026-10-09</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="从一个误会说起"><a href="#从一个误会说起" class="headerlink" title="从一个误会说起"></a>从一个误会说起</h2><p>王端明《深入浅出 Windows API 程序设计》里对 Hook 的阐述是：Hook 是 Windows 消息处理机制中的一个监视点，应用程序可以在这里安装钩子函数（一个回调），监视系统消息，并在消息到达目标窗口过程之前先由钩子函数处理。</p>
+<p>第一次读容易被”目标窗口”带偏：Hook 是不是窗口程序专属的技术？不是。它监视的是”别人的消息流”，你自己的程序有没有窗口都行。这篇笔记按书上的分类把消息钩子理清，再用书上的 HookDll + HookApp 工程实战一次。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2026/10/09/20261009-01-windows-hook-message-hook/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://hanxinle.github.io/2026/10/08/20261008-03-tls-thread-local-storage/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -3762,14 +3896,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">48</span>
+          <span class="site-state-item-count">50</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-count">35</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

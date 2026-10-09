@@ -3861,4 +3861,257 @@ return 0;
         <tag>DLL</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Windows DLL 注入技术全景：七种方式一张图</title>
+    <url>/2026/10/09/20261009-02-dll-injection-techniques/</url>
+    <content><![CDATA[<h2 id="为什么注入有这么多花样"><a href="#为什么注入有这么多花样" class="headerlink" title="为什么注入有这么多花样"></a>为什么注入有这么多花样</h2><p>DLL 注入回答的是同一个问题：<strong>怎么让你的代码在别人的进程里跑起来</strong>。答案有很多个，因为 Windows 提供了多条”合法通道”——消息钩子、远程线程、调试器、APC 队列、输入法框架——每一条都能借来送 DLL 进门。学这一块的目标不是把每种方式的 API 步骤背下来（不现实也没必要），而是建立全景认知：看到一种注入手法，知道它借的是哪条通道、有什么前提和短板。</p>
+<p>这篇笔记按王端明《深入浅出 Windows API 程序设计：核心编程篇》的章节组织，把七种方式连同配套工程一起过一遍。所有工程都在随书源码 Chapter6（个别在 Chapter4/8）。</p>
+<span id="more"></span>
+<h2 id="1-Windows-钩子注入（HookDll-DIPSHook）"><a href="#1-Windows-钩子注入（HookDll-DIPSHook）" class="headerlink" title="1. Windows 钩子注入（HookDll / DIPSHook）"></a>1. Windows 钩子注入（HookDll / DIPSHook）</h2><p>上一篇详细讲过，这里只收个尾。给目标线程装远程钩子（<code>SetWindowsHookEx</code>），系统为了能在目标进程里执行钩子回调，会主动把你的 DLL 映射进去。钩子是”门票”，注入才是目的——DIPS 工程装完钩子后根本不在乎消息，直接在 Explorer 里弹出自己的对话框干活。</p>
+<p><strong>通道</strong>：消息机制。<strong>前提</strong>：目标是 GUI 进程（有消息循环）。</p>
+<h2 id="2-远程线程注入（RemoteApp-RemoteDll）"><a href="#2-远程线程注入（RemoteApp-RemoteDll）" class="headerlink" title="2. 远程线程注入（RemoteApp + RemoteDll）"></a>2. 远程线程注入（RemoteApp + RemoteDll）</h2><p>教科书正招，三步曲：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="built_in">VirtualAllocEx</span>(hProcess, ...);              <span class="comment">// 在目标进程申请内存.</span></span><br><span class="line"><span class="built_in">WriteProcessMemory</span>(hProcess, ..., dllPath); <span class="comment">// 写入 DLL 路径.</span></span><br><span class="line"><span class="built_in">CreateRemoteThread</span>(hProcess, ...,           <span class="comment">// 在目标进程创建线程,</span></span><br><span class="line">    LoadLibraryW, lpRemotePath);            <span class="comment">// 线程函数就是 LoadLibraryW.</span></span><br></pre></td></tr></table></figure>
+<p>巧妙之处：<code>CreateRemoteThread</code> 的线程函数原型和 <code>LoadLibraryW</code> 签名兼容（都是一个指针参数），所以不用写任何 shellcode，直接让目标进程的新线程替你去 LoadLibrary。卸载同样思路：远程线程跑 <code>FreeLibrary</code>。</p>
+<p>配套工程注入后会把目标进程的模块清单回显出来，注入是否成功一目了然。</p>
+<h2 id="3-函数转发机制（FunctionForwarderDll-AheadLib）"><a href="#3-函数转发机制（FunctionForwarderDll-AheadLib）" class="headerlink" title="3. 函数转发机制（FunctionForwarderDll / AheadLib）"></a>3. 函数转发机制（FunctionForwarderDll / AheadLib）</h2><p>严格说这不是”注入进程”，而是<strong>劫持 DLL 解析</strong>：做一个和系统 DLL 同名的假 DLL，让程序加载你而不是它。假 DLL 里大部分导出用一行 pragma 转发给真 DLL：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">pragma</span> comment(linker, <span class="string">&quot;/export:MyMessageBox=User32.MessageBoxW&quot;</span>)</span></span><br></pre></td></tr></table></figure>
+<p>调用方拿到的 <code>MyMessageBox</code> 其实就是 <code>MessageBoxW</code>，功能完全正常——但转发链条上你可以对要拦截的函数加私货。书上还配了 <code>AheadLib</code> 工具，自动生成这种转发 DLL 的骨架代码，打算后面拿到虚拟机里试。</p>
+<h2 id="4-CreateProcess-写-shellcode-注入（CreateProcessInjectDll）"><a href="#4-CreateProcess-写-shellcode-注入（CreateProcessInjectDll）" class="headerlink" title="4. CreateProcess 写 shellcode 注入（CreateProcessInjectDll）"></a>4. CreateProcess 写 shellcode 注入（CreateProcessInjectDll）</h2><p>不创建远程线程，而是劫持目标进程的<strong>初始线程</strong>：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">CreateProcess(..., CREATE_SUSPENDED)     // 以挂起状态创建目标进程.</span><br><span class="line">VirtualAllocEx + WriteProcessMemory      // 写入一段 shellcode:</span><br><span class="line">                                         //   保存现场 -&gt; LoadLibraryW(dll) -&gt; 恢复现场 -&gt; 跳回原入口.</span><br><span class="line">GetThreadContext / SetThreadContext      // 把 EIP 掰到 shellcode.</span><br><span class="line">ResumeThread                             // 放行, 目标先跑你的代码, 再若无其事继续.</span><br></pre></td></tr></table></figure>
+<p>shellcode 是 29 字节硬编码 x86 汇编（pushad/pushfd 保护现场，完事后跳回原 EIP），所以<strong>只能编 32 位</strong>。比方式 2 隐蔽——不产生额外线程，目标进程线程数看起来正常。</p>
+<h2 id="5-调试器写入-shellcode（Chapter4-LoadTest2）"><a href="#5-调试器写入-shellcode（Chapter4-LoadTest2）" class="headerlink" title="5. 调试器写入 shellcode（Chapter4/LoadTest2）"></a>5. 调试器写入 shellcode（Chapter4/LoadTest2）</h2><p>书上这节没给 DLL 注入的完整代码，配套资源里的示例是调试器改代码，原理相通：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="built_in">CreateProcess</span>(..., DEBUG_ONLY_THIS_PROCESS);   <span class="comment">// 以调试器身份创建进程.</span></span><br><span class="line"><span class="built_in">WaitForDebugEventEx</span>(&amp;debugEvent, INFINITE);    <span class="comment">// 等调试事件.</span></span><br><span class="line"><span class="comment">// CREATE_PROCESS_DEBUG_EVENT 到达时进程代码还没跑,</span></span><br><span class="line"><span class="comment">// 此时 ReadProcessMemory / WriteProcessMemory 可以随便改.</span></span><br><span class="line"><span class="built_in">ContinueDebugEvent</span>(...);                       <span class="comment">// 放行.</span></span><br></pre></td></tr></table></figure>
+<p>调试器对被调试进程有完全控制权（这正是调试器的工作原理），改指令、写 shellcode、下断点都可以。示例工程把目标入口附近 2 字节改成 NOP（<code>0x9090</code>）。<strong>注意</strong>：示例里偏移量和校验值是写死的，只能配书上原版 Test.exe，自己重编的目标会因为偏移不同而报”版本不符”。</p>
+<h2 id="6-APC-注入（APCInjectApp）"><a href="#6-APC-注入（APCInjectApp）" class="headerlink" title="6. APC 注入（APCInjectApp）"></a>6. APC 注入（APCInjectApp）</h2><p>前半段和方式 2 相同（申请内存、写 DLL 路径），但最后不创建新线程，而是<strong>枚举目标进程的所有线程，挨个把 LoadLibraryW 排进它们的 APC 队列</strong>：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="built_in">QueueUserAPC</span>(pfnLoadLibraryW, hThread, (ULONG_PTR)lpDllPathRemote);</span><br></pre></td></tr></table></figure>
+<p>APC（异步过程调用）的特点是：排队的函数只在线程进入<strong>可告警等待</strong>（alertable wait，如 <code>SleepEx</code>、<code>WaitForSingleObjectEx</code>）时才执行。所以注入后目标进程可能毫无动静，去点点它的菜单、敲敲键盘，DLL 才被加载。不产生新线程，更隐蔽；触发时机不受你控制，这是代价。</p>
+<h2 id="7-输入法注入（MyIME-MyIMEInstaller-MyIMETestDll）"><a href="#7-输入法注入（MyIME-MyIMEInstaller-MyIMETestDll）" class="headerlink" title="7. 输入法注入（MyIME + MyIMEInstaller + MyIMETestDll）"></a>7. 输入法注入（MyIME + MyIMEInstaller + MyIMETestDll）</h2><p>借系统框架的东风。输入法（.ime）本质是特殊 DLL，<strong>任何进程只要切换到该输入法，系统就把它加载进那个进程</strong>——注入是输入法框架的”本职工作”。工程分三件套：Installer 注册输入法，MyIME.ime 被加载时从共享内存读出 MyIMETestDll 的路径并 LoadLibrary。</p>
+<p>使用门槛也最高：需要管理员权限注册输入法，<strong>位数必须匹配</strong>（64 位进程要 x64 版 .ime），用完要卸载清理。</p>
+<h2 id="七种方式一张表"><a href="#七种方式一张表" class="headerlink" title="七种方式一张表"></a>七种方式一张表</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>借的通道</th>
+<th>产生新线程</th>
+<th>隐蔽性</th>
+<th>前提条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>钩子注入</td>
+<td>消息机制</td>
+<td>否</td>
+<td>中</td>
+<td>目标是 GUI 进程</td>
+</tr>
+<tr>
+<td>远程线程</td>
+<td>CreateRemoteThread</td>
+<td><strong>是</strong></td>
+<td>低（线程数露馅）</td>
+<td>OpenProcess 权限</td>
+</tr>
+<tr>
+<td>函数转发</td>
+<td>DLL 解析顺序</td>
+<td>否</td>
+<td>高</td>
+<td>能替换/放置同名 DLL</td>
+</tr>
+<tr>
+<td>CreateProcess shellcode</td>
+<td>劫持初始线程</td>
+<td>否</td>
+<td>高</td>
+<td>能启动目标进程；x86</td>
+</tr>
+<tr>
+<td>调试器写入</td>
+<td>调试子系统</td>
+<td>否</td>
+<td>高</td>
+<td>调试权限</td>
+</tr>
+<tr>
+<td>APC</td>
+<td>线程 APC 队列</td>
+<td>否</td>
+<td>高</td>
+<td>线程进入可告警等待</td>
+</tr>
+<tr>
+<td>输入法</td>
+<td>输入法框架</td>
+<td>否</td>
+<td>高</td>
+<td>管理员；位数匹配</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="我的取舍"><a href="#我的取舍" class="headerlink" title="我的取舍"></a>我的取舍</h2><p>作者把七种方式摆出来，用意是<strong>告知注入技术有多种实现</strong>，而不是要求每种都烂熟。我的学习策略：</p>
+<ul>
+<li><strong>方式 1（钩子）和方式 2（远程线程）吃透</strong>——一个代表”借系统设施”，一个代表”自己动手”，API 调用链都亲手跑过。</li>
+<li><strong>方式 4-7 知道原理和适用场景即可</strong>，真用到时回来翻代码。工具类（AheadLib）后续在虚拟机里试，用到再消化。</li>
+<li>书上的案例偏教学演示、实用性一般，后续打算用更接近实战的方式巩固：比如自己写一个带注入需求的小工具，把几种方式在同一靶子上各实现一遍，对比效果。</li>
+</ul>
+<p>一句话总结全部：<strong>注入 = 找一条能让目标进程替你执行 LoadLibrary 的通道</strong>。七种方式的区别只在”通道”是什么。</p>
+<h2 id="安全边界"><a href="#安全边界" class="headerlink" title="安全边界"></a>安全边界</h2><p>DLL 注入是安全软件、外挂、恶意软件的共用技术，攻防同源。以上实验只在自己的测试机和虚拟机里做，目标进程选记事本这类无害程序，不对他人机器和任何生产环境使用。</p>
+]]></content>
+      <tags>
+        <tag>Windows</tag>
+        <tag>DLL</tag>
+        <tag>注入</tag>
+        <tag>Hook</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Windows Hook 入门：局部钩子与远程钩子，兼全局键盘钩子实战</title>
+    <url>/2026/10/09/20261009-01-windows-hook-message-hook/</url>
+    <content><![CDATA[<h2 id="从一个误会说起"><a href="#从一个误会说起" class="headerlink" title="从一个误会说起"></a>从一个误会说起</h2><p>王端明《深入浅出 Windows API 程序设计》里对 Hook 的阐述是：Hook 是 Windows 消息处理机制中的一个监视点，应用程序可以在这里安装钩子函数（一个回调），监视系统消息，并在消息到达目标窗口过程之前先由钩子函数处理。</p>
+<p>第一次读容易被”目标窗口”带偏：Hook 是不是窗口程序专属的技术？不是。它监视的是”别人的消息流”，你自己的程序有没有窗口都行。这篇笔记按书上的分类把消息钩子理清，再用书上的 HookDll + HookApp 工程实战一次。</p>
+<span id="more"></span>
+<h2 id="书上的分类：局部钩子与远程钩子"><a href="#书上的分类：局部钩子与远程钩子" class="headerlink" title="书上的分类：局部钩子与远程钩子"></a>书上的分类：局部钩子与远程钩子</h2><p>Windows 用 <code>SetWindowsHookEx</code> 安装的钩子，书上按<strong>作用范围</strong>分两类：</p>
+<ul>
+<li><strong>局部钩子</strong>：只挂钩自身进程的事件</li>
+<li><strong>远程钩子</strong>：挂钩其他进程的事件，又分两种——基于其他进程中<strong>某个线程</strong>的线程钩子，和<strong>系统范围</strong>的系统钩子</li>
+</ul>
+<p>对照到 API 参数上：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>分类</th>
+<th><code>dwThreadId</code> 参数</th>
+<th>钩子函数位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>局部钩子</td>
+<td>自己进程的线程 ID</td>
+<td>可以在 <strong>exe</strong> 里，不用 DLL</td>
+</tr>
+<tr>
+<td>远程钩子-线程钩子</td>
+<td>别的进程的线程 ID</td>
+<td>必须在 <strong>DLL</strong> 里（系统把 DLL 注入那个进程）</td>
+</tr>
+<tr>
+<td>远程钩子-系统钩子</td>
+<td>0</td>
+<td>必须在 <strong>DLL</strong> 里（注入所有 GUI 进程）</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>一条规律贯穿：<strong>远程钩子的钩子函数必须位于 DLL 中</strong>。原因很直接：远程钩子的回调要在别的进程上下文里执行，代码总得有个载体过去——系统的做法就是把装着回调的 DLL 映射进目标进程地址空间。局部钩子不跨进程，exe 里直接写回调就行。</p>
+<p>书里 <code>InstallHook(int idHook, DWORD dwThreadId, HWND hwnd)</code> 保留了 <code>dwThreadId</code> 参数，正是兼容这几种用法——传 0 是系统钩子，传具体线程 ID 是线程钩子。</p>
+<h2 id="实战：远程钩子之系统钩子（HookDll-HookApp）"><a href="#实战：远程钩子之系统钩子（HookDll-HookApp）" class="headerlink" title="实战：远程钩子之系统钩子（HookDll + HookApp）"></a>实战：远程钩子之系统钩子（HookDll + HookApp）</h2><p>书上这个演示工程是<strong>远程钩子中的系统钩子</strong>：<code>dwThreadId = 0</code>，监视全系统的键盘消息。</p>
+<h3 id="工程结构"><a href="#工程结构" class="headerlink" title="工程结构"></a>工程结构</h3><p>两个工程配合：</p>
+<ul>
+<li><strong>HookDll</strong>：钩子 DLL，导出 <code>InstallHook</code> / <code>UninstallHook</code>，内部含钩子回调 <code>KeyboardProc</code></li>
+<li><strong>HookApp</strong>：对话框程序，两个按钮负责装/卸钩子，界面上实时显示全系统敲下的按键</li>
+</ul>
+<p>运行效果：点”安装钩子”后，<strong>在任何程序里</strong>打字——记事本、浏览器地址栏、别的对话框——按键都会同步出现在 HookApp 的编辑框里。这就是”系统范围”的含义。</p>
+<h3 id="为什么是-DLL？这是远程钩子的硬性要求"><a href="#为什么是-DLL？这是远程钩子的硬性要求" class="headerlink" title="为什么是 DLL？这是远程钩子的硬性要求"></a>为什么是 DLL？这是远程钩子的硬性要求</h3><p><code>SetWindowsHookEx</code> 的签名决定了架构：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">HHOOK <span class="title">SetWindowsHookEx</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">int</span>       idHook,      <span class="comment">// 钩子类型, 如 WH_KEYBOARD.</span></span></span></span><br><span class="line"><span class="params"><span class="function">    HOOKPROC  lpfn,        <span class="comment">// 钩子回调函数指针.</span></span></span></span><br><span class="line"><span class="params"><span class="function">    HINSTANCE hmod,        <span class="comment">// 回调所在模块的句柄(DLL).</span></span></span></span><br><span class="line"><span class="params"><span class="function">    DWORD     dwThreadId   <span class="comment">// 0 = 系统钩子, 否则指定线程.</span></span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>钩子回调要在<strong>别的进程的上下文里</strong>执行（键盘事件发生在别人那里），系统实现这一点的方式很粗暴：把装着回调的 DLL <strong>映射进每一个 GUI 进程的地址空间</strong>。所以系统钩子的回调必须放在 DLL 里——这不是作者的设计选择，是系统机制的要求。</p>
+<h3 id="HookDll-核心代码"><a href="#HookDll-核心代码" class="headerlink" title="HookDll 核心代码"></a>HookDll 核心代码</h3><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 钩子回调: 每次系统里有键盘消息, 先经过这里.</span></span><br><span class="line"><span class="function">LRESULT CALLBACK <span class="title">KeyboardProc</span><span class="params">(<span class="type">int</span> nCode, WPARAM wParam, LPARAM lParam)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (nCode &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">CallNextHookEx</span>(<span class="literal">NULL</span>, nCode, wParam, lParam);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (nCode == HC_ACTION)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// wParam 是虚拟键码, 转成可见字符.</span></span><br><span class="line">        <span class="built_in">GetKeyboardState</span>(bKeyState);</span><br><span class="line">        <span class="built_in">ToUnicode</span>(wParam, lParam &gt;&gt; <span class="number">16</span>, bKeyState, g_szBuf, _countof(g_szBuf), <span class="number">0</span>);</span><br><span class="line">        <span class="comment">// 用 WM_COPYDATA 把字符跨进程发回 HookApp 窗口.</span></span><br><span class="line">        <span class="built_in">SendMessage</span>(g_hwnd, WM_COPYDATA, (WPARAM)g_hwnd, (LPARAM)&amp;copyDataStruct);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">CallNextHookEx</span>(<span class="literal">NULL</span>, nCode, wParam, lParam);  <span class="comment">// 放行给下一个钩子/目标窗口.</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">BOOL <span class="title">InstallHook</span><span class="params">(<span class="type">int</span> idHook, DWORD dwThreadId, HWND hwnd)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    g_hwnd = hwnd;</span><br><span class="line">    g_hHookKeyboard = <span class="built_in">SetWindowsHookEx</span>(idHook, KeyboardProc, g_hMod, dwThreadId);</span><br><span class="line">    <span class="keyword">return</span> g_hHookKeyboard != <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>调用时传 <code>InstallHook(WH_KEYBOARD, 0, hwndDlg)</code>：<code>WH_KEYBOARD</code> 是钩子类型，<code>0</code> 表示系统钩子，<code>hwndDlg</code> 是 HookApp 的窗口句柄——也就是钩子回调里 <code>SendMessage</code> 的第一个参数，用于把按键字符回传给 HookApp 窗口。</p>
+<h3 id="HookApp-一侧就简单了"><a href="#HookApp-一侧就简单了" class="headerlink" title="HookApp 一侧就简单了"></a>HookApp 一侧就简单了</h3><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">case</span> IDC_BTN_INSTALLHOOK:</span><br><span class="line">    <span class="built_in">InstallHook</span>(WH_KEYBOARD, <span class="number">0</span>, hwndDlg);   <span class="comment">// 装钩子.</span></span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">case</span> WM_COPYDATA:                            <span class="comment">// 收按键并显示.</span></span><br><span class="line">    <span class="built_in">SendMessage</span>(<span class="built_in">GetDlgItem</span>(hwndDlg, IDC_EDIT_KEYBOARD), EM_REPLACESEL,</span><br><span class="line">        TRUE, (LPARAM)(LPTSTR)(((PCOPYDATASTRUCT)lParam)-&gt;lpData));</span><br><span class="line">    <span class="keyword">return</span> TRUE;</span><br></pre></td></tr></table></figure>
+<p>装/卸钩子调 DLL 导出的两个函数；收到 <code>WM_COPYDATA</code> 就把字符追加到编辑框。</p>
+<h3 id="整条数据流"><a href="#整条数据流" class="headerlink" title="整条数据流"></a>整条数据流</h3><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">用户在任何程序里敲键</span><br><span class="line">    → 系统消息队列</span><br><span class="line">    → KeyboardProc(在目标进程内执行, DLL 已注入)</span><br><span class="line">        → ToUnicode 转成字符</span><br><span class="line">        → WM_COPYDATA 发回 HookApp 窗口</span><br><span class="line">    → CallNextHookEx 放行, 目标程序正常收到按键(无感知)</span><br></pre></td></tr></table></figure>
+<p>三个要点：</p>
+<ol>
+<li><strong>先经过你，再放行</strong>：钩子函数先于目标窗口过程被调用，看完可以放行（<code>CallNextHookEx</code>），也可以吞掉（不调用即可），这就是”监视点”的含义。</li>
+<li><strong>钩子构成链</strong>：系统里可以装多个同类钩子，<code>CallNextHookEx</code> 把消息传给链上的下一个，谁不放行谁就截断了后面的所有环节。</li>
+<li><strong>回调跑在别人家里</strong>：<code>KeyboardProc</code> 的执行上下文是目标进程，这也是为什么回传结果要用 <code>WM_COPYDATA</code>（系统支持的跨进程传数据方式），而不能直接读写 HookApp 的内存。</li>
+</ol>
+<h2 id="消息钩子的常见类型"><a href="#消息钩子的常见类型" class="headerlink" title="消息钩子的常见类型"></a>消息钩子的常见类型</h2><p><code>SetWindowsHookEx</code> 的第一个参数决定监视什么，常用的：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>监视内容</th>
+<th>是否需要 DLL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>WH_KEYBOARD</code></td>
+<td>键盘消息</td>
+<td>做远程钩子时需要</td>
+</tr>
+<tr>
+<td><code>WH_KEYBOARD_LL</code></td>
+<td>低级键盘输入（在自己进程上下文执行）</td>
+<td><strong>不需要</strong>，系统钩子也不用</td>
+</tr>
+<tr>
+<td><code>WH_MOUSE</code> / <code>WH_MOUSE_LL</code></td>
+<td>鼠标，同上规律</td>
+<td>视范围而定</td>
+</tr>
+<tr>
+<td><code>WH_GETMESSAGE</code></td>
+<td>投递到消息队列的所有消息</td>
+<td>做远程钩子时需要</td>
+</tr>
+<tr>
+<td><code>WH_CBT</code></td>
+<td>窗口创建/激活/关闭等事件</td>
+<td>做远程钩子时需要</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>顺带一提：如果只是做全局键盘记录，<code>WH_KEYBOARD_LL</code> 是更简单的选择——它在<strong>自己进程</strong>里执行，不用 DLL 注入。书里用 <code>WH_KEYBOARD</code> + DLL 的写法，教学价值更高：它把”DLL 注入”这个后面 API Hook、内核开发都要用的机制提前演示了一遍。</p>
+<h2 id="更大视角：Hook-不止消息钩子"><a href="#更大视角：Hook-不止消息钩子" class="headerlink" title="更大视角：Hook 不止消息钩子"></a>更大视角：Hook 不止消息钩子</h2><p>消息钩子只是 Hook 技术的一个分支——有官方设施、最安全的那一支。把视野放大，凡是”在执行路径上插一个点，先经过你，你再决定放行、修改还是替换”的技术都叫 Hook：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>拦截的是什么</th>
+<th>典型手段</th>
+<th>是否有官方支持</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>消息钩子</td>
+<td>窗口消息（键盘、鼠标、窗口事件）</td>
+<td><code>SetWindowsHookEx</code>（本文实战）</td>
+<td>有，系统原生设施</td>
+</tr>
+<tr>
+<td>API 钩子</td>
+<td>函数调用</td>
+<td>IAT 改写、inline hook（改函数开头跳转）、Detours</td>
+<td>无，自己动手</td>
+</tr>
+<tr>
+<td>内核钩子</td>
+<td>系统调用、内核事件</td>
+<td>SSDT hook、回调注册（ObRegisterCallbacks 等）</td>
+<td>部分有（回调注册类）</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>API 钩子应用面更广（安全软件、注入、调试器都靠它），但没有官方支持，涉及内存改写，坑也多，是下一步的学习内容。</p>
+<h2 id="安全边界"><a href="#安全边界" class="headerlink" title="安全边界"></a>安全边界</h2><p>全局键盘钩子就是键盘记录器（keylogger）的技术原型，攻防同源。学习时在自己的虚拟机和测试程序里跑，搞清楚机制；不要用在任何他人机器或生产环境。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><figure class="highlight text"><table><tr><td class="code"><pre><span class="line">消息钩子(SetWindowsHookEx) 按作用范围分(书上分类)</span><br><span class="line">├── 局部钩子: 只钩自身进程, 回调可在 exe 里</span><br><span class="line">└── 远程钩子: 钩其他进程, 回调必须在 DLL(系统注入目标进程)</span><br><span class="line">    ├── 线程钩子: dwThreadId = 目标线程 ID</span><br><span class="line">    └── 系统钩子: dwThreadId = 0, 注入所有 GUI 进程(本文实战)</span><br><span class="line"></span><br><span class="line">更大视角: 消息钩子 | API 钩子(IAT/inline/Detours) | 内核钩子(SSDT/回调注册)</span><br></pre></td></tr></table></figure>
+<p>下一篇计划讲 API 钩子：IAT 改写和 inline hook，看看”没有官方设施时，怎么自己造一个钩子”。</p>
+]]></content>
+      <tags>
+        <tag>Windows</tag>
+        <tag>DLL</tag>
+        <tag>Hook</tag>
+      </tags>
+  </entry>
 </search>
