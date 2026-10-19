@@ -4114,4 +4114,117 @@ return 0;
         <tag>Hook</tag>
       </tags>
   </entry>
+  <entry>
+    <title>/MT 与 /MD：CRT 链接选项、跨模块堆损坏与 C++ ABI 一致性</title>
+    <url>/2026/10/19/20261019-01-mt-md-crt-abi/</url>
+    <content><![CDATA[<h2 id="为什么写这篇"><a href="#为什么写这篇" class="headerlink" title="为什么写这篇"></a>为什么写这篇</h2><p>用 MSVC 写 C++ 项目的人都遇到过这条规矩：同一个解决方案里的所有库，编译参数必须一致——编译器版本要一致，/MT、/MD 要一致，Debug、Release 不能混。我一直知道”必须这么做”，但直到最近整理项目配置时才认真想了一个问题：为什么？有人提到这跟 ABI 有关，于是我把这条线索从头理了一遍，写成这篇笔记。</p>
+<span id="more"></span>
+<p>先说结论：</p>
+<ul>
+<li>“编译器版本一致”本质是 <strong>ABI 版本一致</strong>；</li>
+<li>“/MT 与 /MD、Debug 与 Release 一致”本质是 <strong>CRT 实例和对象内存布局一致</strong>。</li>
+</ul>
+<p>两条都是为了同一个目标：让所有模块对”内存里一个对象长什么样、函数怎么调、资源归谁管”达成二进制层面的共识。</p>
+<h2 id="MT-与-MD-的本质区别：CRT-代码进不进你的模块"><a href="#MT-与-MD-的本质区别：CRT-代码进不进你的模块" class="headerlink" title="/MT 与 /MD 的本质区别：CRT 代码进不进你的模块"></a>/MT 与 /MD 的本质区别：CRT 代码进不进你的模块</h2><p>C 运行时（CRT）是每个模块都绕不开的基础设施：堆、<code>malloc</code>/<code>free</code>、<code>printf</code>、<code>fopen</code>、异常处理，全都住在里面。/MT 和 /MD 的区别，就是这套基础设施以什么方式进入你的模块。</p>
+<ul>
+<li><strong>/MT</strong>：链接 <code>libcmt.lib</code>，CRT 代码<strong>静态编进每个模块</strong>。每个 exe/dll 都自己带一份完整的 CRT，是一个”独立小王国”。</li>
+<li><strong>/MD</strong>：链接 <code>msvcrt.lib</code> 导入库，运行时改用系统的 CRT DLL——<code>msvcp140.dll</code>（C++ STL）、<code>vcruntime140.dll</code>（异常处理/类型信息）、<code>ucrtbase.dll</code>（C 标准库，malloc/printf/fopen 都在这）。全进程共享一份 CRT，像大家共用一套基础设施的”共和国”。</li>
+</ul>
+<h2 id="全局状态：一份还是多份"><a href="#全局状态：一份还是多份" class="headerlink" title="全局状态：一份还是多份"></a>全局状态：一份还是多份</h2><p>CRT 里有一堆全局状态：<strong>堆（heap）、<code>errno</code>、<code>FILE*</code> 表和标准流缓冲区、locale、静态/全局对象（含 atexit 链）</strong>。</p>
+<ul>
+<li>/MT：每个模块各有一份，互不可见。</li>
+<li>/MD：全进程一份，天然一致。</li>
+</ul>
+<p>这个区别平时看不见，一旦有资源跨模块传递所有权，立刻出事。</p>
+<h2 id="混用的死法：跨堆释放"><a href="#混用的死法：跨堆释放" class="headerlink" title="混用的死法：跨堆释放"></a>混用的死法：跨堆释放</h2><p>最经典的崩溃场景：/MT 的 A.dll <code>malloc</code> 一块内存，指针传给同样是 /MT 的 B.dll 去 <code>free</code>。</p>
+<p>B 的 CRT 按<strong>自己堆的块头格式</strong>去解析这块内存，但那块内存根本不在 B 的堆里——堆元数据被写坏。最坑的是，崩溃往往不发生在 free 现场，而是后面某次完全无关的堆操作上，调用栈看起来跟真正的凶手毫无关系，排查极其痛苦。</p>
+<p><code>FILE*</code>、locale、静态对象同理。一句话：<strong>/MT 是每个模块自立山头的独立小王国，/MD 是大家共用一套基础设施的共和国。山头多了，跨边界递东西必然出事。</strong></p>
+<h2 id="体积、部署与更新"><a href="#体积、部署与更新" class="headerlink" title="体积、部署与更新"></a>体积、部署与更新</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>/MT</th>
+<th>/MD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>产物体积</td>
+<td>胖（每个模块带一份 CRT）</td>
+<td>小</td>
+</tr>
+<tr>
+<td>外部依赖</td>
+<td>零，单文件分发即可</td>
+<td>目标机需有 CRT DLL（装 VC++ Redistributable 或随包携带）</td>
+</tr>
+<tr>
+<td>CRT 安全更新</td>
+<td>死绑在编译时版本，要更新得重新编译发布</td>
+<td>随系统更新自动受益</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>选择规则：</p>
+<ul>
+<li>单个 exe、想免依赖分发 → /MT 可行。</li>
+<li>解决方案里有多个 dll/exe → 必须统一 /MD。</li>
+<li>有资源跨模块传递所有权 → 只能 /MD。</li>
+<li>用第三方静态库 → 对齐它编译时用的选项。</li>
+</ul>
+<h2 id="Debug-与-Release-为什么不能混"><a href="#Debug-与-Release-为什么不能混" class="headerlink" title="Debug 与 Release 为什么不能混"></a>Debug 与 Release 为什么不能混</h2><p>/MTd、/MDd 这些调试版同理不能混，原因更直接：调试版 CRT 开启迭代器调试（<code>_ITERATOR_DEBUG_LEVEL=2</code>），<code>std::vector</code> 等对象内部会多带调试指针，<strong>内存布局不一样</strong>。Debug 模块造的 <code>vector</code> 传给 Release 模块用，等于按错误的结构体去解释一块内存。</p>
+<p>MSVC 用 <code>#pragma detect_mismatch</code> 在链接期强制拦截这类混用，报 LNK2038 错——这是”链接器替你检查参数一致性”的机制，属于幸运情况。不幸的是那些链接器查不出来的不一致，留到运行期玄学崩溃。</p>
+<h2 id="ABI：更根本的原因"><a href="#ABI：更根本的原因" class="headerlink" title="ABI：更根本的原因"></a>ABI：更根本的原因</h2><p>ABI（Application Binary Interface）是二进制层面模块间如何对话的约定。C 有事实上的稳定 ABI，所以纯 C 库换编译器也能链接；C++ 没有标准化 ABI，以下层面都随编译器厂商、版本、编译选项变化：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>层面</th>
+<th>不一致的后果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>名字修饰（name mangling）</td>
+<td>同一函数在不同编译器/版本下修饰名不同，链接直接找不到符号</td>
+</tr>
+<tr>
+<td>类/对象内存布局</td>
+<td>成员偏移不同，跨模块访问读到错误地址</td>
+</tr>
+<tr>
+<td>STL 实现</td>
+<td><code>std::string</code> 等对象的内部布局随版本变化，传值即内存损坏</td>
+</tr>
+<tr>
+<td>异常处理模型</td>
+<td>异常跨 DLL 边界抛出时展开表/类型信息对不上，terminate</td>
+</tr>
+<tr>
+<td>虚表布局</td>
+<td>跨模块继承、多态调用时虚函数槽位解释不一致</td>
+</tr>
+<tr>
+<td>调用约定、RVO 细节</td>
+<td>栈/寄存器用法不一致，栈破坏</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>所以”编译器版本一致”的要求不是矫情，是 ABI 版本一致。任一条件不满足，要么链接报错（LNK2038 这种幸运情况），要么运行期崩溃（不幸情况）。</p>
+<h2 id="实践推论"><a href="#实践推论" class="headerlink" title="实践推论"></a>实践推论</h2><ul>
+<li>跨 DLL 边界尽量用 <strong>C 风格接口或 COM</strong> 这类有稳定 ABI 的机制。</li>
+<li>必须在 DLL 间传递 STL 对象时，把”编译器版本 + 全部 CRT/STL 相关开关”锁死成团队规范。</li>
+</ul>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>这条规矩我之前一直当成”经验之谈”来遵守，这次把它拆到 CRT 实例、对象布局、ABI 三层之后才看清：它不是经验，是二进制层面的硬约束。理解了 /MT 的”独立小王国”模型，跨模块崩溃那类玄学问题也就有了解释框架——先看指针跨越了几个 CRT 堆。</p>
+]]></content>
+      <tags>
+        <tag>C++</tag>
+        <tag>Windows</tag>
+        <tag>CRT</tag>
+        <tag>ABI</tag>
+      </tags>
+  </entry>
 </search>
